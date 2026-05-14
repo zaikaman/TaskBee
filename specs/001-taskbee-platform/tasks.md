@@ -23,24 +23,24 @@ Phase 1 (Setup)
 - [x] T003 Initialize latest stable Prisma ORM in `prisma/schema.prisma`
 - [x] T004 Setup database connection with Supabase PostgreSQL in `.env.local`
 - [x] T005 [P] Setup latest stable Supabase Auth clients in `lib/auth/client.ts` and `lib/auth/server.ts`
-- [ ] T040 [P] Expand `.env.example` with all required Supabase, Prisma, email, analytics, and cron secret variables
-- [ ] T041 [P] Add project-level constants for fees, withdrawal minimums, timeout bounds, and supported Vietnamese bank metadata in `config/app.ts`
+- [x] T040 [P] Expand `.env.example` with all required Supabase, Prisma, email, analytics, and cron secret variables
+- [x] T041 [P] Add project-level constants for fees, withdrawal minimums, timeout bounds, and supported Vietnamese bank metadata in `config/app.ts`
 
 ## Phase 2: Foundational
 *Goal: Configure data models and foundational layouts. Blocks user stories.*
 
-- [ ] T006 Implement data models (User, Task, Submission, Transaction, Withdrawal) in `prisma/schema.prisma`
-- [ ] T007 Generate Prisma client and create base instance in `lib/db/prisma.ts`
-- [ ] T008 [P] Setup auth proxy for protected route verification in `proxy.ts`
-- [ ] T009 [P] Create base application layout and navbar in `app/layout.tsx`
-- [ ] T042 Extend data model for claimed task slots in `prisma/schema.prisma` to distinguish reserved slots from submitted proof
-- [ ] T043 Extend data model for manual employer deposits in `prisma/schema.prisma` to satisfy Manual Bank Transfer funding
-- [ ] T044 Extend data model for in-app notifications in `prisma/schema.prisma`
-- [ ] T045 Extend data model for admin audit logs in `prisma/schema.prisma`
-- [ ] T046 [P] Create auth/session helpers for current user lookup, email verification checks, and role guards in `lib/auth/session.ts`
-- [ ] T047 [P] Create route group layouts for public auth, protected dashboard, marketplace, and admin areas
-- [ ] T048 [P] Create shared money utilities for Decimal-safe fee, escrow, balance, and ledger calculations in `lib/utils/money.ts`
-- [ ] T049 Create database seed script for initial Admin user and demo marketplace data in `prisma/seed.ts`
+- [x] T006 Implement data models (User, Task, Submission, Transaction, Withdrawal) in `prisma/schema.prisma`
+- [x] T007 Generate Prisma client and create base instance in `lib/db/prisma.ts`
+- [x] T008 [P] Setup auth proxy for protected route verification in `proxy.ts`
+- [x] T009 [P] Create base application layout and navbar in `app/layout.tsx`
+- [x] T042 Extend data model for claimed task slots in `prisma/schema.prisma` to distinguish reserved slots from submitted proof
+- [x] T043 Extend data model for manual employer deposits in `prisma/schema.prisma` to satisfy Manual Bank Transfer funding
+- [x] T044 Extend data model for in-app notifications in `prisma/schema.prisma`
+- [x] T045 Extend data model for admin audit logs in `prisma/schema.prisma`
+- [x] T046 [P] Create auth/session helpers for current user lookup, email verification checks, and role guards in `lib/auth/session.ts`
+- [x] T047 [P] Create route group layouts for public auth, protected dashboard, marketplace, and admin areas
+- [x] T048 [P] Create shared money utilities for Decimal-safe fee, escrow, balance, and ledger calculations in `lib/utils/money.ts`
+- [x] T049 Create database seed script for initial Admin user and demo marketplace data in `prisma/seed.ts`
 
 ## Phase 3: User Story 1 - User Authentication & Profiles
 *Goal: System MUST support user registration, login, email verification, and profile management.*
