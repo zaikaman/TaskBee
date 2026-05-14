@@ -10,11 +10,11 @@ import {
   User,
   WalletCards,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { APP_NAME } from "@/config/app";
+import { Button } from "@/components/ui/button";
 
 const primaryLinks = [
-  { href: "/", label: "Việc làm nhỏ", active: true },
+  { href: "/viec-lam", label: "Việc làm nhỏ", active: true },
   { href: "/dashboard", label: "Bảng điều khiển" },
   { href: "/dashboard/wallet", label: "Ví tiền" },
   { href: "/admin/dashboard", label: "Quản trị" },
@@ -43,7 +43,9 @@ export function AppNavbar() {
               }
             >
               {link.label}
-              {link.href === "/" ? <ChevronDown className="size-3" aria-hidden="true" /> : null}
+              {link.href === "/viec-lam" ? (
+                <ChevronDown className="size-3" aria-hidden="true" />
+              ) : null}
             </Link>
           ))}
         </nav>
@@ -77,7 +79,7 @@ export function AppNavbar() {
           </div>
 
           <Button asChild className="hidden rounded bg-emerald-600 px-4 text-white hover:bg-emerald-700 sm:inline-flex">
-            <Link href="/">
+            <Link href="/viec-lam">
               <Search className="size-4" />
               Tìm việc
             </Link>
@@ -101,7 +103,7 @@ export function AppNavbar() {
               Giới thiệu
             </Link>
             <span className="text-amber-300">|</span>
-            <Link href="/" className="font-medium text-emerald-700">
+            <Link href="/viec-lam" className="font-medium text-emerald-700">
               Khảo sát trả phí (20)
             </Link>
           </div>

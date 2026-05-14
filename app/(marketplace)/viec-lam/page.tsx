@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 const demoTasks = [
   {
     title: "Đăng ký bằng Google và hoàn thành 1 khảo sát",
-    reward: "18,000 VND",
+    reward: "18.000 VND",
     claimed: 190,
     total: 500,
     featured: true,
@@ -13,7 +13,7 @@ const demoTasks = [
   },
   {
     title: "Tải ứng dụng, xác minh KYC và gửi ảnh chụp màn hình",
-    reward: "12,000 VND",
+    reward: "12.000 VND",
     claimed: 128,
     total: 1200,
     featured: true,
@@ -21,7 +21,7 @@ const demoTasks = [
   },
   {
     title: "YouTube: đăng ký kênh và bình luận theo yêu cầu",
-    reward: "7,500 VND",
+    reward: "7.500 VND",
     claimed: 6,
     total: 62,
     featured: true,
@@ -85,7 +85,11 @@ export default function MarketplacePage() {
                     <div className="mb-1 text-xs text-slate-500">đã giữ vị trí</div>
                     <div className="h-1.5 rounded-full bg-slate-200">
                       <div
-                        className={progress > 30 ? "h-1.5 rounded-full bg-red-400" : "h-1.5 rounded-full bg-emerald-500"}
+                        className={
+                          progress > 30
+                            ? "h-1.5 rounded-full bg-red-400"
+                            : "h-1.5 rounded-full bg-emerald-500"
+                        }
                         style={{ width: `${progress}%` }}
                       />
                     </div>
