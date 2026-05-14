@@ -1,7 +1,7 @@
 # Setup & Quickstart
 
 ## Prerequisites
-- Node.js (v18.17+)
+- Node.js (v20.9+; use the current LTS or newer when installing latest Next.js)
 - npm or pnpm
 - Supabase CLI
 - Docker (optional, if running local supabase without CLI)
@@ -14,6 +14,8 @@
    cd taskbee
    npm install
    ```
+
+   Setup tasks should install application libraries with their npm `latest` dist-tags, then commit the generated lockfile for reproducible builds.
 
 2. **Environment Variables**
    Copy `.env.example` to `.env.local` and populate:

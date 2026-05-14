@@ -16,13 +16,13 @@ Phase 1 (Setup)
 ```
 
 ## Phase 1: Setup
-*Goal: Initialize Next.js project, styling, and essential infrastructure.*
+*Goal: Initialize the project with the latest stable application libraries, styling, and essential infrastructure.*
 
-- [ ] T001 Initialize Next.js 14 App Router project in `/`
-- [ ] T002 Setup TailwindCSS and `shadcn/ui` base configuration in `components.json` and `tailwind.config.ts`
-- [ ] T003 Initialize Prisma ORM in `prisma/schema.prisma`
-- [ ] T004 Setup database connection with Supabase PostgreSQL in `.env.local`
-- [ ] T005 [P] Setup Supabase Auth client in `lib/auth/client.ts` and `lib/auth/server.ts`
+- [x] T001 Initialize latest stable Next.js App Router project in `/` using `create-next-app@latest`
+- [x] T002 Setup latest stable TailwindCSS and `shadcn/ui` base configuration in `components.json` and Tailwind/PostCSS config
+- [x] T003 Initialize latest stable Prisma ORM in `prisma/schema.prisma`
+- [x] T004 Setup database connection with Supabase PostgreSQL in `.env.local`
+- [x] T005 [P] Setup latest stable Supabase Auth clients in `lib/auth/client.ts` and `lib/auth/server.ts`
 
 ## Phase 2: Foundational
 *Goal: Configure data models and foundational layouts. Blocks user stories.*
