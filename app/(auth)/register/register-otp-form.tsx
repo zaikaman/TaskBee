@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useMemo } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 import {
   confirmRegistrationOtp,
   requestRegistrationOtp,
@@ -83,6 +83,31 @@ export function RegisterOtpForm() {
 
   const activeEmail = sendState.email ?? verifyState.email ?? "";
   const isOtpStep = sendState.phase === "otp";
+  const resendAvailableAt = sendState.resendAvailableAt ?? 0;
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
+  const remainingResendSeconds = Math.max(
+    0,
+    Math.ceil((resendAvailableAt - currentTime) / 1000),
+  );
+  const canResendOtp = remainingResendSeconds === 0 && !sendPending;
+
+  useEffect(() => {
+    if (!resendAvailableAt) {
+      return;
+    }
+
+    const initialTimerId = window.setTimeout(() => {
+      setCurrentTime(Date.now());
+    }, 0);
+    const intervalId = window.setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000);
+
+    return () => {
+      window.clearTimeout(initialTimerId);
+      window.clearInterval(intervalId);
+    };
+  }, [resendAvailableAt]);
 
   return (
     <div className="w-full">
@@ -194,6 +219,12 @@ export function RegisterOtpForm() {
             </button>
           </form>
 
+          {sendState.error ? (
+            <p className="border border-[#fce3e5] bg-[#fff6f6] px-4 py-3 text-sm text-[#e63e46]">
+              {sendState.error}
+            </p>
+          ) : null}
+
           <form action={sendAction}>
             <input name="firstName" type="hidden" value={profile.firstName} />
             <input name="lastName" type="hidden" value={profile.lastName} />
@@ -202,8 +233,16 @@ export function RegisterOtpForm() {
             <input name="role" type="hidden" value={profile.role} />
             <input name="agreeTerms" type="hidden" value="true" />
             <input name="sendUpdates" type="hidden" value="false" />
-            <button className="text-sm text-[#22ab59] underline" type="submit">
-              Gửi lại mã OTP
+            <button
+              className="text-sm text-[#22ab59] underline disabled:cursor-not-allowed disabled:text-[#a8b0bf]"
+              disabled={!canResendOtp}
+              type="submit"
+            >
+              {sendPending
+                ? "Đang gửi lại mã OTP..."
+                : remainingResendSeconds > 0
+                  ? `Gửi lại mã OTP sau ${remainingResendSeconds} giây`
+                  : "Gửi lại mã OTP"}
             </button>
           </form>
         </div>

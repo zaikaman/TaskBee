@@ -6,6 +6,8 @@ import { createClient } from "@/lib/auth/server";
 import { getPrisma } from "@/lib/db/prisma";
 import { UserRole } from "@/lib/generated/prisma/client";
 
+const OTP_RESEND_COOLDOWN_MS = 60_000;
+
 const registrationSchema = z.object({
   firstName: z.string().trim().min(1, "Vui lòng nhập tên."),
   lastName: z.string().trim().min(1, "Vui lòng nhập họ."),
@@ -30,6 +32,7 @@ export type RegisterState = {
   message?: string;
   error?: string;
   email?: string;
+  resendAvailableAt?: number;
   profile?: {
     firstName: string;
     lastName: string;
@@ -50,15 +53,116 @@ function appUrl() {
   return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 }
 
-function buildUsername(nickname: string, userId: string) {
-  const base = nickname
+function buildNicknameSlug(nickname: string) {
+  return (
+    nickname
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+      .replace(/^-+|-+$/g, "") || "user"
+  );
+}
 
-  return `${base || "user"}-${userId.slice(0, 8)}`;
+function buildUsername(nickname: string, userId: string) {
+  return `${buildNicknameSlug(nickname)}-${userId.slice(0, 8)}`;
+}
+
+function normalizeEmail(email: string) {
+  return email.trim().toLowerCase();
+}
+
+function secondsUntil(date: Date, now = new Date()) {
+  return Math.max(0, Math.ceil((date.getTime() - now.getTime()) / 1000));
+}
+
+async function ensureOtpRateLimitTable() {
+  await getPrisma().$executeRaw`
+    CREATE TABLE IF NOT EXISTS "RegistrationOtpRequest" (
+      "email" TEXT PRIMARY KEY,
+      "lastSentAt" TIMESTAMPTZ NOT NULL,
+      "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
+}
+
+async function reserveOtpEmailSlot(email: string) {
+  await ensureOtpRateLimitTable();
+
+  const now = new Date();
+  const reusableBefore = new Date(now.getTime() - OTP_RESEND_COOLDOWN_MS);
+  const reservedRows = await getPrisma().$queryRaw<Array<{ lastSentAt: Date }>>`
+    INSERT INTO "RegistrationOtpRequest" ("email", "lastSentAt", "createdAt", "updatedAt")
+    VALUES (${email}, ${now}, ${now}, ${now})
+    ON CONFLICT ("email") DO UPDATE
+    SET "lastSentAt" = EXCLUDED."lastSentAt",
+        "updatedAt" = EXCLUDED."updatedAt"
+    WHERE "RegistrationOtpRequest"."lastSentAt" <= ${reusableBefore}
+    RETURNING "lastSentAt"
+  `;
+
+  if (reservedRows.length > 0) {
+    return { allowed: true, resendAvailableAt: now.getTime() + OTP_RESEND_COOLDOWN_MS };
+  }
+
+  const existingRows = await getPrisma().$queryRaw<Array<{ lastSentAt: Date }>>`
+    SELECT "lastSentAt"
+    FROM "RegistrationOtpRequest"
+    WHERE "email" = ${email}
+    LIMIT 1
+  `;
+  const resendAvailableAt =
+    (existingRows[0]?.lastSentAt.getTime() ?? now.getTime()) + OTP_RESEND_COOLDOWN_MS;
+
+  return { allowed: false, resendAvailableAt };
+}
+
+async function emailAlreadyRegistered(email: string) {
+  const existingUser = await getPrisma().user.findUnique({
+    where: { email },
+    select: { id: true },
+  });
+
+  if (existingUser) {
+    return true;
+  }
+
+  const existingAuthUsers = await getPrisma().$queryRaw<Array<{ id: string }>>`
+    SELECT id::text AS id
+    FROM auth.users
+    WHERE lower(email) = lower(${email})
+      AND deleted_at IS NULL
+    LIMIT 1
+  `;
+
+  return existingAuthUsers.length > 0;
+}
+
+async function nicknameAlreadyRegistered(nickname: string) {
+  const nicknameSlug = buildNicknameSlug(nickname);
+  const existingUser = await getPrisma().user.findFirst({
+    where: {
+      username: {
+        startsWith: `${nicknameSlug}-`,
+      },
+    },
+    select: { id: true },
+  });
+
+  if (existingUser) {
+    return true;
+  }
+
+  const existingAuthUsers = await getPrisma().$queryRaw<Array<{ id: string }>>`
+    SELECT id::text AS id
+    FROM auth.users
+    WHERE lower(raw_user_meta_data ->> 'nickname') = lower(${nickname})
+      AND deleted_at IS NULL
+    LIMIT 1
+  `;
+
+  return existingAuthUsers.length > 0;
 }
 
 function mapAuthError(error: { message: string }) {
@@ -79,8 +183,6 @@ export async function requestRegistrationOtp(
   _prevState: RegisterState = initialState,
   formData: FormData,
 ): Promise<RegisterState> {
-  void _prevState;
-
   const raw = parseFormData(formData);
   const parsed = registrationSchema.safeParse(raw);
 
@@ -98,9 +200,45 @@ export async function requestRegistrationOtp(
     };
   }
 
+  const email = normalizeEmail(parsed.data.email);
+  const profile = {
+    firstName: parsed.data.firstName,
+    lastName: parsed.data.lastName,
+    nickname: parsed.data.nickname,
+    role: parsed.data.role,
+  };
+
+  if (await emailAlreadyRegistered(email)) {
+    return {
+      phase: "form",
+      error: "Email này đã được đăng ký. Vui lòng đăng nhập hoặc dùng email khác.",
+    };
+  }
+
+  if (await nicknameAlreadyRegistered(parsed.data.nickname)) {
+    return {
+      phase: "form",
+      error: "Biệt danh này đã được sử dụng. Vui lòng chọn biệt danh khác.",
+    };
+  }
+
+  const emailSlot = await reserveOtpEmailSlot(email);
+
+  if (!emailSlot.allowed) {
+    const retryAfterSeconds = secondsUntil(new Date(emailSlot.resendAvailableAt));
+
+    return {
+      phase: "otp",
+      email,
+      profile,
+      resendAvailableAt: emailSlot.resendAvailableAt,
+      error: `Vui lòng chờ ${retryAfterSeconds} giây trước khi gửi lại mã OTP.`,
+    };
+  }
+
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithOtp({
-    email: parsed.data.email,
+    email,
     options: {
       shouldCreateUser: true,
       emailRedirectTo: `${appUrl()}/register`,
@@ -116,21 +254,20 @@ export async function requestRegistrationOtp(
 
   if (error) {
     return {
-      phase: "form",
+      phase: _prevState.phase,
+      email,
+      profile,
+      resendAvailableAt: emailSlot.resendAvailableAt,
       error: mapAuthError(error),
     };
   }
 
   return {
     phase: "otp",
-    email: parsed.data.email,
-    message: `Mã OTP đã được gửi đến ${parsed.data.email}.`,
-    profile: {
-      firstName: parsed.data.firstName,
-      lastName: parsed.data.lastName,
-      nickname: parsed.data.nickname,
-      role: parsed.data.role,
-    },
+    email,
+    message: `Mã OTP đã được gửi đến ${email}.`,
+    resendAvailableAt: emailSlot.resendAvailableAt,
+    profile,
   };
 }
 
