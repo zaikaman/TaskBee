@@ -1,10 +1,10 @@
 import Link from "next/link";
 import {
   Bell,
-  BriefcaseBusiness,
   ChevronDown,
   CircleHelp,
   Clock3,
+  Leaf,
   Moon,
   Search,
   User,
@@ -24,11 +24,11 @@ export function AppNavbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-2 text-slate-900">
-          <span className="flex size-8 items-center justify-center rounded bg-emerald-600 text-white">
-            <BriefcaseBusiness className="size-4" aria-hidden="true" />
+        <Link href="/" className="flex items-center gap-2 text-[#22ab59]">
+          <span className="flex size-9 items-center justify-center rounded-full border-2 border-[#22ab59]">
+            <Leaf className="size-5" aria-hidden="true" />
           </span>
-          <span className="text-xl font-bold tracking-tight">{APP_NAME}</span>
+          <span className="text-xl font-bold">{APP_NAME}</span>
         </Link>
 
         <nav className="hidden items-center gap-2 md:flex">
@@ -70,8 +70,10 @@ export function AppNavbar() {
             <Button variant="ghost" size="icon" aria-label="Lịch sử">
               <Clock3 className="size-4" />
             </Button>
-            <Button variant="ghost" size="icon" aria-label="Tài khoản">
-              <User className="size-4" />
+            <Button asChild variant="ghost" size="icon">
+              <Link href="/dashboard/profile" aria-label="Tài khoản">
+                <User className="size-4" />
+              </Link>
             </Button>
             <Button variant="ghost" size="icon" aria-label="Giao diện tối">
               <Moon className="size-4" />

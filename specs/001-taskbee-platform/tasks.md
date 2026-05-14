@@ -48,8 +48,8 @@ Phase 1 (Setup)
 
 - [x] T010 [US1] Create registration UI and Server Action in `app/(auth)/register/page.tsx`
 - [x] T011 [US1] Create login UI and Server Action in `app/(auth)/login/page.tsx`
-- [ ] T012 [US1] Implement email verification callback flow in `app/(auth)/verify/page.tsx`
-- [ ] T013 [P] [US1] Create profile UI dashboard in `app/(dashboard)/profile/page.tsx`
+- [x] T012 [US1] Implement email verification callback flow in `app/(auth)/verify/page.tsx`
+- [x] T013 [P] [US1] Create profile UI dashboard in `app/(dashboard)/profile/page.tsx`
 - [ ] T014 [US1] Implement profile update server action in `lib/services/user.ts`
 - [ ] T050 [US1] Implement logout Server Action and navigation entry in `lib/services/auth.ts`
 - [ ] T051 [US1] Create role selection/onboarding flow in `app/(auth)/onboarding/page.tsx`
