@@ -23,14 +23,24 @@ Phase 1 (Setup)
 - [x] T003 Initialize latest stable Prisma ORM in `prisma/schema.prisma`
 - [x] T004 Setup database connection with Supabase PostgreSQL in `.env.local`
 - [x] T005 [P] Setup latest stable Supabase Auth clients in `lib/auth/client.ts` and `lib/auth/server.ts`
+- [ ] T040 [P] Expand `.env.example` with all required Supabase, Prisma, email, analytics, and cron secret variables
+- [ ] T041 [P] Add project-level constants for fees, withdrawal minimums, timeout bounds, and supported Vietnamese bank metadata in `config/app.ts`
 
 ## Phase 2: Foundational
 *Goal: Configure data models and foundational layouts. Blocks user stories.*
 
 - [ ] T006 Implement data models (User, Task, Submission, Transaction, Withdrawal) in `prisma/schema.prisma`
 - [ ] T007 Generate Prisma client and create base instance in `lib/db/prisma.ts`
-- [ ] T008 [P] Setup auth middleware for protected route verification in `middleware.ts`
+- [ ] T008 [P] Setup auth proxy for protected route verification in `proxy.ts`
 - [ ] T009 [P] Create base application layout and navbar in `app/layout.tsx`
+- [ ] T042 Extend data model for claimed task slots in `prisma/schema.prisma` to distinguish reserved slots from submitted proof
+- [ ] T043 Extend data model for manual employer deposits in `prisma/schema.prisma` to satisfy Manual Bank Transfer funding
+- [ ] T044 Extend data model for in-app notifications in `prisma/schema.prisma`
+- [ ] T045 Extend data model for admin audit logs in `prisma/schema.prisma`
+- [ ] T046 [P] Create auth/session helpers for current user lookup, email verification checks, and role guards in `lib/auth/session.ts`
+- [ ] T047 [P] Create route group layouts for public auth, protected dashboard, marketplace, and admin areas
+- [ ] T048 [P] Create shared money utilities for Decimal-safe fee, escrow, balance, and ledger calculations in `lib/utils/money.ts`
+- [ ] T049 Create database seed script for initial Admin user and demo marketplace data in `prisma/seed.ts`
 
 ## Phase 3: User Story 1 - User Authentication & Profiles
 *Goal: System MUST support user registration, login, email verification, and profile management.*
@@ -41,6 +51,11 @@ Phase 1 (Setup)
 - [ ] T012 [US1] Implement email verification callback flow in `app/(auth)/verify/page.tsx`
 - [ ] T013 [P] [US1] Create profile UI dashboard in `app/(dashboard)/profile/page.tsx`
 - [ ] T014 [US1] Implement profile update server action in `lib/services/user.ts`
+- [ ] T050 [US1] Implement logout Server Action and navigation entry in `lib/services/auth.ts`
+- [ ] T051 [US1] Create role selection/onboarding flow in `app/(auth)/onboarding/page.tsx`
+- [ ] T052 [US1] Enforce email verification and role-specific access in Server Components and Server Actions
+- [ ] T053 [P] [US1] Add avatar upload support with Supabase Storage in `lib/services/storage.ts`
+- [ ] T054 [P] [US1] Create password reset request and update flows in `app/(auth)/forgot-password/page.tsx` and `app/(auth)/reset-password/page.tsx`
 
 ## Phase 4: User Story 2 - Employer Task Lifecycle
 *Goal: System MUST allow Employers to create tasks with specific instructions, rewards, and available slots.*
@@ -51,6 +66,11 @@ Phase 1 (Setup)
 - [ ] T017 [US2] Create the Task Creation Form UI in `components/tasks/create-task-form.tsx`
 - [ ] T018 [US2] Create Task listing dashboard for Employers in `app/(dashboard)/employer/tasks/page.tsx`
 - [ ] T019 [US2] Implement submission approval/rejection action (`reviewSubmission`) in `lib/services/submission.ts`
+- [ ] T055 [US2] Add task proof requirement fields to validators, schema, create form, and detail view
+- [ ] T056 [US2] Implement Employer 10% task creation fee calculation and ledger entries in `lib/services/task.ts`
+- [ ] T057 [US2] Implement task pause, resume, close, and cancel actions with escrow refund handling in `lib/services/task.ts`
+- [ ] T058 [US2] Create Employer task detail and submission review UI in `app/(dashboard)/employer/tasks/[id]/page.tsx`
+- [ ] T059 [P] [US2] Create reusable task status badges, fee preview, and escrow summary components in `components/tasks/`
 
 ## Phase 5: User Story 3 - Worker Task Completion
 *Goal: System MUST allow Workers to browse, claim slots, and submit proof for Active Tasks.*
@@ -62,6 +82,12 @@ Phase 1 (Setup)
 - [ ] T023 [US3] Implement Server Action to process Worker proof submissions (`createSubmission`) in `lib/services/submission.ts`
 - [ ] T024 [P] [US3] Create the proof submission upload UI (images/text) in `components/tasks/submission-form.tsx`
 - [ ] T036 [US3] Implement background job (CRON/Vercel trigger) to auto-approve expired pending submissions in `app/api/cron/auto-approve/route.ts`
+- [ ] T060 [US3] Persist task claims and prevent duplicate active claims per worker/task in `lib/services/task.ts`
+- [ ] T061 [US3] Create Worker "My Tasks" dashboard for claimed, pending, approved, and rejected submissions in `app/(dashboard)/worker/tasks/page.tsx`
+- [ ] T062 [US3] Add marketplace search, category/status filters, reward range filters, and pagination in `app/(marketplace)/page.tsx`
+- [ ] T063 [US3] Implement Supabase Storage upload flow for proof screenshots in `lib/services/storage.ts`
+- [ ] T064 [US3] Add friendly full-slot and duplicate-submission error states across claim and submission UI
+- [ ] T065 [US3] Add Vercel Cron configuration and cron secret validation for auto-approve route
 
 ## Phase 6: User Story 4 - Wallet and Escrow Management
 *Goal: Track user balances and handle manual withdrawal requests.*
@@ -71,6 +97,12 @@ Phase 1 (Setup)
 - [ ] T026 [US4] Implement `requestWithdrawal` Server Action including 10% fee calculation in `lib/services/wallet.ts`
 - [ ] T027 [US4] Create Wallet Dashboard UI (Available/Pending/Escrow) in `app/(dashboard)/wallet/page.tsx`
 - [ ] T028 [US4] Create the Transaction History Table UI component in `components/wallet/transaction-history.tsx`
+- [ ] T066 [US4] Create bank detail Zod validators and reusable bank transfer form components in `lib/validators/wallet.ts` and `components/wallet/`
+- [ ] T067 [US4] Enforce minimum withdrawal threshold and insufficient-balance errors in `requestWithdrawal`
+- [ ] T068 [US4] Implement manual Employer deposit request action in `lib/services/wallet.ts`
+- [ ] T069 [US4] Create Employer deposit request UI and instructions in `app/(dashboard)/wallet/deposit/page.tsx`
+- [ ] T070 [US4] Record immutable ledger entries for deposits, escrow locks, escrow releases, rewards, withdrawals, and fees
+- [ ] T071 [P] [US4] Create ledger reconciliation utility to verify wallet totals and transaction consistency in `lib/services/ledger.ts`
 
 ## Phase 7: User Story 5 - System Moderation and Anti-Abuse
 *Goal: Admins manage users, manual transactions, and limit abuse.*
@@ -80,6 +112,13 @@ Phase 1 (Setup)
 - [ ] T030 [US5] Create the unified Admin Dashboard in `app/(admin)/dashboard/page.tsx`
 - [ ] T031 [US5] Create interface for Admins to view pending withdrawals in `app/(admin)/withdrawals/page.tsx`
 - [ ] T032 [US5] Add rate-limiting utility wrapper for critical Server Actions in `lib/utils/rate-limit.ts`
+- [ ] T072 [US5] Implement Admin manual deposit approval/rejection flow in `lib/services/admin.ts`
+- [ ] T073 [US5] Create Admin deposit review UI in `app/(admin)/deposits/page.tsx`
+- [ ] T074 [US5] Implement Admin user search, role/status management, suspension, and ban actions in `lib/services/admin.ts`
+- [ ] T075 [US5] Cancel pending withdrawals and freeze funds automatically when Admin suspends a user
+- [ ] T076 [US5] Create Admin user management UI in `app/(admin)/users/page.tsx`
+- [ ] T077 [P] [US5] Record admin audit logs for withdrawals, deposits, task moderation, and user status changes
+- [ ] T078 [P] [US5] Apply rate-limit wrappers to registration, login, task creation, slot claim, submission, withdrawal, and admin actions
 
 ## Phase 8: Polish & Cross-Cutting
 *Goal: UI/UX polish and deployment configuration to hit performance constraints.*
@@ -90,3 +129,13 @@ Phase 1 (Setup)
 - [ ] T037 [P] Setup Resend email service and implement core notification utilities in `lib/services/notifications.ts`
 - [ ] T038 Integrate email notification triggers into key submission and wallet workflows across services
 - [ ] T039 [P] Include continuous performance profiling tests (k6 or artillery) to validate p95 < 300ms core API limits
+- [ ] T079 [P] Install and configure Jest test runner, TypeScript transform, and test scripts in `jest.config.ts`
+- [ ] T080 [P] Install and configure Playwright project, browser setup, and CI-friendly test scripts in `playwright.config.ts`
+- [ ] T081 [P] Add unit tests for task fee, withdrawal fee, ledger reconciliation, and balance invariant utilities
+- [ ] T082 [P] Add concurrency tests for slot claiming to prove exact slot limits under parallel requests
+- [ ] T083 [P] Create in-app notification center UI in `components/notifications/notification-center.tsx`
+- [ ] T084 Integrate notification records and Resend email triggers for verification, submission review, auto-approval, withdrawal status, task status, and deposit status
+- [ ] T085 [P] Add localized Vietnamese UI copy, empty states, error states, and currency formatting across user-facing pages
+- [ ] T086 [P] Add global error, loading, forbidden, and not-found pages for each route group
+- [ ] T087 [P] Add analytics instrumentation for key funnels with PostHog in `lib/services/analytics.ts`
+- [ ] T088 Add deployment configuration including `vercel.json`, cron schedule, required env docs, and production readiness checklist
