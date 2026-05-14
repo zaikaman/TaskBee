@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { BadgeCheck, Landmark, UsersRound, WalletCards } from "lucide-react";
 import { AppNavbar } from "@/components/layout/app-navbar";
+import { requireRole } from "@/lib/auth/session";
+import { UserRole } from "@/lib/generated/prisma/client";
 
 const adminLinks = [
   { href: "/admin/dashboard", label: "Tổng quan", icon: BadgeCheck },
@@ -9,11 +11,13 @@ const adminLinks = [
   { href: "/admin/users", label: "Người dùng", icon: UsersRound },
 ];
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  await requireRole(UserRole.ADMIN);
+
   return (
     <>
       <AppNavbar />

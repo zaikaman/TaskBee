@@ -8,7 +8,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { requireAuth } from "@/lib/auth/session";
+import { requireVerifiedUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/db/prisma";
 import {
   SubmissionStatus,
@@ -55,7 +55,7 @@ type ProfileStats = {
 };
 
 export default async function ProfilePage() {
-  const session = await requireAuth();
+  const session = await requireVerifiedUser();
   const profile = session.profile;
 
   if (!profile) {

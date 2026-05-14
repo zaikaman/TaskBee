@@ -53,7 +53,7 @@ Phase 1 (Setup)
 - [x] T014 [US1] Implement profile update server action in `lib/services/user.ts`
 - [x] T050 [US1] Implement logout Server Action and navigation entry in `lib/services/auth.ts`
 - [x] T051 [US1] Create role selection/onboarding flow in `app/(auth)/onboarding/page.tsx`
-- [ ] T052 [US1] Enforce email verification and role-specific access in Server Components and Server Actions
+- [x] T052 [US1] Enforce email verification and role-specific access in Server Components and Server Actions
 - [ ] T053 [P] [US1] Add avatar upload support with Cloudflare R2 Storage in `lib/services/storage.ts`
 - [ ] T054 [P] [US1] Create password reset request and update flows in `app/(auth)/forgot-password/page.tsx` and `app/(auth)/reset-password/page.tsx`
 

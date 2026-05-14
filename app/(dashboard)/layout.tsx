@@ -1,10 +1,13 @@
 import { AppNavbar } from "@/components/layout/app-navbar";
+import { requireVerifiedUser } from "@/lib/auth/session";
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  await requireVerifiedUser();
+
   return (
     <>
       <AppNavbar />

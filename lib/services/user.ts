@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireAuth } from "@/lib/auth/session";
+import { requireVerifiedUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/db/prisma";
 import { UserStatus } from "@/lib/generated/prisma/client";
 
@@ -71,7 +71,7 @@ export async function updateProfile(
 ): Promise<UpdateProfileState> {
   void _prevState;
 
-  const session = await requireAuth();
+  const session = await requireVerifiedUser();
   const profile = session.profile;
   const raw = parseFormData(formData);
   const fields = mapFields(raw);
