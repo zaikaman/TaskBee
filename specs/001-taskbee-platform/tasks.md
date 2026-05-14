@@ -54,7 +54,7 @@ Phase 1 (Setup)
 - [ ] T050 [US1] Implement logout Server Action and navigation entry in `lib/services/auth.ts`
 - [ ] T051 [US1] Create role selection/onboarding flow in `app/(auth)/onboarding/page.tsx`
 - [ ] T052 [US1] Enforce email verification and role-specific access in Server Components and Server Actions
-- [ ] T053 [P] [US1] Add avatar upload support with Supabase Storage in `lib/services/storage.ts`
+- [ ] T053 [P] [US1] Add avatar upload support with Cloudflare R2 Storage in `lib/services/storage.ts`
 - [ ] T054 [P] [US1] Create password reset request and update flows in `app/(auth)/forgot-password/page.tsx` and `app/(auth)/reset-password/page.tsx`
 
 ## Phase 4: User Story 2 - Employer Task Lifecycle
@@ -85,7 +85,7 @@ Phase 1 (Setup)
 - [ ] T060 [US3] Persist task claims and prevent duplicate active claims per worker/task in `lib/services/task.ts`
 - [ ] T061 [US3] Create Worker "My Tasks" dashboard for claimed, pending, approved, and rejected submissions in `app/(dashboard)/worker/tasks/page.tsx`
 - [ ] T062 [US3] Add marketplace search, category/status filters, reward range filters, and pagination in `app/(marketplace)/page.tsx`
-- [ ] T063 [US3] Implement Supabase Storage upload flow for proof screenshots in `lib/services/storage.ts`
+- [ ] T063 [US3] Implement Cloudflare R2 Storage upload flow for proof screenshots in `lib/services/storage.ts`
 - [ ] T064 [US3] Add friendly full-slot and duplicate-submission error states across claim and submission UI
 - [ ] T065 [US3] Add Vercel Cron configuration and cron secret validation for auto-approve route
 

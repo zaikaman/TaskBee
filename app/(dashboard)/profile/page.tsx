@@ -19,6 +19,7 @@ import {
   type User,
 } from "@/lib/generated/prisma/client";
 import { formatVnd } from "@/lib/utils/money";
+import { ProfileUpdateForm } from "./profile-update-form";
 
 const tabs = [
   "Tổng quan",
@@ -144,29 +145,19 @@ export default async function ProfilePage() {
         </aside>
 
         <main className="space-y-6">
-          <section className="bg-white p-6 shadow-sm ring-1 ring-slate-100">
-            <div className="flex items-center gap-3">
-              <h2 className="text-base font-semibold text-slate-950">Thông tin cá nhân</h2>
-              <span className="text-sm font-semibold text-slate-400">- #{profile.id.slice(0, 8)}</span>
-            </div>
-
-            <div className="mt-6 grid gap-5 md:grid-cols-2">
-              <ReadonlyField label="Tên hiển thị" value={displayName} required />
-              <ReadonlyField label="Email" value={displayEmail} />
-              <ReadonlyField label="Vai trò" value={roleLabels[profile.role]} />
-              <ReadonlyField label="Ngày tham gia" value={joinedDate} />
-              <ReadonlyField
-                label="Xác minh email"
-                value={profile.emailVerified && session.emailVerified ? "Đã xác minh" : "Chưa xác minh"}
-              />
-              <ReadonlyField label="Trạng thái tài khoản" value={statusLabels[profile.status]} />
-            </div>
-
-            <p className="mt-6 text-sm leading-6 text-red-500">
-              * Các thông tin chỉnh sửa hồ sơ, ảnh đại diện và xác minh danh tính sẽ được mở trong
-              các bước tiếp theo của MVP.
-            </p>
-          </section>
+          <ProfileUpdateForm
+            profileId={profile.id}
+            username={displayName}
+            avatarUrl={profile.avatarUrl}
+            email={displayEmail}
+            roleLabel={roleLabels[profile.role]}
+            joinedDate={joinedDate}
+            emailVerificationLabel={
+              profile.emailVerified && session.emailVerified ? "Đã xác minh" : "Chưa xác minh"
+            }
+            accountStatusLabel={statusLabels[profile.status]}
+            canEdit={profile.status === UserStatus.ACTIVE}
+          />
 
           <section className="bg-white p-6 shadow-sm ring-1 ring-slate-100">
             <div className="flex items-center justify-between gap-4">
@@ -267,26 +258,6 @@ function AvatarPreview({ user, name }: { user: User; name: string }) {
     >
       {user.avatarUrl ? <span className="sr-only">{name}</span> : initial}
     </div>
-  );
-}
-
-function ReadonlyField({
-  label,
-  value,
-  required = false,
-}: {
-  label: string;
-  value: string;
-  required?: boolean;
-}) {
-  return (
-    <label className="space-y-2">
-      <span className="block text-sm font-semibold text-slate-400">
-        {label}
-        {required ? <span className="text-red-500"> *</span> : null}
-      </span>
-      <span className="block min-h-11 bg-slate-100 px-4 py-3 text-sm text-slate-700">{value}</span>
-    </label>
   );
 }
 
