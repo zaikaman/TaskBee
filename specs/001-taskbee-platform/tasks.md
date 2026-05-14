@@ -55,7 +55,7 @@ Phase 1 (Setup)
 - [x] T051 [US1] Create role selection/onboarding flow in `app/(auth)/onboarding/page.tsx`
 - [x] T052 [US1] Enforce email verification and role-specific access in Server Components and Server Actions
 - [x] T053 [P] [US1] Add avatar upload support with Cloudflare R2 Storage in `lib/services/storage.ts`
-- [ ] T054 [P] [US1] Create password reset request and update flows in `app/(auth)/forgot-password/page.tsx` and `app/(auth)/reset-password/page.tsx`
+- [x] T054 [P] [US1] Create password reset request and update flows in `app/(auth)/forgot-password/page.tsx` and `app/(auth)/reset-password/page.tsx`
 
 ## Phase 4: User Story 2 - Employer Task Lifecycle
 *Goal: System MUST allow Employers to create tasks with specific instructions, rewards, and available slots.*
