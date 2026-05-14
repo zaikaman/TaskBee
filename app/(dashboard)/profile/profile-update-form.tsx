@@ -1,10 +1,14 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useCallback, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { Camera, Save } from "lucide-react";
+import { Camera, ImagePlus, Save, Trash2, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { updateProfile, type UpdateProfileState } from "@/lib/services/user";
+
+const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
+const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ACCEPTED_EXTENSIONS = ".jpg,.jpeg,.png,.webp";
 
 type ProfileUpdateFormProps = {
   profileId: string;
@@ -22,6 +26,12 @@ const initialState: UpdateProfileState = {
   ok: false,
 };
 
+function formatFileSize(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 export function ProfileUpdateForm({
   profileId,
   username,
@@ -35,41 +45,244 @@ export function ProfileUpdateForm({
 }: ProfileUpdateFormProps) {
   const [state, formAction] = useActionState(updateProfile, initialState);
   const currentUsername = state.fields?.username ?? username;
-  const currentAvatarUrl = state.fields?.avatarUrl ?? avatarUrl ?? "";
+  const serverAvatarUrl = state.fields?.avatarUrl ?? avatarUrl ?? "";
   const avatarInitial = currentUsername.trim().slice(0, 1).toUpperCase() || "T";
+
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [removeAvatar, setRemoveAvatar] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const displayAvatarUrl = removeAvatar ? null : (previewUrl ?? (serverAvatarUrl || null));
+
+  const validateAndSetFile = useCallback((file: File) => {
+    setFileError(null);
+
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      setFileError("Chỉ hỗ trợ ảnh định dạng JPG, PNG hoặc WebP.");
+      return;
+    }
+
+    if (file.size > AVATAR_MAX_BYTES) {
+      setFileError(`Ảnh không được vượt quá 2 MB. Ảnh bạn chọn: ${formatFileSize(file.size)}.`);
+      return;
+    }
+
+    if (file.size < 1) {
+      setFileError("Tệp ảnh trống, vui lòng chọn ảnh khác.");
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+
+    setSelectedFile(file);
+    setPreviewUrl(objectUrl);
+    setRemoveAvatar(false);
+  }, [previewUrl]);
+
+  const handleFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      validateAndSetFile(file);
+    }
+    // Reset the input so the same file can be re-selected
+    event.target.value = "";
+  }, [validateAndSetFile]);
+
+  const handleDrop = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setDragActive(false);
+
+    const file = event.dataTransfer.files?.[0];
+    if (file) {
+      validateAndSetFile(file);
+    }
+  }, [validateAndSetFile]);
+
+  const handleDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setDragActive(true);
+  }, []);
+
+  const handleDragLeave = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setDragActive(false);
+  }, []);
+
+  const handleRemoveFile = useCallback(() => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    setFileError(null);
+  }, [previewUrl]);
+
+  const handleRemoveAvatar = useCallback(() => {
+    handleRemoveFile();
+    setRemoveAvatar(true);
+  }, [handleRemoveFile]);
+
+  const handleBrowseClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
 
   return (
     <section className="space-y-6">
+      {/* Avatar Section */}
       <div className="bg-white p-6 shadow-sm ring-1 ring-slate-100">
-        <div className="grid gap-6 lg:grid-cols-[144px_1fr] lg:items-center">
-          <div className="flex justify-center">
-            <div className="flex h-36 w-36 items-center justify-center overflow-hidden border border-slate-300 bg-slate-100 text-5xl font-semibold text-slate-400">
-              {currentAvatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={currentAvatarUrl}
-                  alt={currentUsername}
-                  className="h-full w-full object-cover"
-                />
+        <div className="grid gap-6 lg:grid-cols-[180px_1fr] lg:items-start">
+          {/* Avatar Preview */}
+          <div className="flex flex-col items-center gap-3">
+            <div
+              className="group relative flex h-[180px] w-[180px] items-center justify-center overflow-hidden border-2 border-dashed border-slate-200 bg-slate-50 transition-colors"
+              style={{ borderRadius: 0 }}
+            >
+              {displayAvatarUrl ? (
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={displayAvatarUrl}
+                    alt={currentUsername}
+                    className="h-full w-full object-cover"
+                  />
+                  {canEdit && (
+                    <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                      <button
+                        type="button"
+                        onClick={handleBrowseClick}
+                        className="flex h-9 w-9 items-center justify-center bg-white/90 text-slate-700 transition-colors hover:bg-white"
+                        title="Đổi ảnh đại diện"
+                      >
+                        <Camera className="size-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleRemoveAvatar}
+                        className="flex h-9 w-9 items-center justify-center bg-red-500/90 text-white transition-colors hover:bg-red-600"
+                        title="Xóa ảnh đại diện"
+                      >
+                        <Trash2 className="size-4" />
+                      </button>
+                    </div>
+                  )}
+                </>
               ) : (
-                avatarInitial
+                <span className="text-6xl font-semibold text-slate-300 select-none">
+                  {avatarInitial}
+                </span>
               )}
             </div>
+
+            {selectedFile && (
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <span className="max-w-[160px] truncate font-medium" title={selectedFile.name}>
+                  {selectedFile.name}
+                </span>
+                <span className="text-slate-400">({formatFileSize(selectedFile.size)})</span>
+              </div>
+            )}
           </div>
 
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-slate-400">
+          {/* Upload Controls */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-slate-500">
               <Camera className="size-4" aria-hidden="true" />
-              <span className="text-sm font-medium">Ảnh đại diện</span>
+              <span className="text-sm font-semibold">Ảnh đại diện</span>
             </div>
-            <p className="max-w-2xl text-sm leading-6 text-slate-600">
-              Cập nhật ảnh đại diện bằng URL trực tiếp. Nút tải tệp riêng sẽ nối ở bước lưu trữ ảnh
-              sau của MVP.
-            </p>
+
+            {canEdit ? (
+              <>
+                {/* Drag-Drop Zone */}
+                <div
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onClick={handleBrowseClick}
+                  className={`
+                    flex cursor-pointer flex-col items-center gap-3 border-2 border-dashed px-6 py-8 transition-all
+                    ${dragActive
+                      ? "border-emerald-500 bg-emerald-50/50"
+                      : "border-slate-200 bg-slate-50 hover:border-emerald-400 hover:bg-emerald-50/30"
+                    }
+                  `}
+                >
+                  <div
+                    className={`flex h-12 w-12 items-center justify-center transition-colors ${
+                      dragActive ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-400"
+                    }`}
+                  >
+                    {dragActive ? (
+                      <Upload className="size-6" />
+                    ) : (
+                      <ImagePlus className="size-6" />
+                    )}
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-slate-700">
+                      {dragActive ? "Thả ảnh vào đây..." : "Kéo thả ảnh vào đây hoặc nhấn để chọn"}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      JPG, PNG hoặc WebP · Tối đa 2 MB
+                    </p>
+                  </div>
+                </div>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept={ACCEPTED_EXTENSIONS}
+                  onChange={handleFileChange}
+                  className="hidden"
+                  aria-label="Chọn ảnh đại diện"
+                />
+
+                {/* Selected File Preview Bar */}
+                {selectedFile && (
+                  <div className="flex items-center gap-3 border border-emerald-100 bg-emerald-50 px-4 py-3">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center bg-emerald-100 text-emerald-600">
+                      <ImagePlus className="size-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-slate-700">{selectedFile.name}</p>
+                      <p className="text-xs text-slate-500">{formatFileSize(selectedFile.size)} · Sẵn sàng tải lên</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRemoveFile}
+                      className="flex h-7 w-7 shrink-0 items-center justify-center text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500"
+                      title="Xóa ảnh đã chọn"
+                    >
+                      <X className="size-4" />
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <p className="text-sm leading-6 text-slate-500">
+                Tài khoản đang bị hạn chế nên không thể thay đổi ảnh đại diện.
+              </p>
+            )}
+
+            {fileError && (
+              <p className="border border-red-100 bg-red-50 px-4 py-2.5 text-sm font-medium text-red-600">
+                {fileError}
+              </p>
+            )}
           </div>
         </div>
       </div>
 
+      {/* Personal Info Form */}
       <section className="bg-white p-6 shadow-sm ring-1 ring-slate-100">
         <div className="flex items-center gap-3">
           <h2 className="text-base font-semibold text-slate-950">Thông tin cá nhân</h2>
@@ -87,14 +300,14 @@ export function ProfileUpdateForm({
               autoComplete="nickname"
             />
             <ReadonlyField label="Email" value={email} />
-            <EditableField
-              label="URL ảnh đại diện"
-              name="avatarUrl"
-              defaultValue={currentAvatarUrl}
-              disabled={!canEdit}
-              placeholder="https://..."
-              type="url"
+
+            {/* Hidden fields to carry avatar state */}
+            <AvatarHiddenFields
+              selectedFile={selectedFile}
+              removeAvatar={removeAvatar}
+              currentAvatarUrl={serverAvatarUrl}
             />
+
             <ReadonlyField label="Ngày tham gia" value={joinedDate} />
             <ReadonlyField label="Vai trò" value={roleLabel} />
             <ReadonlyField label="Xác minh email" value={emailVerificationLabel} />
@@ -119,14 +332,71 @@ export function ProfileUpdateForm({
             </p>
           ) : (
             <p className="text-sm leading-6 text-slate-500">
-              Ảnh đại diện hiện hỗ trợ URL trực tiếp. Upload file sẽ được nối ở task lưu trữ ảnh riêng.
+              Ảnh đại diện sẽ được tải lên Cloudflare R2 khi bạn lưu hồ sơ. Hỗ trợ JPG, PNG và WebP, tối đa 2 MB.
             </p>
           )}
 
-          <SubmitButton disabled={!canEdit} />
+          <SubmitButton disabled={!canEdit} hasFile={!!selectedFile} />
         </form>
       </section>
     </section>
+  );
+}
+
+/**
+ * Injects the selected avatar file into the form's FormData via a hidden
+ * file input. Also sends `avatarUrl` so the server action can tell
+ * whether the user removed their avatar vs. keeping the existing one.
+ */
+function AvatarHiddenFields({
+  selectedFile,
+  removeAvatar,
+  currentAvatarUrl,
+}: {
+  selectedFile: File | null;
+  removeAvatar: boolean;
+  currentAvatarUrl: string;
+}) {
+  const avatarFileInputRef = useRef<HTMLInputElement>(null);
+
+  // We use a ref callback to attach the selected File to the hidden input
+  // so the browser form submission includes it in the FormData payload.
+  const setFileInputFiles = useCallback(
+    (input: HTMLInputElement | null) => {
+      if (!input) return;
+
+      if (selectedFile) {
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(selectedFile);
+        input.files = dataTransfer.files;
+      } else {
+        input.files = new DataTransfer().files;
+      }
+    },
+    [selectedFile],
+  );
+
+  const avatarUrlValue = removeAvatar ? "" : currentAvatarUrl;
+
+  return (
+    <>
+      <input
+        ref={(el) => {
+          (avatarFileInputRef as React.MutableRefObject<HTMLInputElement | null>).current = el;
+          setFileInputFiles(el);
+        }}
+        type="file"
+        name="avatarFile"
+        className="hidden"
+        tabIndex={-1}
+        aria-hidden="true"
+      />
+      <input
+        type="hidden"
+        name="avatarUrl"
+        value={avatarUrlValue}
+      />
+    </>
   );
 }
 
@@ -178,7 +448,7 @@ function ReadonlyField({ label, value }: { label: string; value: string }) {
   );
 }
 
-function SubmitButton({ disabled }: { disabled: boolean }) {
+function SubmitButton({ disabled, hasFile }: { disabled: boolean; hasFile: boolean }) {
   const { pending } = useFormStatus();
 
   return (
@@ -188,7 +458,12 @@ function SubmitButton({ disabled }: { disabled: boolean }) {
       className="h-11 w-full rounded bg-emerald-600 font-bold uppercase text-white hover:bg-emerald-700"
     >
       <Save className="size-4" aria-hidden="true" />
-      {pending ? "Đang lưu hồ sơ..." : "Lưu hồ sơ"}
+      {pending
+        ? hasFile
+          ? "Đang tải ảnh và lưu hồ sơ..."
+          : "Đang lưu hồ sơ..."
+        : "Lưu hồ sơ"
+      }
     </Button>
   );
 }

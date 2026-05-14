@@ -5,6 +5,7 @@ import { z } from "zod";
 import { requireVerifiedUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/db/prisma";
 import { UserStatus } from "@/lib/generated/prisma/client";
+import { uploadAvatarImage } from "@/lib/services/storage";
 
 const usernameSchema = z
   .string()
@@ -65,6 +66,16 @@ function mapFields(raw: Record<string, FormDataEntryValue>) {
   };
 }
 
+function getOptionalFile(raw: Record<string, FormDataEntryValue>, name: string) {
+  const value = raw[name];
+
+  if (value instanceof File && value.size > 0) {
+    return value;
+  }
+
+  return null;
+}
+
 export async function updateProfile(
   _prevState: UpdateProfileState = initialUpdateProfileState,
   formData: FormData,
@@ -75,6 +86,7 @@ export async function updateProfile(
   const profile = session.profile;
   const raw = parseFormData(formData);
   const fields = mapFields(raw);
+  const avatarFile = getOptionalFile(raw, "avatarFile");
   const parsed = profileUpdateSchema.safeParse(fields);
 
   if (!parsed.success) {
@@ -122,13 +134,32 @@ export async function updateProfile(
     };
   }
 
+  let avatarUrl = parsed.data.avatarUrl ?? null;
+
+  if (avatarFile) {
+    try {
+      const uploadedAvatar = await uploadAvatarImage({
+        userId: profile.id,
+        file: avatarFile,
+        previousAvatarUrl: profile.avatarUrl,
+      });
+      avatarUrl = uploadedAvatar.url;
+    } catch (error) {
+      return {
+        ok: false,
+        fields,
+        error: error instanceof Error ? error.message : "Không thể tải ảnh đại diện lúc này.",
+      };
+    }
+  }
+
   await prisma.user.update({
     where: {
       id: profile.id,
     },
     data: {
       username: parsed.data.username,
-      avatarUrl: parsed.data.avatarUrl ?? null,
+      avatarUrl,
     },
   });
 
@@ -139,8 +170,8 @@ export async function updateProfile(
     ok: true,
     fields: {
       username: parsed.data.username,
-      avatarUrl: parsed.data.avatarUrl,
+      avatarUrl: avatarUrl ?? undefined,
     },
-    message: "Hồ sơ đã được cập nhật.",
+    message: avatarFile ? "Hồ sơ và ảnh đại diện đã được cập nhật." : "Hồ sơ đã được cập nhật.",
   };
 }

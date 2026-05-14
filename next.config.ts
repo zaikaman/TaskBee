@@ -1,7 +1,20 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Cho phép Server Action nhận payload lớn hơn (avatar upload 2 MB + overhead)
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "4mb",
+    },
+  },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "*.r2.dev",
+      },
+    ],
+  },
   async rewrites() {
     return [
       {
