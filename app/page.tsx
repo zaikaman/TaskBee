@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, Leaf } from "lucide-react";
+import posthog from "posthog-js";
 
 const categories = [
   "Đăng ký tài khoản",
@@ -36,12 +39,17 @@ export default function LandingPage() {
           </nav>
 
           <div className="flex items-center gap-7 text-sm font-medium">
-            <Link href="/login" className="hidden text-[#22ab59] hover:text-[#005924] sm:inline">
+            <Link
+              href="/login"
+              className="hidden text-[#22ab59] hover:text-[#005924] sm:inline"
+              onClick={() => posthog.capture("landing_login_clicked", { location: "header" })}
+            >
               Đăng nhập
             </Link>
             <Link
               href="/register"
               className="rounded-[3px] bg-[#22ab59] px-6 py-3 font-bold text-white shadow-sm hover:bg-[#005924]"
+              onClick={() => posthog.capture("landing_register_clicked", { location: "header" })}
             >
               Đăng ký
             </Link>
@@ -62,10 +70,19 @@ export default function LandingPage() {
               <Link
                 href="/register"
                 className="flex h-16 w-full items-center justify-center rounded-[7px] bg-[#22ab59] px-8 text-base font-black uppercase text-white hover:bg-[#005924]"
+                onClick={() =>
+                  posthog.capture("landing_register_clicked", { location: "hero_cta" })
+                }
               >
                 Đăng việc nhỏ
               </Link>
-              <Link href="/viec-lam" className="text-xl text-[#22ab59] hover:text-[#005924]">
+              <Link
+                href="/viec-lam"
+                className="text-xl text-[#22ab59] hover:text-[#005924]"
+                onClick={() =>
+                  posthog.capture("landing_browse_tasks_clicked", { location: "hero_cta" })
+                }
+              >
                 hoặc duyệt việc
               </Link>
             </div>
@@ -149,6 +166,9 @@ export default function LandingPage() {
               href="/viec-lam"
               key={category}
               className="rounded-[7px] border border-[#f0f2f5] bg-white p-5 font-bold text-[#203259] shadow-sm hover:border-[#22ab59] hover:text-[#22ab59]"
+              onClick={() =>
+                posthog.capture("landing_category_clicked", { category })
+              }
             >
               {category}
             </Link>
@@ -178,6 +198,9 @@ export default function LandingPage() {
         <Link
           href="/register"
           className="inline-flex h-14 items-center justify-center rounded-[7px] bg-[#22ab59] px-8 font-black uppercase text-white hover:bg-[#005924]"
+          onClick={() =>
+            posthog.capture("landing_browse_tasks_clicked", { location: "bottom_cta" })
+          }
         >
           Bắt đầu
         </Link>

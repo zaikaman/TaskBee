@@ -126,7 +126,7 @@ Phase 1 (Setup)
 - [ ] T033 [P] Add Playwright end-to-end framework test for complete Task Flow in `tests/e2e/task-flow.spec.ts`
 - [ ] T034 [P] Create Jest unit tests for strict Financial Math logic safely in `tests/unit/wallet.test.ts`
 - [ ] T035 [P] Refine loading states and skeleton UI globally in `components/ui/`
-- [ ] T037 [P] Setup Resend email service and implement core notification utilities in `lib/services/notifications.ts`
+- [ ] T037 [P] Setup Gmail SMTP email service and implement core notification utilities in `lib/services/notifications.ts`
 - [ ] T038 Integrate email notification triggers into key submission and wallet workflows across services
 - [ ] T039 [P] Include continuous performance profiling tests (k6 or artillery) to validate p95 < 300ms core API limits
 - [ ] T079 [P] Install and configure Jest test runner, TypeScript transform, and test scripts in `jest.config.ts`
@@ -134,7 +134,7 @@ Phase 1 (Setup)
 - [ ] T081 [P] Add unit tests for task fee, withdrawal fee, ledger reconciliation, and balance invariant utilities
 - [ ] T082 [P] Add concurrency tests for slot claiming to prove exact slot limits under parallel requests
 - [ ] T083 [P] Create in-app notification center UI in `components/notifications/notification-center.tsx`
-- [ ] T084 Integrate notification records and Resend email triggers for verification, submission review, auto-approval, withdrawal status, task status, and deposit status
+- [ ] T084 Integrate notification records and Gmail SMTP email triggers for verification, submission review, auto-approval, withdrawal status, task status, and deposit status
 - [ ] T085 [P] Add localized Vietnamese UI copy, empty states, error states, and currency formatting across user-facing pages
 - [ ] T086 [P] Add global error, loading, forbidden, and not-found pages for each route group
 - [ ] T087 [P] Add analytics instrumentation for key funnels with PostHog in `lib/services/analytics.ts`

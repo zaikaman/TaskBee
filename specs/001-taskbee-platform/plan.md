@@ -12,7 +12,7 @@ Build a monolithic fullstack TypeScript microtask marketplace for Vietnam using 
 ## Technical Context
 
 **Language/Version**: TypeScript (strict mode), Node.js current LTS or newer
-**Primary Dependencies**: Latest stable Next.js App Router, TailwindCSS, shadcn/ui, Prisma ORM, Supabase Auth/Storage, Resend, PostHog
+**Primary Dependencies**: Latest stable Next.js App Router, TailwindCSS, shadcn/ui, Prisma ORM, Supabase Auth/Storage, Gmail SMTP, PostHog
 **Storage**: PostgreSQL (via Supabase Relational Database)
 **Testing**: Jest, Playwright (Resolved via Phase 0 Research to satisfy Constitution II)
 **Target Platform**: Web browsers (deployed on Vercel)

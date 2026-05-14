@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { EyeOff, ExternalLink, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import posthog from "posthog-js";
+import { useEffect } from "react";
 
 const demoTasks = [
   {
@@ -30,6 +34,10 @@ const demoTasks = [
 ];
 
 export default function MarketplacePage() {
+  useEffect(() => {
+    posthog.capture("task_listing_viewed", { task_count: demoTasks.length });
+  }, []);
+
   return (
     <>
       <div className="flex flex-col gap-3 border-b border-slate-200 px-4 py-4 md:flex-row md:items-center md:justify-between">
@@ -41,6 +49,13 @@ export default function MarketplacePage() {
               className="h-9 w-full rounded border border-slate-300 bg-white pl-9 pr-3 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20"
               placeholder="Tìm kiếm công việc..."
               type="search"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  posthog.capture("marketplace_searched", {
+                    query: (e.target as HTMLInputElement).value,
+                  });
+                }
+              }}
             />
           </label>
           <div className="flex items-center gap-2 whitespace-nowrap text-sm">
@@ -97,10 +112,26 @@ export default function MarketplacePage() {
 
                   <div className="min-w-24 text-right">
                     <div className="mb-1 flex justify-end gap-2 text-slate-400">
-                      <Button variant="ghost" size="icon" className="size-7" aria-label="Mở chi tiết">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-7"
+                        aria-label="Mở chi tiết"
+                        onClick={() =>
+                          posthog.capture("task_detail_opened", { task_title: task.title })
+                        }
+                      >
                         <ExternalLink className="size-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="size-7" aria-label="Ẩn việc">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-7"
+                        aria-label="Ẩn việc"
+                        onClick={() =>
+                          posthog.capture("task_hidden", { task_title: task.title })
+                        }
+                      >
                         <EyeOff className="size-4" />
                       </Button>
                     </div>
