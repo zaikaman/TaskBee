@@ -3,9 +3,15 @@ import { PostHog } from "posthog-node";
 let posthogClient: PostHog | null = null;
 
 export function getPostHogClient() {
+  const token = process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN ?? process.env.NEXT_PUBLIC_POSTHOG_KEY;
+
+  if (!token) {
+    return null;
+  }
+
   if (!posthogClient) {
-    posthogClient = new PostHog(process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN!, {
-      host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+    posthogClient = new PostHog(token, {
+      host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com",
       flushAt: 1,
       flushInterval: 0,
     });

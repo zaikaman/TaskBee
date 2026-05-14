@@ -46,7 +46,7 @@ Phase 1 (Setup)
 *Goal: System MUST support user registration, login, email verification, and profile management.*
 *Test Criteria: Can create account, verify, login, and view profile.*
 
-- [ ] T010 [US1] Create registration UI and Server Action in `app/(auth)/register/page.tsx`
+- [x] T010 [US1] Create registration UI and Server Action in `app/(auth)/register/page.tsx`
 - [ ] T011 [US1] Create login UI and Server Action in `app/(auth)/login/page.tsx`
 - [ ] T012 [US1] Implement email verification callback flow in `app/(auth)/verify/page.tsx`
 - [ ] T013 [P] [US1] Create profile UI dashboard in `app/(dashboard)/profile/page.tsx`
