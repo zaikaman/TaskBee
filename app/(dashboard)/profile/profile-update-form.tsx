@@ -140,11 +140,16 @@ export function ProfileUpdateForm({
     <section className="space-y-6">
       {/* Avatar Section */}
       <div className="bg-white p-6 shadow-sm ring-1 ring-slate-100">
-        <div className="grid gap-6 lg:grid-cols-[180px_1fr] lg:items-start">
-          {/* Avatar Preview */}
-          <div className="flex flex-col items-center gap-3">
+        <div className="flex items-center gap-2 text-slate-500 mb-6">
+          <Camera className="size-4" aria-hidden="true" />
+          <span className="text-sm font-semibold">Ảnh đại diện</span>
+        </div>
+
+        <div className="flex flex-col lg:flex-row gap-8 items-start">
+          {/* Avatar Preview - Left Side */}
+          <div className="flex-shrink-0">
             <div
-              className="group relative flex h-[180px] w-[180px] items-center justify-center overflow-hidden border-2 border-dashed border-slate-200 bg-slate-50 transition-colors"
+              className="group relative flex h-[140px] w-[140px] items-center justify-center overflow-hidden border border-slate-300 bg-slate-50"
               style={{ borderRadius: 0 }}
             >
               {displayAvatarUrl ? (
@@ -182,24 +187,10 @@ export function ProfileUpdateForm({
                 </span>
               )}
             </div>
-
-            {selectedFile && (
-              <div className="flex items-center gap-2 text-xs text-slate-500">
-                <span className="max-w-[160px] truncate font-medium" title={selectedFile.name}>
-                  {selectedFile.name}
-                </span>
-                <span className="text-slate-400">({formatFileSize(selectedFile.size)})</span>
-              </div>
-            )}
           </div>
 
-          {/* Upload Controls */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 text-slate-500">
-              <Camera className="size-4" aria-hidden="true" />
-              <span className="text-sm font-semibold">Ảnh đại diện</span>
-            </div>
-
+          {/* Upload Controls - Right Side */}
+          <div className="flex-1 w-full">
             {canEdit ? (
               <>
                 {/* Drag-Drop Zone */}
@@ -207,34 +198,39 @@ export function ProfileUpdateForm({
                   onDrop={handleDrop}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
-                  onClick={handleBrowseClick}
                   className={`
-                    flex cursor-pointer flex-col items-center gap-3 border-2 border-dashed px-6 py-8 transition-all
+                    relative flex min-h-[140px] cursor-pointer flex-col items-center justify-center gap-3 border-2 border-dashed px-6 py-8 transition-all
                     ${dragActive
-                      ? "border-emerald-500 bg-emerald-50/50"
-                      : "border-slate-200 bg-slate-50 hover:border-emerald-400 hover:bg-emerald-50/30"
+                      ? "border-slate-400 bg-slate-50"
+                      : "border-slate-300 bg-white hover:border-slate-400 hover:bg-slate-50"
                     }
                   `}
                 >
-                  <div
-                    className={`flex h-12 w-12 items-center justify-center transition-colors ${
-                      dragActive ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-400"
-                    }`}
-                  >
-                    {dragActive ? (
-                      <Upload className="size-6" />
-                    ) : (
-                      <ImagePlus className="size-6" />
-                    )}
+                  <div className="flex h-12 w-12 items-center justify-center bg-slate-100 text-slate-400">
+                    <ImagePlus className="size-6" />
                   </div>
+                  
                   <div className="text-center">
-                    <p className="text-sm font-medium text-slate-700">
-                      {dragActive ? "Thả ảnh vào đây..." : "Kéo thả ảnh vào đây hoặc nhấn để chọn"}
+                    <p className="text-sm text-slate-500">
+                      Kéo và thả ảnh vào đây hoặc
                     </p>
                     <p className="mt-1 text-xs text-slate-400">
-                      JPG, PNG hoặc WebP · Tối đa 2 MB
+                      hoặc
                     </p>
                   </div>
+
+                  <Button
+                    type="button"
+                    onClick={handleBrowseClick}
+                    className="mt-2 h-10 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                  >
+                    <Camera className="size-4" />
+                    Chọn tệp
+                  </Button>
+
+                  <p className="mt-2 text-xs text-slate-400">
+                    JPG, PNG hoặc WebP · Tối đa 2 MB
+                  </p>
                 </div>
 
                 <input
@@ -248,7 +244,7 @@ export function ProfileUpdateForm({
 
                 {/* Selected File Preview Bar */}
                 {selectedFile && (
-                  <div className="flex items-center gap-3 border border-emerald-100 bg-emerald-50 px-4 py-3">
+                  <div className="mt-4 flex items-center gap-3 border border-emerald-100 bg-emerald-50 px-4 py-3">
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center bg-emerald-100 text-emerald-600">
                       <ImagePlus className="size-4" />
                     </div>
@@ -266,17 +262,19 @@ export function ProfileUpdateForm({
                     </button>
                   </div>
                 )}
+
+                {fileError && (
+                  <p className="mt-4 border border-red-100 bg-red-50 px-4 py-2.5 text-sm font-medium text-red-600">
+                    {fileError}
+                  </p>
+                )}
               </>
             ) : (
-              <p className="text-sm leading-6 text-slate-500">
-                Tài khoản đang bị hạn chế nên không thể thay đổi ảnh đại diện.
-              </p>
-            )}
-
-            {fileError && (
-              <p className="border border-red-100 bg-red-50 px-4 py-2.5 text-sm font-medium text-red-600">
-                {fileError}
-              </p>
+              <div className="flex min-h-[140px] items-center justify-center border-2 border-dashed border-slate-200 bg-slate-50 px-6 py-8">
+                <p className="text-sm leading-6 text-slate-500">
+                  Tài khoản đang bị hạn chế nên không thể thay đổi ảnh đại diện.
+                </p>
+              </div>
             )}
           </div>
         </div>
