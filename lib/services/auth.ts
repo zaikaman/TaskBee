@@ -591,3 +591,14 @@ export async function confirmLoginOtp(
 
   redirect(normalizeRedirectTo(parsed.data.redirectTo));
 }
+
+export async function logout() {
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signOut();
+
+  if (error) {
+    throw new Error("Không thể đăng xuất lúc này. Vui lòng thử lại.");
+  }
+
+  redirect("/login");
+}

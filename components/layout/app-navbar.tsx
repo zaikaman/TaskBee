@@ -1,26 +1,27 @@
 import Link from "next/link";
 import {
   Bell,
-  ChevronDown,
   CircleHelp,
   Clock3,
   Leaf,
   Moon,
   Search,
-  User,
   WalletCards,
 } from "lucide-react";
 import { APP_NAME } from "@/config/app";
 import { Button } from "@/components/ui/button";
+import { getCurrentUser } from "@/lib/auth/session";
+import { PrimaryNav } from "./primary-nav";
+import { ProfileMenu } from "./profile-menu";
 
-const primaryLinks = [
-  { href: "/viec-lam", label: "Việc làm nhỏ", active: true },
-  { href: "/dashboard", label: "Bảng điều khiển" },
-  { href: "/dashboard/wallet", label: "Ví tiền" },
-  { href: "/admin/dashboard", label: "Quản trị" },
-];
+export async function AppNavbar() {
+  const session = await getCurrentUser();
+  const isAuthenticated = Boolean(session);
+  const displayName =
+    session?.profile?.username ??
+    session?.email?.split("@")[0] ??
+    "người dùng";
 
-export function AppNavbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -31,24 +32,7 @@ export function AppNavbar() {
           <span className="text-xl font-bold">{APP_NAME}</span>
         </Link>
 
-        <nav className="hidden items-center gap-2 md:flex">
-          {primaryLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={
-                link.active
-                  ? "flex h-16 items-center gap-1 border-b-2 border-slate-900 px-3 text-sm font-medium text-slate-900"
-                  : "flex h-16 items-center gap-1 px-3 text-sm font-medium text-slate-600 hover:text-emerald-700"
-              }
-            >
-              {link.label}
-              {link.href === "/viec-lam" ? (
-                <ChevronDown className="size-3" aria-hidden="true" />
-              ) : null}
-            </Link>
-          ))}
-        </nav>
+        <PrimaryNav />
 
         <div className="flex items-center gap-3">
           <div className="hidden items-center gap-2 text-sm lg:flex">
@@ -59,26 +43,33 @@ export function AppNavbar() {
             <span className="font-medium text-emerald-700">người làm thuê</span>
           </div>
 
-          <div className="hidden items-center gap-1 text-slate-500 sm:flex">
-            <Button variant="ghost" size="icon" aria-label="Trợ giúp">
-              <CircleHelp className="size-4" />
-            </Button>
-            <Button variant="ghost" size="icon" aria-label="Thông báo" className="relative">
-              <Bell className="size-4" />
-              <span className="absolute right-2 top-2 size-2 rounded-full bg-red-500 ring-2 ring-white" />
-            </Button>
-            <Button variant="ghost" size="icon" aria-label="Lịch sử">
-              <Clock3 className="size-4" />
-            </Button>
-            <Button asChild variant="ghost" size="icon">
-              <Link href="/dashboard/profile" aria-label="Tài khoản">
-                <User className="size-4" />
+          {isAuthenticated ? (
+            <div className="hidden items-center gap-1 text-slate-500 sm:flex">
+              <Button variant="ghost" size="icon" aria-label="Trợ giúp">
+                <CircleHelp className="size-4" />
+              </Button>
+              <Button variant="ghost" size="icon" aria-label="Thông báo" className="relative">
+                <Bell className="size-4" />
+                <span className="absolute right-2 top-2 size-2 rounded-full bg-red-500 ring-2 ring-white" />
+              </Button>
+              <Button variant="ghost" size="icon" aria-label="Lịch sử">
+                <Clock3 className="size-4" />
+              </Button>
+              <ProfileMenu displayName={displayName} />
+              <Button variant="ghost" size="icon" aria-label="Giao diện tối">
+                <Moon className="size-4" />
+              </Button>
+            </div>
+          ) : (
+            <div className="hidden items-center gap-3 text-sm font-medium sm:flex">
+              <Link href="/login" className="text-emerald-700 hover:text-emerald-900">
+                Đăng nhập
               </Link>
-            </Button>
-            <Button variant="ghost" size="icon" aria-label="Giao diện tối">
-              <Moon className="size-4" />
-            </Button>
-          </div>
+              <Button asChild className="rounded bg-emerald-600 text-white hover:bg-emerald-700">
+                <Link href="/register">Đăng ký</Link>
+              </Button>
+            </div>
+          )}
 
           <Button asChild className="hidden rounded bg-emerald-600 px-4 text-white hover:bg-emerald-700 sm:inline-flex">
             <Link href="/viec-lam">
@@ -87,7 +78,7 @@ export function AppNavbar() {
             </Link>
           </Button>
           <Button asChild variant="outline" size="icon" className="sm:hidden">
-            <Link href="/dashboard/wallet" aria-label="Ví tiền">
+            <Link href={isAuthenticated ? "/dashboard/wallet" : "/login"} aria-label="Ví tiền">
               <WalletCards className="size-4" />
             </Link>
           </Button>
