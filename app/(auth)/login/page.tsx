@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Leaf } from "lucide-react";
 import { SiteFooter } from "@/components/layout/site-footer";
+import { getCurrentUser } from "@/lib/auth/session";
 import { LoginOtpForm } from "./login-otp-form";
 
 type LoginPageProps = {
@@ -9,9 +11,25 @@ type LoginPageProps = {
   }>;
 };
 
+function normalizeRedirectTo(redirectTo?: string) {
+  if (!redirectTo || !redirectTo.startsWith("/") || redirectTo.startsWith("//")) {
+    return "/viec-lam";
+  }
+
+  if (redirectTo.startsWith("/login") || redirectTo.startsWith("/register")) {
+    return "/viec-lam";
+  }
+
+  return redirectTo;
+}
+
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const params = await searchParams;
-  const redirectTo = params?.redirectTo ?? "/viec-lam";
+  const [session, params] = await Promise.all([getCurrentUser(), searchParams]);
+  const redirectTo = normalizeRedirectTo(params?.redirectTo);
+
+  if (session) {
+    redirect(redirectTo);
+  }
 
   return (
     <div className="min-h-screen bg-white text-[#1b1b1b]">

@@ -1,9 +1,17 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Leaf } from "lucide-react";
 import { SiteFooter } from "@/components/layout/site-footer";
+import { getCurrentUser } from "@/lib/auth/session";
 import { RegisterOtpForm } from "./register-otp-form";
 
-export default function RegisterPage() {
+export default async function RegisterPage() {
+  const session = await getCurrentUser();
+
+  if (session) {
+    redirect("/viec-lam");
+  }
+
   return (
     <div className="home min-h-screen bg-white">
       <header className="mx-auto flex h-[86px] max-w-[1090px] items-center justify-between px-6">
