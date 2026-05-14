@@ -1,6 +1,7 @@
 import { ShieldCheck, SlidersHorizontal } from "lucide-react";
 import { AppNavbar } from "@/components/layout/app-navbar";
 import { Button } from "@/components/ui/button";
+import { JobsDropdown } from "./jobs-dropdown";
 
 const filters = ["Cấp độ", "Danh mục", "Danh mục con", "Thanh toán", "Vị trí", "Thống kê"];
 
@@ -25,9 +26,7 @@ export default function MarketplaceLayout({
           <section className="overflow-hidden rounded border border-slate-200 bg-white">
             <div className="flex items-end justify-between border-b border-slate-200 px-3 pt-3">
               <div className="flex gap-2">
-                <Button className="rounded-b-none rounded-t bg-emerald-600 text-white hover:bg-emerald-700">
-                  Việc làm nhỏ
-                </Button>
+                <JobsDropdown isActive={true} />
                 <Button variant="ghost" className="rounded-b-none rounded-t text-slate-500">
                   Khảo sát
                 </Button>

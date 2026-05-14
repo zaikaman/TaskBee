@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { TaskStatus } from "@prisma/client";
+import { TaskStatus } from "@/lib/generated/prisma/client";
 import {
   TASK_LIMITS,
   WALLET_LIMITS,
@@ -132,7 +132,7 @@ export type UpdateTaskInput = z.infer<typeof updateTaskSchema>;
 export const taskStatusChangeSchema = z.object({
   taskId: z.string().uuid("ID task không hợp lệ"),
   newStatus: z.enum([TaskStatus.ACTIVE, TaskStatus.PAUSED, TaskStatus.COMPLETED, TaskStatus.CANCELLED], {
-    errorMap: () => ({ message: "Trạng thái không hợp lệ" }),
+    message: "Trạng thái không hợp lệ",
   }),
   reason: z
     .string()
