@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/auth/server";
 import { getPrisma } from "@/lib/db/prisma";
-import { UserRole } from "@/lib/generated/prisma/client";
+import { UserRole, UserStatus } from "@/lib/generated/prisma/client";
 
 const OTP_RESEND_COOLDOWN_MS = 60_000;
 
@@ -27,6 +27,19 @@ const otpSchema = z.object({
   lastName: z.string().trim().min(1),
 });
 
+const loginEmailSchema = z.object({
+  email: z.string().trim().email("Email không hợp lệ."),
+  rememberMe: z.coerce.boolean().optional(),
+  redirectTo: z.string().trim().optional(),
+});
+
+const loginOtpSchema = z.object({
+  email: z.string().trim().email("Email không hợp lệ."),
+  otp: z.string().trim().regex(/^\d{6}$/, "Mã OTP phải gồm 6 chữ số."),
+  rememberMe: z.coerce.boolean().optional(),
+  redirectTo: z.string().trim().optional(),
+});
+
 export type RegisterState = {
   phase: "form" | "otp";
   message?: string;
@@ -41,7 +54,21 @@ export type RegisterState = {
   };
 };
 
+export type LoginState = {
+  phase: "form" | "otp";
+  message?: string;
+  error?: string;
+  email?: string;
+  rememberMe?: boolean;
+  redirectTo?: string;
+  resendAvailableAt?: number;
+};
+
 const initialState: RegisterState = {
+  phase: "form",
+};
+
+const initialLoginState: LoginState = {
   phase: "form",
 };
 
@@ -70,6 +97,18 @@ function buildUsername(nickname: string, userId: string) {
 
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
+}
+
+function normalizeRedirectTo(redirectTo?: string) {
+  if (!redirectTo || !redirectTo.startsWith("/") || redirectTo.startsWith("//")) {
+    return "/viec-lam";
+  }
+
+  if (redirectTo.startsWith("/login") || redirectTo.startsWith("/register")) {
+    return "/viec-lam";
+  }
+
+  return redirectTo;
 }
 
 function secondsUntil(date: Date, now = new Date()) {
@@ -118,7 +157,70 @@ async function reserveOtpEmailSlot(email: string) {
   return { allowed: false, resendAvailableAt };
 }
 
+async function ensureLoginOtpRateLimitTable() {
+  await getPrisma().$executeRaw`
+    CREATE TABLE IF NOT EXISTS "LoginOtpRequest" (
+      "email" TEXT PRIMARY KEY,
+      "lastSentAt" TIMESTAMPTZ NOT NULL,
+      "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
+}
+
+async function reserveLoginOtpEmailSlot(email: string) {
+  await ensureLoginOtpRateLimitTable();
+
+  const now = new Date();
+  const reusableBefore = new Date(now.getTime() - OTP_RESEND_COOLDOWN_MS);
+  const reservedRows = await getPrisma().$queryRaw<Array<{ lastSentAt: Date }>>`
+    INSERT INTO "LoginOtpRequest" ("email", "lastSentAt", "createdAt", "updatedAt")
+    VALUES (${email}, ${now}, ${now}, ${now})
+    ON CONFLICT ("email") DO UPDATE
+    SET "lastSentAt" = EXCLUDED."lastSentAt",
+        "updatedAt" = EXCLUDED."updatedAt"
+    WHERE "LoginOtpRequest"."lastSentAt" <= ${reusableBefore}
+    RETURNING "lastSentAt"
+  `;
+
+  if (reservedRows.length > 0) {
+    return { allowed: true, resendAvailableAt: now.getTime() + OTP_RESEND_COOLDOWN_MS };
+  }
+
+  const existingRows = await getPrisma().$queryRaw<Array<{ lastSentAt: Date }>>`
+    SELECT "lastSentAt"
+    FROM "LoginOtpRequest"
+    WHERE "email" = ${email}
+    LIMIT 1
+  `;
+  const resendAvailableAt =
+    (existingRows[0]?.lastSentAt.getTime() ?? now.getTime()) + OTP_RESEND_COOLDOWN_MS;
+
+  return { allowed: false, resendAvailableAt };
+}
+
 async function emailAlreadyRegistered(email: string) {
+  const existingUser = await getPrisma().user.findUnique({
+    where: { email },
+    select: { id: true },
+  });
+
+  if (existingUser) {
+    return true;
+  }
+
+  const existingAuthUsers = await getPrisma().$queryRaw<Array<{ id: string }>>`
+    SELECT id::text AS id
+    FROM auth.users
+    WHERE lower(email) = lower(${email})
+      AND deleted_at IS NULL
+    LIMIT 1
+  `;
+
+  return existingAuthUsers.length > 0;
+}
+
+async function emailCanLogin(email: string) {
   const existingUser = await getPrisma().user.findUnique({
     where: { email },
     select: { id: true },
@@ -177,6 +279,20 @@ function mapAuthError(error: { message: string }) {
   }
 
   return "Không thể xử lý yêu cầu đăng ký lúc này.";
+}
+
+function mapLoginAuthError(error: { message: string }) {
+  const message = error.message.toLowerCase();
+
+  if (message.includes("rate")) {
+    return "Bạn đang yêu cầu OTP quá nhanh. Vui lòng thử lại sau.";
+  }
+
+  if (message.includes("invalid") || message.includes("expired")) {
+    return "Mã OTP chưa đúng hoặc đã hết hạn.";
+  }
+
+  return "Không thể xử lý đăng nhập lúc này. Vui lòng thử lại sau.";
 }
 
 export async function requestRegistrationOtp(
@@ -329,4 +445,149 @@ export async function confirmRegistrationOtp(
   });
 
   redirect("/viec-lam?registered=1");
+}
+
+export async function requestLoginOtp(
+  _prevState: LoginState = initialLoginState,
+  formData: FormData,
+): Promise<LoginState> {
+  const raw = parseFormData(formData);
+  const parsed = loginEmailSchema.safeParse(raw);
+
+  if (!parsed.success) {
+    return {
+      phase: "form",
+      error: parsed.error.issues[0]?.message ?? "Dữ liệu đăng nhập không hợp lệ.",
+    };
+  }
+
+  const email = normalizeEmail(parsed.data.email);
+  const redirectTo = normalizeRedirectTo(parsed.data.redirectTo);
+  const rememberMe = parsed.data.rememberMe ?? false;
+  const emailSlot = await reserveLoginOtpEmailSlot(email);
+
+  if (!emailSlot.allowed) {
+    const retryAfterSeconds = secondsUntil(new Date(emailSlot.resendAvailableAt));
+
+    return {
+      phase: "otp",
+      email,
+      rememberMe,
+      redirectTo,
+      resendAvailableAt: emailSlot.resendAvailableAt,
+      error: `Vui lòng chờ ${retryAfterSeconds} giây trước khi gửi lại mã OTP.`,
+    };
+  }
+
+  if (!(await emailCanLogin(email))) {
+    return {
+      phase: "form",
+      email,
+      rememberMe,
+      redirectTo,
+      resendAvailableAt: emailSlot.resendAvailableAt,
+      message: "Nếu email đã có tài khoản TaskBee, mã OTP sẽ được gửi trong ít phút.",
+    };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: {
+      shouldCreateUser: false,
+      emailRedirectTo: `${appUrl()}/login`,
+    },
+  });
+
+  if (error) {
+    return {
+      phase: _prevState.phase,
+      email,
+      rememberMe,
+      redirectTo,
+      resendAvailableAt: emailSlot.resendAvailableAt,
+      error: mapLoginAuthError(error),
+    };
+  }
+
+  return {
+    phase: "otp",
+    email,
+    rememberMe,
+    redirectTo,
+    resendAvailableAt: emailSlot.resendAvailableAt,
+    message: `Mã OTP đã được gửi đến ${email}.`,
+  };
+}
+
+export async function confirmLoginOtp(
+  _prevState: LoginState = initialLoginState,
+  formData: FormData,
+): Promise<LoginState> {
+  void _prevState;
+
+  const raw = parseFormData(formData);
+  const parsed = loginOtpSchema.safeParse(raw);
+
+  if (!parsed.success) {
+    return {
+      phase: "otp",
+      error: parsed.error.issues[0]?.message ?? "Mã OTP không hợp lệ.",
+      email: typeof raw.email === "string" ? raw.email : undefined,
+      redirectTo: typeof raw.redirectTo === "string" ? normalizeRedirectTo(raw.redirectTo) : undefined,
+    };
+  }
+
+  const email = normalizeEmail(parsed.data.email);
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.verifyOtp({
+    email,
+    token: parsed.data.otp,
+    type: "email",
+  });
+
+  if (error || !data.user) {
+    return {
+      phase: "otp",
+      error: error ? mapLoginAuthError(error) : "Mã OTP chưa đúng hoặc đã hết hạn.",
+      email,
+      rememberMe: parsed.data.rememberMe ?? false,
+      redirectTo: normalizeRedirectTo(parsed.data.redirectTo),
+    };
+  }
+
+  const metadata = data.user.user_metadata ?? {};
+  const fallbackNickname = email.split("@")[0] || "user";
+  const nickname = (metadata.nickname as string | undefined) ?? fallbackNickname;
+  const role =
+    metadata.role === UserRole.ADMIN ||
+    metadata.role === UserRole.EMPLOYER ||
+    metadata.role === UserRole.WORKER
+      ? metadata.role
+      : UserRole.WORKER;
+
+  const profile = await getPrisma().user.upsert({
+    where: { email },
+    update: {
+      emailVerified: true,
+    },
+    create: {
+      id: data.user.id,
+      email,
+      username: buildUsername(nickname, data.user.id),
+      role,
+      emailVerified: true,
+      status: UserStatus.ACTIVE,
+    },
+  });
+
+  if (profile.status !== UserStatus.ACTIVE) {
+    return {
+      phase: "form",
+      email,
+      error: "Tài khoản của bạn đang bị hạn chế. Vui lòng liên hệ bộ phận hỗ trợ.",
+    };
+  }
+
+  redirect(normalizeRedirectTo(parsed.data.redirectTo));
 }

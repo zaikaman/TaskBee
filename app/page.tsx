@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, Leaf } from "lucide-react";
 import posthog from "posthog-js";
+import { SiteFooter } from "@/components/layout/site-footer";
 
 const categories = [
   "Đăng ký tài khoản",
@@ -206,9 +207,7 @@ export default function LandingPage() {
         </Link>
       </section>
 
-      <footer className="border-t border-[#f0f2f5] py-8 text-center text-sm text-[#686d77]">
-        TaskBee © 2026
-      </footer>
+      <SiteFooter />
     </main>
   );
 }
