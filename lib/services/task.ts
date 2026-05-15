@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { PLATFORM_FEES } from "@/config/app";
 import { requireRole } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/db/prisma";
 import {
@@ -14,6 +15,7 @@ import {
   addMoney,
   calculateEmployerTaskCharge,
   formatVnd,
+  subtractMoney,
   toMinorUnits,
 } from "@/lib/utils/money";
 import { createTaskSchema, type CreateTaskInput } from "@/lib/validators/task";
@@ -137,6 +139,27 @@ async function createTaskRecord(employerId: string, data: CreateTaskInput) {
   const now = new Date();
 
   return prisma.$transaction(async (tx) => {
+    // Kiểm tra số dư trước khi thực hiện giao dịch
+    const currentUser = await tx.user.findUniqueOrThrow({
+      where: {
+        id: employerId,
+        role: UserRole.EMPLOYER,
+      },
+      select: {
+        availableBalance: true,
+      },
+    });
+
+    const currentBalance = currentUser.availableBalance.toString();
+    
+    // Kiểm tra số dư đủ để trừ cả escrow và phí
+    if (toMinorUnits(currentBalance) < toMinorUnits(charge.totalCharge)) {
+      throw new Error(
+        `Số dư không đủ. Cần ${formatVnd(charge.totalCharge)} nhưng chỉ có ${formatVnd(currentBalance)}.`
+      );
+    }
+
+    // Cập nhật ví: trừ tổng số tiền từ available, cộng escrow vào escrow balance
     const walletUpdate = await tx.user.updateMany({
       where: {
         id: employerId,
@@ -157,17 +180,18 @@ async function createTaskRecord(employerId: string, data: CreateTaskInput) {
 
     assertSufficientBalance(walletUpdate.count);
 
+    // Tạo task record
     const task = await tx.task.create({
       data: {
         employerId,
-        taskType: data.taskType ?? TaskType.EXPRESS, // MVP: hardcode EXPRESS
+        taskType: data.taskType ?? TaskType.EXPRESS,
         title: data.title,
         description: data.description,
         instructions: data.instructions,
         proofRequirements: data.proofRequirements ?? null,
         category: data.category ?? null,
-        subcategory: data.subcategory ?? null, // Future: for CLASSIC jobs
-        targetListId: data.targetListId ?? null, // Future: for LIST jobs
+        subcategory: data.subcategory ?? null,
+        targetListId: data.targetListId ?? null,
         rewardAmount: String(data.rewardAmount),
         totalSlots: data.totalSlots,
         availableSlots: data.totalSlots,
@@ -180,6 +204,7 @@ async function createTaskRecord(employerId: string, data: CreateTaskInput) {
       },
     });
 
+    // Lấy số dư sau khi cập nhật
     const updatedEmployer = await tx.user.findUniqueOrThrow({
       where: {
         id: employerId,
@@ -190,45 +215,55 @@ async function createTaskRecord(employerId: string, data: CreateTaskInput) {
     });
 
     const finalAvailableBalance = updatedEmployer.availableBalance.toString();
+
+    // Tính số dư sau mỗi bước để ghi ledger chính xác
+    // Bước 1: Trừ escrow từ available balance
+    const balanceAfterEscrow = subtractMoney(currentBalance, charge.escrowAmount);
+    
+    // Bước 2: Trừ phí từ số dư còn lại (nếu có phí)
     const hasPlatformFee = toMinorUnits(charge.platformFee) > BigInt(0);
-    const balanceAfterEscrow = hasPlatformFee
-      ? addMoney(finalAvailableBalance, charge.platformFee)
-      : finalAvailableBalance;
+
+    // Ghi ledger entries theo thứ tự thời gian
+    const ledgerEntries = [];
+
+    // Entry 1: Khóa escrow
+    ledgerEntries.push({
+      userId: employerId,
+      type: TransactionType.TASK_ESCROW_LOCK,
+      amount: `-${charge.escrowAmount}`,
+      balanceAfter: balanceAfterEscrow,
+      referenceId: task.id,
+      description: `Khóa escrow ${formatVnd(charge.escrowAmount)} cho task "${task.title}".`,
+      metadata: {
+        taskId: task.id,
+        taskTitle: task.title,
+        rewardAmount: String(data.rewardAmount),
+        totalSlots: data.totalSlots,
+        escrowAmount: charge.escrowAmount,
+      },
+    });
+
+    // Entry 2: Phí tạo task (10% của escrow)
+    if (hasPlatformFee) {
+      ledgerEntries.push({
+        userId: employerId,
+        type: TransactionType.TASK_CREATION_FEE,
+        amount: `-${charge.platformFee}`,
+        balanceAfter: finalAvailableBalance,
+        referenceId: task.id,
+        description: `Phí tạo task ${formatVnd(charge.platformFee)} (10% của ${formatVnd(charge.escrowAmount)}) cho task "${task.title}".`,
+        metadata: {
+          taskId: task.id,
+          taskTitle: task.title,
+          escrowAmount: charge.escrowAmount,
+          platformFeeAmount: charge.platformFee,
+          feeRate: PLATFORM_FEES.employerTaskCreationRate,
+        },
+      });
+    }
 
     await tx.transaction.createMany({
-      data: [
-        {
-          userId: employerId,
-          type: TransactionType.TASK_ESCROW_LOCK,
-          amount: `-${charge.escrowAmount}`,
-          balanceAfter: balanceAfterEscrow,
-          referenceId: task.id,
-          description: `Khóa escrow cho task "${task.title}".`,
-          metadata: {
-            taskId: task.id,
-            rewardAmount: String(data.rewardAmount),
-            totalSlots: data.totalSlots,
-            escrowAmount: charge.escrowAmount,
-          },
-        },
-        ...(hasPlatformFee
-          ? [
-              {
-                userId: employerId,
-                type: TransactionType.TASK_CREATION_FEE,
-                amount: `-${charge.platformFee}`,
-                balanceAfter: finalAvailableBalance,
-                referenceId: task.id,
-                description: `Phí tạo task "${task.title}".`,
-                metadata: {
-                  taskId: task.id,
-                  escrowAmount: charge.escrowAmount,
-                  platformFeeAmount: charge.platformFee,
-                },
-              },
-            ]
-          : []),
-      ],
+      data: ledgerEntries,
     });
 
     return {
