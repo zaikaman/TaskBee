@@ -62,8 +62,8 @@ Phase 1 (Setup)
 *Test Criteria: Employer can fund and post a task, and later approve submissions.*
 
 - [x] T015 [P] [US2] Create Zod schemas for task generation in `lib/validators/task.ts`
-- [ ] T016 [US2] Implement `createTask` Server Action (with Wallet Escrow lock logic) in `lib/services/task.ts`
-- [ ] T017 [US2] Create the Task Creation Form UI in `components/tasks/create-task-form.tsx`
+- [x] T016 [US2] Implement `createTask` Server Action (with Wallet Escrow lock logic) in `lib/services/task.ts`
+- [x] T017 [US2] Create the Task Creation Form UI in `components/tasks/create-task-form.tsx`
 - [ ] T018 [US2] Create Task listing dashboard for Employers in `app/(dashboard)/employer/tasks/page.tsx`
 - [ ] T019 [US2] Implement submission approval/rejection action (`reviewSubmission`) in `lib/services/submission.ts`
 - [ ] T055 [US2] Add task proof requirement fields to validators, schema, create form, and detail view

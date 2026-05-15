@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { TaskStatus } from "@/lib/generated/prisma/client";
+import { TaskStatus, TaskType } from "@/lib/generated/prisma/client";
 import {
   TASK_LIMITS,
   WALLET_LIMITS,
@@ -10,6 +10,11 @@ import {
  * Employer sử dụng để tạo task với đầy đủ thông tin
  */
 export const createTaskSchema = z.object({
+  // Task type - MVP chỉ support EXPRESS, sau này mở rộng CLASSIC và LIST
+  taskType: z
+    .enum([TaskType.EXPRESS, TaskType.CLASSIC, TaskType.LIST])
+    .default(TaskType.EXPRESS),
+
   title: z
     .string()
     .min(5, "Tiêu đề phải có ít nhất 5 ký tự")
@@ -41,6 +46,22 @@ export const createTaskSchema = z.object({
     .min(2, "Danh mục phải có ít nhất 2 ký tự")
     .max(50, "Danh mục không được vượt quá 50 ký tự")
     .trim()
+    .optional()
+    .nullable(),
+
+  // Subcategory - dùng cho CLASSIC job type (future)
+  subcategory: z
+    .string()
+    .min(2, "Danh mục con phải có ít nhất 2 ký tự")
+    .max(50, "Danh mục con không được vượt quá 50 ký tự")
+    .trim()
+    .optional()
+    .nullable(),
+
+  // Target list ID - dùng cho LIST job type (future)
+  targetListId: z
+    .string()
+    .uuid("ID danh sách không hợp lệ")
     .optional()
     .nullable(),
 

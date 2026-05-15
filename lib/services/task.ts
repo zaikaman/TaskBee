@@ -6,6 +6,7 @@ import { requireRole } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/db/prisma";
 import {
   TaskStatus,
+  TaskType,
   TransactionType,
   UserRole,
 } from "@/lib/generated/prisma/client";
@@ -159,11 +160,14 @@ async function createTaskRecord(employerId: string, data: CreateTaskInput) {
     const task = await tx.task.create({
       data: {
         employerId,
+        taskType: data.taskType ?? TaskType.EXPRESS, // MVP: hardcode EXPRESS
         title: data.title,
         description: data.description,
         instructions: data.instructions,
         proofRequirements: data.proofRequirements ?? null,
         category: data.category ?? null,
+        subcategory: data.subcategory ?? null, // Future: for CLASSIC jobs
+        targetListId: data.targetListId ?? null, // Future: for LIST jobs
         rewardAmount: String(data.rewardAmount),
         totalSlots: data.totalSlots,
         availableSlots: data.totalSlots,

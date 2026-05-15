@@ -1,0 +1,77 @@
+"use client";
+
+type CreateTaskStepperProps = {
+  currentStep: number;
+  totalSteps: number;
+};
+
+const stepLabels = [
+  "Thông tin cơ bản",
+  "Cài đặt công việc",
+  "Xác nhận & Thanh toán",
+];
+
+export function CreateTaskStepper({ currentStep, totalSteps }: CreateTaskStepperProps) {
+  return (
+    <div className="w-full">
+      <div className="flex items-center justify-between">
+        {Array.from({ length: totalSteps }, (_, index) => {
+          const stepNumber = index + 1;
+          const isActive = stepNumber === currentStep;
+          const isCompleted = stepNumber < currentStep;
+
+          return (
+            <div key={stepNumber} className="flex flex-1 items-center">
+              {/* Step Circle */}
+              <div className="flex flex-col items-center">
+                <div
+                  className={`flex h-10 w-10 items-center justify-center rounded-full border-2 font-bold transition-colors ${
+                    isCompleted
+                      ? "border-[#22ab59] bg-[#22ab59] text-white"
+                      : isActive
+                        ? "border-[#22ab59] bg-white text-[#22ab59]"
+                        : "border-[#d1d5db] bg-white text-[#9ca3af]"
+                  }`}
+                >
+                  {isCompleted ? (
+                    <svg
+                      className="h-5 w-5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={3}
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        d="M5 13l4 4L19 7"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  ) : (
+                    stepNumber
+                  )}
+                </div>
+                <span
+                  className={`mt-2 text-xs font-medium ${
+                    isActive || isCompleted ? "text-[#22ab59]" : "text-[#9ca3af]"
+                  }`}
+                >
+                  {stepLabels[index]}
+                </span>
+              </div>
+
+              {/* Connector Line */}
+              {stepNumber < totalSteps && (
+                <div
+                  className={`mx-2 h-0.5 flex-1 transition-colors ${
+                    isCompleted ? "bg-[#22ab59]" : "bg-[#d1d5db]"
+                  }`}
+                />
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

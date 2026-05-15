@@ -7,6 +7,211 @@ datasource db {
   provider = "postgresql"
 }
 
+model User {
+  id               String          @id @default(uuid()) @db.Uuid
+  email            String          @unique
+  username         String?         @unique
+  role             UserRole        @default(WORKER)
+  avatarUrl        String?
+  emailVerified    Boolean         @default(false)
+  status           UserStatus      @default(ACTIVE)
+  availableBalance Decimal         @default(0) @db.Decimal(14, 2)
+  pendingBalance   Decimal         @default(0) @db.Decimal(14, 2)
+  escrowBalance    Decimal         @default(0) @db.Decimal(14, 2)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  adminAuditLogs   AdminAuditLog[] @relation("AdminAuditActor")
+  affectedAudits   AdminAuditLog[] @relation("AdminAuditTarget")
+  manualDeposits   ManualDeposit[] @relation("EmployerDeposits")
+  notifications    Notification[]
+  submissions      Submission[]    @relation("WorkerSubmissions")
+  tasks            Task[]          @relation("EmployerTasks")
+  claims           TaskClaim[]     @relation("WorkerClaims")
+  transactions     Transaction[]
+  withdrawals      Withdrawal[]
+
+  @@index([role, status])
+  @@index([emailVerified])
+}
+
+model Task {
+  id                String       @id @default(uuid()) @db.Uuid
+  employerId        String       @db.Uuid
+  taskType          TaskType     @default(EXPRESS)
+  title             String
+  description       String
+  instructions      String
+  proofRequirements String?
+  category          String?
+  subcategory       String?
+  targetListId      String?      @db.Uuid
+  rewardAmount      Decimal      @db.Decimal(14, 2)
+  totalSlots        Int
+  availableSlots    Int
+  claimedSlots      Int          @default(0)
+  submittedSlots    Int          @default(0)
+  approvedSlots     Int          @default(0)
+  rejectedSlots     Int          @default(0)
+  escrowAmount      Decimal      @default(0) @db.Decimal(14, 2)
+  platformFeeAmount Decimal      @default(0) @db.Decimal(14, 2)
+  status            TaskStatus   @default(DRAFT)
+  autoApproveDays   Int          @default(3)
+  expiresAt         DateTime?
+  publishedAt       DateTime?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  submissions       Submission[]
+  employer          User         @relation("EmployerTasks", fields: [employerId], references: [id])
+  claims            TaskClaim[]
+
+  @@index([status, createdAt])
+  @@index([employerId, status])
+  @@index([category])
+  @@index([taskType, status])
+}
+
+model TaskClaim {
+  id          String          @id @default(uuid()) @db.Uuid
+  taskId      String          @db.Uuid
+  workerId    String          @db.Uuid
+  status      TaskClaimStatus @default(CLAIMED)
+  claimedAt   DateTime        @default(now())
+  submittedAt DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  submission  Submission?
+  task        Task            @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  worker      User            @relation("WorkerClaims", fields: [workerId], references: [id])
+
+  @@unique([taskId, workerId])
+  @@index([workerId, status])
+  @@index([taskId, status])
+}
+
+model Submission {
+  id               String           @id @default(uuid()) @db.Uuid
+  taskId           String           @db.Uuid
+  workerId         String           @db.Uuid
+  claimId          String           @unique @db.Uuid
+  status           SubmissionStatus @default(PENDING)
+  proofText        String?
+  proofImages      Json?
+  employerFeedback String?
+  reviewedAt       DateTime?
+  autoApproveAt    DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  claim            TaskClaim        @relation(fields: [claimId], references: [id])
+  task             Task             @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  worker           User             @relation("WorkerSubmissions", fields: [workerId], references: [id])
+
+  @@unique([taskId, workerId])
+  @@index([status, autoApproveAt])
+  @@index([workerId, status])
+}
+
+model Transaction {
+  id           String          @id @default(uuid()) @db.Uuid
+  userId       String          @db.Uuid
+  type         TransactionType
+  amount       Decimal         @db.Decimal(14, 2)
+  balanceAfter Decimal         @db.Decimal(14, 2)
+  referenceId  String?         @db.Uuid
+  description  String
+  metadata     Json?
+  createdAt    DateTime        @default(now())
+  user         User            @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([type, createdAt])
+  @@index([referenceId])
+}
+
+model Withdrawal {
+  id            String           @id @default(uuid()) @db.Uuid
+  userId        String           @db.Uuid
+  amount        Decimal          @db.Decimal(14, 2)
+  fee           Decimal          @db.Decimal(14, 2)
+  netAmount     Decimal          @db.Decimal(14, 2)
+  status        WithdrawalStatus @default(PENDING)
+  bankDetails   Json
+  adminFeedback String?
+  processedAt   DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  user          User             @relation(fields: [userId], references: [id])
+
+  @@index([status, createdAt])
+  @@index([userId, status])
+}
+
+model ManualDeposit {
+  id            String              @id @default(uuid()) @db.Uuid
+  employerId    String              @db.Uuid
+  amount        Decimal             @db.Decimal(14, 2)
+  status        ManualDepositStatus @default(PENDING)
+  bankDetails   Json
+  transferCode  String              @unique
+  proofImageUrl String?
+  adminFeedback String?
+  processedAt   DateTime?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  employer      User                @relation("EmployerDeposits", fields: [employerId], references: [id])
+
+  @@index([status, createdAt])
+  @@index([employerId, status])
+}
+
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @db.Uuid
+  type      NotificationType
+  title     String
+  body      String
+  data      Json?
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
+  @@index([type, createdAt])
+}
+
+model AdminAuditLog {
+  id           String           @id @default(uuid()) @db.Uuid
+  adminId      String           @db.Uuid
+  targetUserId String?          @db.Uuid
+  action       AdminAuditAction
+  entityType   String
+  entityId     String?          @db.Uuid
+  before       Json?
+  after        Json?
+  reason       String?
+  createdAt    DateTime         @default(now())
+  admin        User             @relation("AdminAuditActor", fields: [adminId], references: [id])
+  targetUser   User?            @relation("AdminAuditTarget", fields: [targetUserId], references: [id])
+
+  @@index([adminId, createdAt])
+  @@index([targetUserId, createdAt])
+  @@index([entityType, entityId])
+}
+
+model LoginOtpRequest {
+  email      String   @id
+  lastSentAt DateTime @db.Timestamptz(6)
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime @default(now()) @db.Timestamptz(6)
+}
+
+model RegistrationOtpRequest {
+  email      String   @id
+  lastSentAt DateTime @db.Timestamptz(6)
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime @default(now()) @db.Timestamptz(6)
+}
+
 enum UserRole {
   ADMIN
   EMPLOYER
@@ -17,6 +222,12 @@ enum UserStatus {
   ACTIVE
   SUSPENDED
   BANNED
+}
+
+enum TaskType {
+  EXPRESS
+  CLASSIC
+  LIST
 }
 
 enum TaskStatus {
@@ -85,200 +296,4 @@ enum AdminAuditAction {
   USER_ROLE_CHANGED
   TASK_MODERATED
   FUNDS_FROZEN
-}
-
-model User {
-  id               String     @id @default(uuid()) @db.Uuid
-  email            String     @unique
-  username         String?    @unique
-  role             UserRole   @default(WORKER)
-  avatarUrl        String?
-  emailVerified    Boolean    @default(false)
-  status           UserStatus @default(ACTIVE)
-  availableBalance Decimal    @default(0) @db.Decimal(14, 2)
-  pendingBalance   Decimal    @default(0) @db.Decimal(14, 2)
-  escrowBalance    Decimal    @default(0) @db.Decimal(14, 2)
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
-
-  tasks           Task[]           @relation("EmployerTasks")
-  claims          TaskClaim[]       @relation("WorkerClaims")
-  submissions     Submission[]      @relation("WorkerSubmissions")
-  transactions    Transaction[]
-  withdrawals     Withdrawal[]
-  manualDeposits  ManualDeposit[]   @relation("EmployerDeposits")
-  notifications   Notification[]
-  adminAuditLogs  AdminAuditLog[]   @relation("AdminAuditActor")
-  affectedAudits  AdminAuditLog[]   @relation("AdminAuditTarget")
-
-  @@index([role, status])
-  @@index([emailVerified])
-}
-
-model Task {
-  id                 String     @id @default(uuid()) @db.Uuid
-  employerId         String     @db.Uuid
-  title              String
-  description        String
-  instructions       String
-  proofRequirements  String?
-  category           String?
-  rewardAmount       Decimal    @db.Decimal(14, 2)
-  totalSlots         Int
-  availableSlots     Int
-  claimedSlots       Int        @default(0)
-  submittedSlots     Int        @default(0)
-  approvedSlots      Int        @default(0)
-  rejectedSlots      Int        @default(0)
-  escrowAmount       Decimal    @default(0) @db.Decimal(14, 2)
-  platformFeeAmount  Decimal    @default(0) @db.Decimal(14, 2)
-  status             TaskStatus @default(DRAFT)
-  autoApproveDays    Int        @default(3)
-  expiresAt          DateTime?
-  publishedAt        DateTime?
-  createdAt          DateTime   @default(now())
-  updatedAt          DateTime   @updatedAt
-
-  employer    User         @relation("EmployerTasks", fields: [employerId], references: [id], onDelete: Restrict)
-  claims      TaskClaim[]
-  submissions Submission[]
-
-  @@index([status, createdAt])
-  @@index([employerId, status])
-  @@index([category])
-}
-
-model TaskClaim {
-  id          String          @id @default(uuid()) @db.Uuid
-  taskId      String          @db.Uuid
-  workerId    String          @db.Uuid
-  status      TaskClaimStatus @default(CLAIMED)
-  claimedAt   DateTime        @default(now())
-  submittedAt DateTime?
-  expiresAt   DateTime?
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-
-  task       Task        @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  worker     User        @relation("WorkerClaims", fields: [workerId], references: [id], onDelete: Restrict)
-  submission Submission?
-
-  @@unique([taskId, workerId])
-  @@index([workerId, status])
-  @@index([taskId, status])
-}
-
-model Submission {
-  id               String           @id @default(uuid()) @db.Uuid
-  taskId           String           @db.Uuid
-  workerId         String           @db.Uuid
-  claimId          String           @unique @db.Uuid
-  status           SubmissionStatus @default(PENDING)
-  proofText        String?
-  proofImages      Json?
-  employerFeedback String?
-  reviewedAt       DateTime?
-  autoApproveAt    DateTime?
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-
-  task   Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  worker User      @relation("WorkerSubmissions", fields: [workerId], references: [id], onDelete: Restrict)
-  claim  TaskClaim @relation(fields: [claimId], references: [id], onDelete: Restrict)
-
-  @@unique([taskId, workerId])
-  @@index([status, autoApproveAt])
-  @@index([workerId, status])
-}
-
-model Transaction {
-  id           String          @id @default(uuid()) @db.Uuid
-  userId       String          @db.Uuid
-  type         TransactionType
-  amount       Decimal         @db.Decimal(14, 2)
-  balanceAfter Decimal         @db.Decimal(14, 2)
-  referenceId  String?         @db.Uuid
-  description  String
-  metadata     Json?
-  createdAt    DateTime        @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
-
-  @@index([userId, createdAt])
-  @@index([type, createdAt])
-  @@index([referenceId])
-}
-
-model Withdrawal {
-  id            String           @id @default(uuid()) @db.Uuid
-  userId        String           @db.Uuid
-  amount        Decimal          @db.Decimal(14, 2)
-  fee           Decimal          @db.Decimal(14, 2)
-  netAmount     Decimal          @db.Decimal(14, 2)
-  status        WithdrawalStatus @default(PENDING)
-  bankDetails   Json
-  adminFeedback String?
-  processedAt   DateTime?
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
-
-  @@index([status, createdAt])
-  @@index([userId, status])
-}
-
-model ManualDeposit {
-  id            String              @id @default(uuid()) @db.Uuid
-  employerId    String              @db.Uuid
-  amount        Decimal             @db.Decimal(14, 2)
-  status        ManualDepositStatus @default(PENDING)
-  bankDetails   Json
-  transferCode  String              @unique
-  proofImageUrl String?
-  adminFeedback String?
-  processedAt   DateTime?
-  createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
-
-  employer User @relation("EmployerDeposits", fields: [employerId], references: [id], onDelete: Restrict)
-
-  @@index([status, createdAt])
-  @@index([employerId, status])
-}
-
-model Notification {
-  id        String           @id @default(uuid()) @db.Uuid
-  userId    String           @db.Uuid
-  type      NotificationType
-  title     String
-  body      String
-  data      Json?
-  readAt    DateTime?
-  createdAt DateTime         @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId, readAt, createdAt])
-  @@index([type, createdAt])
-}
-
-model AdminAuditLog {
-  id           String           @id @default(uuid()) @db.Uuid
-  adminId      String           @db.Uuid
-  targetUserId String?          @db.Uuid
-  action       AdminAuditAction
-  entityType   String
-  entityId     String?          @db.Uuid
-  before       Json?
-  after        Json?
-  reason       String?
-  createdAt    DateTime         @default(now())
-
-  admin      User  @relation("AdminAuditActor", fields: [adminId], references: [id], onDelete: Restrict)
-  targetUser User? @relation("AdminAuditTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
-
-  @@index([adminId, createdAt])
-  @@index([targetUserId, createdAt])
-  @@index([entityType, entityId])
 }

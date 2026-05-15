@@ -7,6 +7,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 ## Local Instructions
 
 Do not use rg, always use PowerShell.
+DO not reset the database.
 Khi viết code thì luôn phải viết nội dung bằng tiếng Việt và là tiếng Việt có dấu.
 Khi viết code phải luôn hướng đến production, đừng làm kiểu hardcode, mock code hay fake code, luôn luôn real và production.
 
