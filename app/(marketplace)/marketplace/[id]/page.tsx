@@ -6,6 +6,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { TaskDetailCard } from "@/components/tasks/task-detail-card";
 import { SubmissionForm } from "@/components/tasks/submission-form";
 import { TaskClaimButton } from "@/components/tasks/task-claim-button";
+import {
+  TaskNotActiveErrorState,
+  InvalidClaimStatusErrorState,
+  DuplicateSubmissionErrorState,
+} from "@/components/tasks/error-states";
 import { requireRole } from "@/lib/auth/session";
 import { loadMarketplaceTask } from "@/lib/services/marketplace";
 import { formatVnd } from "@/lib/utils/money";
@@ -173,37 +178,17 @@ export default async function TaskDetailPage({ params }: TaskDetailPageProps) {
                   />
                 </div>
               ) : (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800 font-medium">
-                  Việc này hiện chưa thể giữ chỗ vì đang không ở trạng thái mở
-                  hoặc đã hết suất.
-                </div>
+                <TaskNotActiveErrorState taskStatus={task.status} />
               )
             ) : task.status !== TaskStatus.ACTIVE ? (
-              <div className="rounded-lg border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800 font-medium">
-                Việc này hiện không ở trạng thái ACTIVE nên bạn không thể nộp
-                thêm bằng chứng lúc này.
-              </div>
+              <TaskNotActiveErrorState taskStatus={task.status} />
             ) : currentClaim.status === TaskClaimStatus.CANCELLED ||
               currentClaim.status === TaskClaimStatus.EXPIRED ? (
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-5 py-4 text-sm text-slate-600 font-medium">
-                Bạn đã có lịch sử nhận việc này và không thể nhận lại task này.
-              </div>
+              <InvalidClaimStatusErrorState claimStatus={currentClaim.status} />
             ) : currentSubmissionStatus === SubmissionStatus.PENDING ? (
-              <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800 font-medium flex items-center gap-3">
-                <ShieldCheck className="size-5 text-emerald-600" />
-                <span>
-                  Bạn đã gửi bằng chứng. Hệ thống sẽ duyệt tự động sau{" "}
-                  {task.autoApproveDays} ngày hoặc khi người thuê phản hồi.
-                </span>
-              </div>
+              <DuplicateSubmissionErrorState submissionStatus="PENDING" />
             ) : currentSubmissionStatus === SubmissionStatus.APPROVED ? (
-              <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800 font-medium flex items-center gap-3">
-                <ShieldCheck className="size-5 text-emerald-600" />
-                <span>
-                  Bằng chứng của bạn đã được duyệt. Phần thưởng đã được thêm vào
-                  số dư.
-                </span>
-              </div>
+              <DuplicateSubmissionErrorState submissionStatus="APPROVED" />
             ) : showSubmissionForm ? (
               <div className="space-y-6">
                 {currentSubmissionStatus === SubmissionStatus.REJECTED ? (

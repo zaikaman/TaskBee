@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -8,17 +9,51 @@ import { Input } from "@/components/ui/input";
 import { X, UploadCloud, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { createSubmission, uploadProofFileAction } from "@/lib/services/submission";
+import { DuplicateSubmissionErrorState } from "./error-states";
 
 interface SubmissionFormProps {
   taskId: string;
   proofRequirements?: string | null;
 }
 
+type SubmissionError = {
+  type: "duplicate-submission";
+  submissionStatus?: string;
+} | null;
+
+function parseSubmissionError(errorMessage: string): SubmissionError {
+  // Check for duplicate submission errors
+  if (
+    errorMessage.includes("đã gửi bằng chứng") ||
+    errorMessage.includes("đã có submission") ||
+    errorMessage.includes("đã được duyệt")
+  ) {
+    let submissionStatus: string | undefined;
+
+    if (errorMessage.includes("PENDING") || errorMessage.includes("chờ duyệt")) {
+      submissionStatus = "PENDING";
+    } else if (errorMessage.includes("APPROVED") || errorMessage.includes("đã được duyệt")) {
+      submissionStatus = "APPROVED";
+    }
+
+    return { type: "duplicate-submission", submissionStatus };
+  }
+
+  return null;
+}
+
 export function SubmissionForm({ taskId, proofRequirements }: SubmissionFormProps) {
+  const router = useRouter();
   const [proofText, setProofText] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [submissionError, setSubmissionError] = useState<SubmissionError>(null);
+
+  // Show error state if there's a submission error
+  if (submissionError?.type === "duplicate-submission") {
+    return <DuplicateSubmissionErrorState submissionStatus={submissionError.submissionStatus} />;
+  }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -85,12 +120,22 @@ export function SubmissionForm({ taskId, proofRequirements }: SubmissionFormProp
         const submitRes = await createSubmission({ ok: false }, submitData);
 
         if (!submitRes.ok) {
+          // Parse error and show appropriate error state
+          const error = parseSubmissionError(submitRes.error || "");
+          if (error) {
+            setSubmissionError(error);
+            router.refresh();
+            return;
+          }
+
           throw new Error(submitRes.error || "Không thể gửi bằng chứng.");
         }
 
         toast.success(submitRes.message || "Đã gửi bằng chứng thành công!");
         setProofText("");
         setSelectedFiles([]);
+        setSubmissionError(null);
+        router.refresh();
       } catch (err: any) {
         toast.error(err.message || "Có lỗi xảy ra, vui lòng thử lại.");
       } finally {
