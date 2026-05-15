@@ -78,8 +78,8 @@ Phase 1 (Setup)
 
 - [x] T020 [P] [US3] Implement optimistic lock slot claim logic (`claimTaskSlot`) in `lib/services/task.ts`
 - [x] T021 [US3] Create Task Marketplace browsing view for workers in `app/(marketplace)/viec-lam/page.tsx`
-- [ ] T022 [US3] Create individual Task Details view in `app/(marketplace)/viec-lam/[id]/page.tsx`
-- [ ] T023 [US3] Implement Server Action to process Worker proof submissions (`createSubmission`) in `lib/services/submission.ts`
+- [x] T022 [US3] Create individual Task Details view in `app/(marketplace)/viec-lam/[id]/page.tsx`
+- [x] T023 [US3] Implement Server Action to process Worker proof submissions (`createSubmission`) in `lib/services/submission.ts`
 - [ ] T024 [P] [US3] Create the proof submission upload UI (images/text) in `components/tasks/submission-form.tsx`
 - [ ] T036 [US3] Implement background job (CRON/Vercel trigger) to auto-approve expired pending submissions in `app/api/cron/auto-approve/route.ts`
 - [ ] T060 [US3] Persist task claims and prevent duplicate active claims per worker/task in `lib/services/task.ts`
