@@ -126,6 +126,8 @@ export function PrimaryNav({ currentRole }: { currentRole?: string }) {
                         >
                           <div className="font-medium text-slate-900">Tìm việc làm</div>
                         </Link>
+                        
+                        <div className="my-1 h-px bg-slate-100" />
 
                         <Link
                           href="/viec-lam/finished"
@@ -144,7 +146,7 @@ export function PrimaryNav({ currentRole }: { currentRole?: string }) {
                           onClick={() => setIsJobsMenuOpen(false)}
                         >
                           <div className="flex items-center justify-between">
-                            <span className="font-medium text-slate-900">Đã xác nhận + thanh toán</span>
+                            <span className="font-medium text-slate-500">Đã xác nhận + thanh toán</span>
                             <span className="text-slate-500">0</span>
                           </div>
                         </Link>
@@ -155,7 +157,7 @@ export function PrimaryNav({ currentRole }: { currentRole?: string }) {
                           onClick={() => setIsJobsMenuOpen(false)}
                         >
                           <div className="flex items-center justify-between">
-                            <span className="font-medium text-slate-900">Đang chờ xét duyệt</span>
+                            <span className="font-medium text-slate-500">Đang chờ xét duyệt</span>
                             <span className="text-slate-500">0</span>
                           </div>
                         </Link>

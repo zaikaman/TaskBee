@@ -15,6 +15,7 @@ import {
   addMoney,
   calculateEmployerTaskCharge,
   formatVnd,
+  fromMinorUnits,
   subtractMoney,
   toMinorUnits,
 } from "@/lib/utils/money";
@@ -322,5 +323,505 @@ export async function createTask(
           ? error.message
           : "Không thể tạo task lúc này. Vui lòng thử lại sau.",
     };
+  }
+}
+
+/**
+ * Tạm dừng task đang ACTIVE
+ * Chỉ Employer sở hữu task mới có thể pause
+ * Task PAUSED sẽ không hiển thị trong marketplace và không cho phép claim mới
+ */
+export async function pauseTask(taskId: string): Promise<{
+  ok: boolean;
+  message?: string;
+  error?: string;
+}> {
+  try {
+    const session = await requireRole(UserRole.EMPLOYER);
+    const profile = session.profile;
+
+    if (!profile) {
+      return {
+        ok: false,
+        error: "Hồ sơ Employer chưa được khởi tạo. Vui lòng đăng nhập lại.",
+      };
+    }
+
+    const prisma = getPrisma();
+
+    // Kiểm tra task tồn tại và thuộc về employer này
+    const task = await prisma.task.findUnique({
+      where: {
+        id: taskId,
+        employerId: profile.id,
+      },
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        employerId: true,
+      },
+    });
+
+    if (!task) {
+      return {
+        ok: false,
+        error: "Không tìm thấy task hoặc bạn không có quyền thao tác task này.",
+      };
+    }
+
+    // Chỉ có thể pause task đang ACTIVE
+    if (task.status !== TaskStatus.ACTIVE) {
+      return {
+        ok: false,
+        error: `Không thể tạm dừng task đang ở trạng thái ${task.status}. Chỉ có thể tạm dừng task đang ACTIVE.`,
+      };
+    }
+
+    // Cập nhật trạng thái task
+    await prisma.task.update({
+      where: {
+        id: taskId,
+      },
+      data: {
+        status: TaskStatus.PAUSED,
+        updatedAt: new Date(),
+      },
+    });
+
+    revalidatePath("/dashboard/employer/tasks");
+    revalidatePath("/marketplace");
+    revalidatePath(`/marketplace/tasks/${taskId}`);
+
+    return {
+      ok: true,
+      message: `Task "${task.title}" đã được tạm dừng thành công.`,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Không thể tạm dừng task lúc này. Vui lòng thử lại sau.",
+    };
+  }
+}
+
+/**
+ * Tiếp tục task đang PAUSED
+ * Chỉ Employer sở hữu task mới có thể resume
+ * Task sẽ quay lại trạng thái ACTIVE và hiển thị trong marketplace
+ */
+export async function resumeTask(taskId: string): Promise<{
+  ok: boolean;
+  message?: string;
+  error?: string;
+}> {
+  try {
+    const session = await requireRole(UserRole.EMPLOYER);
+    const profile = session.profile;
+
+    if (!profile) {
+      return {
+        ok: false,
+        error: "Hồ sơ Employer chưa được khởi tạo. Vui lòng đăng nhập lại.",
+      };
+    }
+
+    const prisma = getPrisma();
+
+    // Kiểm tra task tồn tại và thuộc về employer này
+    const task = await prisma.task.findUnique({
+      where: {
+        id: taskId,
+        employerId: profile.id,
+      },
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        employerId: true,
+        expiresAt: true,
+      },
+    });
+
+    if (!task) {
+      return {
+        ok: false,
+        error: "Không tìm thấy task hoặc bạn không có quyền thao tác task này.",
+      };
+    }
+
+    // Chỉ có thể resume task đang PAUSED
+    if (task.status !== TaskStatus.PAUSED) {
+      return {
+        ok: false,
+        error: `Không thể tiếp tục task đang ở trạng thái ${task.status}. Chỉ có thể tiếp tục task đang PAUSED.`,
+      };
+    }
+
+    // Kiểm tra task đã hết hạn chưa
+    if (task.expiresAt && task.expiresAt < new Date()) {
+      return {
+        ok: false,
+        error: "Không thể tiếp tục task đã hết hạn. Vui lòng tạo task mới.",
+      };
+    }
+
+    // Cập nhật trạng thái task
+    await prisma.task.update({
+      where: {
+        id: taskId,
+      },
+      data: {
+        status: TaskStatus.ACTIVE,
+        updatedAt: new Date(),
+      },
+    });
+
+    revalidatePath("/dashboard/employer/tasks");
+    revalidatePath("/marketplace");
+    revalidatePath(`/marketplace/tasks/${taskId}`);
+
+    return {
+      ok: true,
+      message: `Task "${task.title}" đã được tiếp tục và hiển thị lại trong marketplace.`,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Không thể tiếp tục task lúc này. Vui lòng thử lại sau.",
+    };
+  }
+}
+
+/**
+ * Đóng task thành công
+ * Chỉ Employer sở hữu task mới có thể close
+ * Task COMPLETED sẽ không hiển thị trong marketplace
+ * Escrow còn lại (nếu có) sẽ được giải phóng về available balance
+ */
+export async function closeTask(taskId: string): Promise<{
+  ok: boolean;
+  message?: string;
+  error?: string;
+}> {
+  try {
+    const session = await requireRole(UserRole.EMPLOYER);
+    const profile = session.profile;
+
+    if (!profile) {
+      return {
+        ok: false,
+        error: "Hồ sơ Employer chưa được khởi tạo. Vui lòng đăng nhập lại.",
+      };
+    }
+
+    const prisma = getPrisma();
+
+    return await prisma.$transaction(async (tx) => {
+      // Kiểm tra task tồn tại và thuộc về employer này
+      const task = await tx.task.findUnique({
+        where: {
+          id: taskId,
+          employerId: profile.id,
+        },
+        select: {
+          id: true,
+          title: true,
+          status: true,
+          employerId: true,
+          escrowAmount: true,
+          rewardAmount: true,
+          approvedSlots: true,
+          totalSlots: true,
+        },
+      });
+
+      if (!task) {
+        return {
+          ok: false,
+          error: "Không tìm thấy task hoặc bạn không có quyền thao tác task này.",
+        };
+      }
+
+      // Chỉ có thể close task đang ACTIVE hoặc PAUSED
+      if (task.status !== TaskStatus.ACTIVE && task.status !== TaskStatus.PAUSED) {
+        return {
+          ok: false,
+          error: `Không thể đóng task đang ở trạng thái ${task.status}. Chỉ có thể đóng task đang ACTIVE hoặc PAUSED.`,
+        };
+      }
+
+      // Tính toán số tiền escrow còn lại cần giải phóng
+      const escrowAmountMinor = toMinorUnits(task.escrowAmount.toString());
+      const rewardAmountMinor = toMinorUnits(task.rewardAmount.toString());
+      const paidOutMinor = rewardAmountMinor * BigInt(task.approvedSlots);
+      const remainingEscrowMinor = escrowAmountMinor - paidOutMinor;
+
+      // Lấy số dư hiện tại
+      const currentUser = await tx.user.findUniqueOrThrow({
+        where: {
+          id: profile.id,
+        },
+        select: {
+          availableBalance: true,
+          escrowBalance: true,
+        },
+      });
+
+      const currentAvailable = currentUser.availableBalance.toString();
+      const currentEscrow = currentUser.escrowBalance.toString();
+
+      // Cập nhật trạng thái task
+      await tx.task.update({
+        where: {
+          id: taskId,
+        },
+        data: {
+          status: TaskStatus.COMPLETED,
+          updatedAt: new Date(),
+        },
+      });
+
+      // Nếu còn escrow, giải phóng về available balance
+      if (remainingEscrowMinor > BigInt(0)) {
+        const remainingEscrow = fromMinorUnits(remainingEscrowMinor);
+
+        // Cập nhật ví: trừ escrow, cộng available
+        await tx.user.update({
+          where: {
+            id: profile.id,
+          },
+          data: {
+            escrowBalance: {
+              decrement: remainingEscrow,
+            },
+            availableBalance: {
+              increment: remainingEscrow,
+            },
+          },
+        });
+
+        // Tính số dư sau khi giải phóng
+        const newEscrowBalance = subtractMoney(currentEscrow, remainingEscrow);
+        const newAvailableBalance = addMoney(currentAvailable, remainingEscrow);
+
+        // Ghi ledger entry cho việc giải phóng escrow
+        await tx.transaction.create({
+          data: {
+            userId: profile.id,
+            type: TransactionType.TASK_ESCROW_RELEASE,
+            amount: remainingEscrow,
+            balanceAfter: newAvailableBalance,
+            referenceId: taskId,
+            description: `Giải phóng escrow ${formatVnd(remainingEscrow)} từ task "${task.title}" đã hoàn thành.`,
+            metadata: {
+              taskId: task.id,
+              taskTitle: task.title,
+              totalEscrow: task.escrowAmount.toString(),
+              approvedSlots: task.approvedSlots,
+              totalSlots: task.totalSlots,
+              paidOut: fromMinorUnits(paidOutMinor),
+              released: remainingEscrow,
+            },
+          },
+        });
+
+        return {
+          ok: true,
+          message: `Task "${task.title}" đã được đóng thành công. Escrow còn lại ${formatVnd(remainingEscrow)} đã được giải phóng về ví.`,
+        };
+      }
+
+      return {
+        ok: true,
+        message: `Task "${task.title}" đã được đóng thành công.`,
+      };
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Không thể đóng task lúc này. Vui lòng thử lại sau.",
+    };
+  } finally {
+    revalidatePath("/dashboard/employer/tasks");
+    revalidatePath("/marketplace");
+    revalidatePath(`/marketplace/tasks/${taskId}`);
+  }
+}
+
+/**
+ * Hủy task và hoàn tiền escrow
+ * Chỉ Employer sở hữu task mới có thể cancel
+ * Toàn bộ escrow sẽ được hoàn lại về available balance
+ * Lưu ý: Phí tạo task (10%) đã trả sẽ KHÔNG được hoàn lại
+ */
+export async function cancelTask(taskId: string, reason?: string): Promise<{
+  ok: boolean;
+  message?: string;
+  error?: string;
+}> {
+  try {
+    const session = await requireRole(UserRole.EMPLOYER);
+    const profile = session.profile;
+
+    if (!profile) {
+      return {
+        ok: false,
+        error: "Hồ sơ Employer chưa được khởi tạo. Vui lòng đăng nhập lại.",
+      };
+    }
+
+    const prisma = getPrisma();
+
+    return await prisma.$transaction(async (tx) => {
+      // Kiểm tra task tồn tại và thuộc về employer này
+      const task = await tx.task.findUnique({
+        where: {
+          id: taskId,
+          employerId: profile.id,
+        },
+        select: {
+          id: true,
+          title: true,
+          status: true,
+          employerId: true,
+          escrowAmount: true,
+          rewardAmount: true,
+          approvedSlots: true,
+          totalSlots: true,
+          platformFeeAmount: true,
+        },
+      });
+
+      if (!task) {
+        return {
+          ok: false,
+          error: "Không tìm thấy task hoặc bạn không có quyền thao tác task này.",
+        };
+      }
+
+      // Chỉ có thể cancel task đang ACTIVE hoặc PAUSED
+      if (task.status !== TaskStatus.ACTIVE && task.status !== TaskStatus.PAUSED) {
+        return {
+          ok: false,
+          error: `Không thể hủy task đang ở trạng thái ${task.status}. Chỉ có thể hủy task đang ACTIVE hoặc PAUSED.`,
+        };
+      }
+
+      // Tính toán số tiền escrow cần hoàn lại
+      const escrowAmountMinor = toMinorUnits(task.escrowAmount.toString());
+      const rewardAmountMinor = toMinorUnits(task.rewardAmount.toString());
+      const paidOutMinor = rewardAmountMinor * BigInt(task.approvedSlots);
+      const refundEscrowMinor = escrowAmountMinor - paidOutMinor;
+
+      if (refundEscrowMinor < BigInt(0)) {
+        return {
+          ok: false,
+          error: "Lỗi tính toán escrow. Vui lòng liên hệ admin.",
+        };
+      }
+
+      // Lấy số dư hiện tại
+      const currentUser = await tx.user.findUniqueOrThrow({
+        where: {
+          id: profile.id,
+        },
+        select: {
+          availableBalance: true,
+          escrowBalance: true,
+        },
+      });
+
+      const currentAvailable = currentUser.availableBalance.toString();
+      const currentEscrow = currentUser.escrowBalance.toString();
+      const refundEscrow = fromMinorUnits(refundEscrowMinor);
+
+      // Cập nhật trạng thái task
+      await tx.task.update({
+        where: {
+          id: taskId,
+        },
+        data: {
+          status: TaskStatus.CANCELLED,
+          updatedAt: new Date(),
+        },
+      });
+
+      // Hoàn tiền escrow về available balance
+      if (refundEscrowMinor > BigInt(0)) {
+        await tx.user.update({
+          where: {
+            id: profile.id,
+          },
+          data: {
+            escrowBalance: {
+              decrement: refundEscrow,
+            },
+            availableBalance: {
+              increment: refundEscrow,
+            },
+          },
+        });
+
+        // Tính số dư sau khi hoàn tiền
+        const newEscrowBalance = subtractMoney(currentEscrow, refundEscrow);
+        const newAvailableBalance = addMoney(currentAvailable, refundEscrow);
+
+        // Ghi ledger entry cho việc hoàn tiền escrow
+        await tx.transaction.create({
+          data: {
+            userId: profile.id,
+            type: TransactionType.TASK_ESCROW_RELEASE,
+            amount: refundEscrow,
+            balanceAfter: newAvailableBalance,
+            referenceId: taskId,
+            description: `Hoàn tiền escrow ${formatVnd(refundEscrow)} từ task "${task.title}" đã hủy.${reason ? ` Lý do: ${reason}` : ""}`,
+            metadata: {
+              taskId: task.id,
+              taskTitle: task.title,
+              totalEscrow: task.escrowAmount.toString(),
+              approvedSlots: task.approvedSlots,
+              totalSlots: task.totalSlots,
+              paidOut: fromMinorUnits(paidOutMinor),
+              refunded: refundEscrow,
+              platformFeeNotRefunded: task.platformFeeAmount.toString(),
+              reason: reason ?? null,
+            },
+          },
+        });
+      }
+
+      const feeNote = toMinorUnits(task.platformFeeAmount.toString()) > BigInt(0)
+        ? ` Lưu ý: Phí tạo task ${formatVnd(task.platformFeeAmount.toString())} đã trả sẽ không được hoàn lại.`
+        : "";
+
+      return {
+        ok: true,
+        message: refundEscrowMinor > BigInt(0)
+          ? `Task "${task.title}" đã được hủy thành công. Escrow ${formatVnd(refundEscrow)} đã được hoàn lại về ví.${feeNote}`
+          : `Task "${task.title}" đã được hủy thành công.${feeNote}`,
+      };
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Không thể hủy task lúc này. Vui lòng thử lại sau.",
+    };
+  } finally {
+    revalidatePath("/dashboard/employer/tasks");
+    revalidatePath("/marketplace");
+    revalidatePath(`/marketplace/tasks/${taskId}`);
   }
 }

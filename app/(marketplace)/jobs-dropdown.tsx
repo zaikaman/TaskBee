@@ -7,17 +7,14 @@ interface JobsDropdownProps {
   isActive?: boolean;
 }
 
+const menuButtonClassName =
+  "w-full px-4 py-3 text-left text-sm hover:bg-slate-50";
+
 export function JobsDropdown({ isActive = true }: JobsDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    console.log("JobsDropdown mounted");
-  }, []);
-
-  useEffect(() => {
-    console.log("Dropdown state changed:", isOpen);
-    
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
@@ -36,32 +33,25 @@ export function JobsDropdown({ isActive = true }: JobsDropdownProps) {
   const handleToggle = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log("Toggle clicked, current state:", isOpen, "event:", e.type);
-    setIsOpen((prev) => {
-      console.log("Setting isOpen from", prev, "to", !prev);
-      return !prev;
-    });
+    setIsOpen((prev) => !prev);
   };
 
   return (
-    <div className="relative" ref={dropdownRef} style={{ pointerEvents: 'auto' }}>
+    <div className="relative" ref={dropdownRef}>
       <button
         type="button"
-        onMouseDown={handleToggle}
-        onClickCapture={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          console.log("Click capture triggered");
-        }}
-        className={`inline-flex items-center gap-1 rounded-b-none rounded-t px-4 py-2 text-sm font-medium transition-colors ${
+        onClick={handleToggle}
+        aria-haspopup="menu"
+        aria-expanded={isOpen}
+        className={`inline-flex items-center gap-1 rounded-t px-4 py-2 text-sm transition-colors ${
           isActive
-            ? "bg-emerald-600 text-white hover:bg-emerald-700"
-            : "bg-transparent text-slate-500 hover:bg-slate-100"
+            ? "border-b-2 border-emerald-600 font-semibold text-emerald-700"
+            : "font-medium text-slate-500 hover:text-emerald-700"
         }`}
       >
         Việc làm nhỏ
         <ChevronDown
-          className={`size-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
+          className={`size-3 transition-transform ${isOpen ? "rotate-180" : ""}`}
         />
       </button>
 
@@ -69,20 +59,22 @@ export function JobsDropdown({ isActive = true }: JobsDropdownProps) {
         <div className="absolute left-0 top-full z-50 mt-0 w-64 rounded-b border border-slate-200 bg-white shadow-lg">
           <div className="py-2">
             <button
-              className="w-full px-4 py-3 text-left text-sm hover:bg-slate-50"
+              type="button"
+              className={menuButtonClassName}
               onClick={() => {
                 setIsOpen(false);
-                console.log("Tìm việc làm clicked");
               }}
             >
               <div className="font-medium text-slate-900">Tìm việc làm</div>
             </button>
 
+            <div className="my-1 h-px bg-slate-100" />
+
             <button
-              className="w-full px-4 py-3 text-left text-sm hover:bg-slate-50"
+              type="button"
+              className={menuButtonClassName}
               onClick={() => {
                 setIsOpen(false);
-                console.log("Nhiệm vụ đã hoàn thành clicked");
               }}
             >
               <div className="flex items-center justify-between">
@@ -92,10 +84,10 @@ export function JobsDropdown({ isActive = true }: JobsDropdownProps) {
             </button>
 
             <button
-              className="w-full px-4 py-3 text-left text-sm hover:bg-slate-50"
+              type="button"
+              className={menuButtonClassName}
               onClick={() => {
                 setIsOpen(false);
-                console.log("Đã xác nhận + thanh toán clicked");
               }}
             >
               <div className="flex items-center justify-between">
@@ -105,10 +97,10 @@ export function JobsDropdown({ isActive = true }: JobsDropdownProps) {
             </button>
 
             <button
-              className="w-full px-4 py-3 text-left text-sm hover:bg-slate-50"
+              type="button"
+              className={menuButtonClassName}
               onClick={() => {
                 setIsOpen(false);
-                console.log("Đang chờ xét duyệt clicked");
               }}
             >
               <div className="flex items-center justify-between">
