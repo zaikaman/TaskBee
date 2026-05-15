@@ -43,15 +43,31 @@ const statusColors: Record<TaskStatus, string> = {
   CANCELLED: "bg-red-100 text-red-700",
 };
 
+function normalizeSearchText(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[đĐ]/g, "d")
+    .toLowerCase()
+    .trim();
+}
+
 export function EmployerTasksList({ tasks }: EmployerTasksListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<TaskStatus | "ALL">("ALL");
   const [sortBy, setSortBy] = useState<"newest" | "oldest">("newest");
 
+  const normalizedSearchQuery = normalizeSearchText(searchQuery);
+
   // Filter and sort tasks
   const filteredTasks = tasks
     .filter((task) => {
-      const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
+      const normalizedTitle = normalizeSearchText(task.title);
+      const normalizedTaskType = normalizeSearchText(String(task.taskType));
+      const matchesSearch =
+        normalizedSearchQuery.length === 0 ||
+        normalizedTitle.includes(normalizedSearchQuery) ||
+        normalizedTaskType.includes(normalizedSearchQuery);
       const matchesStatus = statusFilter === "ALL" || task.status === statusFilter;
       return matchesSearch && matchesStatus;
     })
@@ -108,8 +124,32 @@ export function EmployerTasksList({ tasks }: EmployerTasksListProps) {
         {filteredTasks.length} kết quả
       </div>
 
+      {filteredTasks.length === 0 && (searchQuery || statusFilter !== "ALL") ? (
+        <div className="rounded border border-[#f0f2f5] bg-[#f5f7fa] p-12 text-center">
+          <svg
+            className="mx-auto h-12 w-12 text-[#a8b0bf]"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M21 21l-4.35-4.35m1.85-5.65a7 7 0 11-14 0 7 7 0 0114 0z"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+            />
+          </svg>
+          <h3 className="mt-4 text-lg font-medium text-[#203259]">
+            Không tìm thấy công việc phù hợp
+          </h3>
+          <p className="mt-2 text-sm text-[#686d77]">
+            Hãy thử đổi từ khóa tìm kiếm hoặc xóa bộ lọc trạng thái để xem thêm kết quả.
+          </p>
+        </div>
+      ) : null}
+
       {/* Tasks Table */}
-      {filteredTasks.length === 0 ? (
+      {filteredTasks.length === 0 && !(searchQuery || statusFilter !== "ALL") ? (
         <div className="rounded border border-[#f0f2f5] bg-[#f5f7fa] p-12 text-center">
           <svg
             className="mx-auto h-12 w-12 text-[#a8b0bf]"

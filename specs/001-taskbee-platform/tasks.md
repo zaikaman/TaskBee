@@ -69,7 +69,7 @@ Phase 1 (Setup)
 - [x] T055 [US2] Add task proof requirement fields to validators, schema, create form, and detail view
 - [x] T056 [US2] Implement Employer 10% task creation fee calculation and ledger entries in `lib/services/task.ts`
 - [x] T057 [US2] Implement task pause, resume, close, and cancel actions with escrow refund handling in `lib/services/task.ts`
-- [ ] T058 [US2] Create Employer task detail and submission review UI in `app/(dashboard)/employer/tasks/[id]/page.tsx`
+- [x] T058 [US2] Create Employer task detail and submission review UI in `app/(dashboard)/employer/tasks/[id]/page.tsx`
 - [ ] T059 [P] [US2] Create reusable task status badges, fee preview, and escrow summary components in `components/tasks/`
 
 ## Phase 5: User Story 3 - Worker Task Completion

@@ -313,8 +313,8 @@ async function rejectSubmission(
 }
 
 export async function reviewSubmission(
-  input: ReviewSubmissionInput,
   _prevState: ReviewSubmissionState = initialReviewSubmissionState,
+  formData: FormData,
 ): Promise<ReviewSubmissionState> {
   void _prevState;
 
@@ -327,6 +327,17 @@ export async function reviewSubmission(
       error: "Hồ sơ Employer chưa được khởi tạo. Vui lòng đăng nhập lại.",
     };
   }
+
+  // Parse form data
+  const submissionId = formData.get("submissionId") as string;
+  const action = formData.get("action") as ReviewAction;
+  const feedback = formData.get("feedback") as string | null;
+
+  const input: ReviewSubmissionInput = {
+    submissionId,
+    action,
+    feedback: feedback || undefined,
+  };
 
   try {
     // Validate ownership and submission state
