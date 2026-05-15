@@ -76,7 +76,7 @@ Phase 1 (Setup)
 *Goal: System MUST allow Workers to browse, claim slots, and submit proof for Active Tasks.*
 *Test Criteria: Worker finds active task, claims slot (respecting concurrency locks), and uploads proof.*
 
-- [ ] T020 [P] [US3] Implement optimistic lock slot claim logic (`claimTaskSlot`) in `lib/services/task.ts`
+- [x] T020 [P] [US3] Implement optimistic lock slot claim logic (`claimTaskSlot`) in `lib/services/task.ts`
 - [ ] T021 [US3] Create Task Marketplace browsing view for workers in `app/(marketplace)/page.tsx`
 - [ ] T022 [US3] Create individual Task Details view in `app/(marketplace)/tasks/[id]/page.tsx`
 - [ ] T023 [US3] Implement Server Action to process Worker proof submissions (`createSubmission`) in `lib/services/submission.ts`

@@ -1058,7 +1058,7 @@ export async function updateTask(
       ok: true,
       taskId: updatedTask.id,
       fields,
-      message: `Việc "${updatedTask.title}" đã được lưu bản nháp thành công.`,
+      message: "Việc đã được cập nhật thành công.",
     };
   } catch (error) {
     return {
@@ -1067,7 +1067,185 @@ export async function updateTask(
       error:
         error instanceof Error
           ? error.message
-            : "Không thể cập nhật việc lúc này. Vui lòng thử lại sau.",
+          : "Không thể cập nhật việc lúc này. Vui lòng thử lại sau.",
     };
+  }
+}
+
+/**
+ * Claim một slot của task cho worker
+ * Sử dụng optimistic locking để đảm bảo không có race condition
+ * 
+ * Business Rules:
+ * - Chỉ worker mới có thể claim slot
+ * - Task phải ở trạng thái ACTIVE
+ * - Task phải còn slot khả dụng (availableSlots > 0)
+ * - Worker không thể claim cùng một task nhiều lần nếu đã có claim active
+ * - Sử dụng atomic decrement với WHERE condition để đảm bảo concurrency safety
+ * 
+ * @param taskId - ID của task cần claim
+ * @returns Promise với kết quả claim
+ */
+export async function claimTaskSlot(taskId: string): Promise<{
+  ok: boolean;
+  message?: string;
+  error?: string;
+  claimId?: string;
+}> {
+  try {
+    // Yêu cầu user phải là WORKER
+    const session = await requireRole(UserRole.WORKER);
+    const profile = session.profile;
+
+    if (!profile) {
+      return {
+        ok: false,
+        error: "Hồ sơ người làm chưa được khởi tạo. Vui lòng đăng nhập lại.",
+      };
+    }
+
+    const prisma = getPrisma();
+
+    // Sử dụng transaction để đảm bảo atomicity
+    return await prisma.$transaction(async (tx) => {
+      // 1. Kiểm tra task tồn tại và ở trạng thái ACTIVE
+      const task = await tx.task.findUnique({
+        where: {
+          id: taskId,
+        },
+        select: {
+          id: true,
+          title: true,
+          status: true,
+          availableSlots: true,
+          expiresAt: true,
+          rewardAmount: true,
+        },
+      });
+
+      if (!task) {
+        return {
+          ok: false,
+          error: "Không tìm thấy việc này.",
+        };
+      }
+
+      // 2. Validate task status
+      if (task.status !== TaskStatus.ACTIVE) {
+        return {
+          ok: false,
+          error: `Việc này đang ở trạng thái ${task.status} và không thể nhận. Chỉ có thể nhận việc đang ACTIVE.`,
+        };
+      }
+
+      // 3. Kiểm tra task đã hết hạn chưa
+      if (task.expiresAt && task.expiresAt < new Date()) {
+        return {
+          ok: false,
+          error: "Việc này đã hết hạn và không thể nhận.",
+        };
+      }
+
+      // 4. Kiểm tra worker đã claim task này chưa (chỉ cho phép 1 claim active per worker per task)
+      const existingClaim = await tx.taskClaim.findFirst({
+        where: {
+          taskId: taskId,
+          workerId: profile.id,
+          // Chỉ kiểm tra các claim chưa có submission hoặc submission chưa được approve/reject
+          OR: [
+            {
+              submission: null,
+            },
+            {
+              submission: {
+                status: {
+                  notIn: ["APPROVED", "REJECTED"],
+                },
+              },
+            },
+          ],
+        },
+        select: {
+          id: true,
+          claimedAt: true,
+        },
+      });
+
+      if (existingClaim) {
+        return {
+          ok: false,
+          error: "Bạn đã nhận việc này rồi. Vui lòng hoàn thành việc hiện tại trước khi nhận lại.",
+        };
+      }
+
+      // 5. Sử dụng optimistic locking: atomic decrement với WHERE condition
+      // Chỉ update nếu availableSlots > 0
+      const updateResult = await tx.task.updateMany({
+        where: {
+          id: taskId,
+          status: TaskStatus.ACTIVE,
+          availableSlots: {
+            gt: 0,
+          },
+        },
+        data: {
+          availableSlots: {
+            decrement: 1,
+          },
+        },
+      });
+
+      // 6. Kiểm tra xem có update được không (nếu không thì slot đã hết)
+      if (updateResult.count === 0) {
+        // Double check lại availableSlots để đưa ra message chính xác
+        const taskCheck = await tx.task.findUnique({
+          where: { id: taskId },
+          select: { availableSlots: true, status: true },
+        });
+
+        if (taskCheck?.availableSlots === 0) {
+          return {
+            ok: false,
+            error: "Việc này đã hết slot. Vui lòng chọn việc khác.",
+          };
+        }
+
+        return {
+          ok: false,
+          error: "Không thể nhận việc lúc này. Vui lòng thử lại.",
+        };
+      }
+
+      // 7. Tạo TaskClaim record để track việc claim
+      const claim = await tx.taskClaim.create({
+        data: {
+          taskId: taskId,
+          workerId: profile.id,
+          claimedAt: new Date(),
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      return {
+        ok: true,
+        claimId: claim.id,
+        message: `Bạn đã nhận việc "${task.title}" thành công. Phần thưởng: ${formatVnd(task.rewardAmount.toString())}.`,
+      };
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Không thể nhận việc lúc này. Vui lòng thử lại sau.",
+    };
+  } finally {
+    // Revalidate các path liên quan
+    revalidatePath("/marketplace");
+    revalidatePath(`/marketplace/tasks/${taskId}`);
+    revalidatePath("/dashboard/worker/tasks");
   }
 }
