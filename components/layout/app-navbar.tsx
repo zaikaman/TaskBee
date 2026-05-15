@@ -5,6 +5,7 @@ import {
   Clock3,
   Leaf,
   Moon,
+  Plus,
   Search,
   WalletCards,
 } from "lucide-react";
@@ -74,7 +75,7 @@ export async function AppNavbar() {
           <Button asChild className="hidden rounded bg-emerald-600 px-4 text-white hover:bg-emerald-700 sm:inline-flex">
             {session?.profile?.role === UserRole.EMPLOYER ? (
               <Link href="/dashboard/employer/tasks/create">
-                <Search className="size-4" />
+                <Plus className="size-4" />
                 Tạo công việc
               </Link>
             ) : (
