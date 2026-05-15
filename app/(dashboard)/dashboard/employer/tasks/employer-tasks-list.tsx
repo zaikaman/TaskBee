@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { formatVnd } from "@/lib/utils/money";
+import { addMoney, formatVnd } from "@/lib/utils/money";
 import type { TaskStatus, TaskType } from "@/lib/generated/prisma/browser";
 
 type Task = {
@@ -212,7 +212,7 @@ export function EmployerTasksList({ tasks }: EmployerTasksListProps) {
                   {/* Cost */}
                   <td className="px-6 py-4">
                     <div className="text-sm font-medium text-[#1b1b1b]">
-                      {formatVnd(task.escrowAmount)}
+                      {formatVnd(addMoney(task.escrowAmount, task.platformFeeAmount))}
                     </div>
                   </td>
 
