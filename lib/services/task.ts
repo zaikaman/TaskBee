@@ -7,6 +7,7 @@ import { requireRole } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/db/prisma";
 import {
   Prisma,
+  SubmissionStatus,
   TaskStatus,
   TaskType,
   TransactionType,
@@ -144,6 +145,43 @@ function assertSufficientBalance(updatedCount: number) {
   if (updatedCount !== 1) {
     throw new Error("Số dư ví không đủ để khóa tiền ký quỹ cho việc này.");
   }
+}
+
+function isUniqueConstraintError(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: string }).code === "P2002"
+  );
+}
+
+function getDuplicateClaimMessage(existingClaimStatus?: string, submissionStatus?: string) {
+  if (existingClaimStatus === "CLAIMED") {
+    return "Bạn đã nhận việc này rồi. Hãy hoàn thành hoặc gửi bằng chứng với claim hiện tại trước khi nhận lại.";
+  }
+
+  if (existingClaimStatus === "SUBMITTED") {
+    if (submissionStatus === SubmissionStatus.PENDING) {
+      return "Bạn đã gửi bằng chứng cho việc này rồi. Vui lòng chờ employer duyệt.";
+    }
+
+    if (submissionStatus === SubmissionStatus.APPROVED) {
+      return "Submission của bạn cho việc này đã được duyệt rồi.";
+    }
+
+    if (submissionStatus === SubmissionStatus.REJECTED) {
+      return "Bạn đang có claim cho việc này rồi. Hãy tiếp tục với claim hiện tại.";
+    }
+
+    return "Bạn đã có claim cho việc này rồi.";
+  }
+
+  if (existingClaimStatus === "CANCELLED" || existingClaimStatus === "EXPIRED") {
+    return "Bạn đã có lịch sử claim cho việc này rồi và không thể nhận lại task này.";
+  }
+
+  return "Bạn đã nhận việc này rồi.";
 }
 
 function getTaskSubmissionMode(raw: Record<string, unknown>): TaskSubmissionMode {
@@ -1146,35 +1184,32 @@ export async function claimTaskSlot(taskId: string): Promise<{
         };
       }
 
-      // 4. Kiểm tra worker đã claim task này chưa (chỉ cho phép 1 claim active per worker per task)
-      const existingClaim = await tx.taskClaim.findFirst({
+      // 4. Kiểm tra worker đã có claim cho task này chưa để tránh tạo trùng claim
+      const existingClaim = await tx.taskClaim.findUnique({
         where: {
-          taskId: taskId,
-          workerId: profile.id,
-          // Chỉ kiểm tra các claim chưa có submission hoặc submission chưa được approve/reject
-          OR: [
-            {
-              submission: null,
-            },
-            {
-              submission: {
-                status: {
-                  notIn: ["APPROVED", "REJECTED"],
-                },
-              },
-            },
-          ],
+          taskId_workerId: {
+            taskId,
+            workerId: profile.id,
+          },
         },
         select: {
           id: true,
-          claimedAt: true,
+          status: true,
+          submission: {
+            select: {
+              status: true,
+            },
+          },
         },
       });
 
       if (existingClaim) {
         return {
           ok: false,
-          error: "Bạn đã nhận việc này rồi. Vui lòng hoàn thành việc hiện tại trước khi nhận lại.",
+          error: getDuplicateClaimMessage(
+            existingClaim.status,
+            existingClaim.submission?.status,
+          ),
         };
       }
 
@@ -1191,6 +1226,9 @@ export async function claimTaskSlot(taskId: string): Promise<{
         data: {
           availableSlots: {
             decrement: 1,
+          },
+          claimedSlots: {
+            increment: 1,
           },
         },
       });
@@ -1235,6 +1273,13 @@ export async function claimTaskSlot(taskId: string): Promise<{
       };
     });
   } catch (error) {
+    if (isUniqueConstraintError(error)) {
+      return {
+        ok: false,
+        error: "Bạn đã nhận việc này rồi. Hãy hoàn thành hoặc xử lý claim hiện tại trước khi nhận lại.",
+      };
+    }
+
     return {
       ok: false,
       error:
@@ -1244,8 +1289,10 @@ export async function claimTaskSlot(taskId: string): Promise<{
     };
   } finally {
     // Revalidate các path liên quan
-    revalidatePath("/marketplace");
-    revalidatePath(`/marketplace/tasks/${taskId}`);
+    revalidatePath("/viec-lam");
+    revalidatePath(`/viec-lam/${taskId}`);
+    revalidatePath("/dashboard/employer/tasks");
+    revalidatePath(`/dashboard/employer/tasks/${taskId}`);
     revalidatePath("/dashboard/worker/tasks");
   }
 }

@@ -82,7 +82,7 @@ Phase 1 (Setup)
 - [x] T023 [US3] Implement Server Action to process Worker proof submissions (`createSubmission`) in `lib/services/submission.ts`
 - [x] T024 [P] [US3] Create the proof submission upload UI (images/text) in `components/tasks/submission-form.tsx`
 - [x] T036 [US3] Implement background job (cron-job.org) to auto-approve expired pending submissions in `app/api/cron/auto-approve/route.ts`
-- [ ] T060 [US3] Persist task claims and prevent duplicate active claims per worker/task in `lib/services/task.ts`
+- [x] T060 [US3] Persist task claims and prevent duplicate active claims per worker/task in `lib/services/task.ts`
 - [ ] T061 [US3] Create Worker "My Tasks" dashboard for claimed, pending, approved, and rejected submissions in `app/(dashboard)/worker/tasks/page.tsx`
 - [ ] T062 [US3] Add marketplace search, category/status filters, reward range filters, and pagination in `app/(marketplace)/viec-lam/page.tsx`
 - [x] T063 [US3] Implement Cloudflare R2 Storage upload flow for proof screenshots in `lib/services/storage.ts`
