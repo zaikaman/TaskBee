@@ -3,9 +3,10 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import posthog from "posthog-js";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { JobsDropdown } from "../jobs-dropdown";
 import { formatVnd } from "@/lib/utils/money";
 import type { MarketplaceTaskListItem } from "@/lib/services/marketplace";
 import type { TaskFilterInput } from "@/lib/validators/task";
@@ -94,7 +95,10 @@ export function MarketplacePageClient({
   return (
     <div className="space-y-6 bg-slate-50">
       <div className="flex flex-col items-center justify-between border-b border-gray-200 bg-white px-4 py-4 text-sm md:flex-row">
-        <span className="mb-2 text-gray-500 md:mb-0">{totalCount} kết quả</span>
+        <div className="mb-4 flex w-full items-center gap-6 md:mb-0 md:w-auto">
+          <JobsDropdown />
+          <span className="text-gray-500 whitespace-nowrap">{totalCount} kết quả</span>
+        </div>
         
         <form
           action="/marketplace"
@@ -106,10 +110,15 @@ export function MarketplacePageClient({
               search: String(formData.get("search") ?? ""),
             });
           }}
-          className="flex w-full items-center gap-4 md:w-auto"
+          className="flex w-full items-center justify-between gap-4 md:w-auto md:justify-end"
         >
           <input type="hidden" name="page" value="1" />
           <input type="hidden" name="pageSize" value={String(pageSize)} />
+
+          <Button type="button" variant="outline" className="flex items-center gap-2 text-sm text-gray-700 md:hidden">
+            <SlidersHorizontal className="size-4" />
+            Lọc
+          </Button>
 
           <Input
             defaultValue={filters.search ?? ""}
@@ -117,7 +126,13 @@ export function MarketplacePageClient({
             placeholder="Tìm kiếm công việc..."
             className="w-full rounded border-gray-300 px-3 py-1.5 text-sm focus:border-sprout-green focus:ring-sprout-green md:w-64"
           />
-          <div className="flex items-center gap-2 whitespace-nowrap">
+
+          <Button type="button" variant="outline" className="hidden items-center gap-2 text-sm text-gray-700 md:flex">
+            <SlidersHorizontal className="size-4" />
+            Lọc
+          </Button>
+
+          <div className="hidden items-center gap-2 whitespace-nowrap md:flex">
             <span className="text-gray-500">Sắp xếp theo</span>
             <button type="button" className="flex items-center gap-1 font-medium text-sprout-green hover:text-green-700">
               Mới nhất
