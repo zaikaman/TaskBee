@@ -77,14 +77,14 @@ Phase 1 (Setup)
 *Test Criteria: Worker finds active task, claims slot (respecting concurrency locks), and uploads proof.*
 
 - [x] T020 [P] [US3] Implement optimistic lock slot claim logic (`claimTaskSlot`) in `lib/services/task.ts`
-- [ ] T021 [US3] Create Task Marketplace browsing view for workers in `app/(marketplace)/page.tsx`
-- [ ] T022 [US3] Create individual Task Details view in `app/(marketplace)/tasks/[id]/page.tsx`
+- [x] T021 [US3] Create Task Marketplace browsing view for workers in `app/(marketplace)/viec-lam/page.tsx`
+- [ ] T022 [US3] Create individual Task Details view in `app/(marketplace)/viec-lam/[id]/page.tsx`
 - [ ] T023 [US3] Implement Server Action to process Worker proof submissions (`createSubmission`) in `lib/services/submission.ts`
 - [ ] T024 [P] [US3] Create the proof submission upload UI (images/text) in `components/tasks/submission-form.tsx`
 - [ ] T036 [US3] Implement background job (CRON/Vercel trigger) to auto-approve expired pending submissions in `app/api/cron/auto-approve/route.ts`
 - [ ] T060 [US3] Persist task claims and prevent duplicate active claims per worker/task in `lib/services/task.ts`
 - [ ] T061 [US3] Create Worker "My Tasks" dashboard for claimed, pending, approved, and rejected submissions in `app/(dashboard)/worker/tasks/page.tsx`
-- [ ] T062 [US3] Add marketplace search, category/status filters, reward range filters, and pagination in `app/(marketplace)/page.tsx`
+- [ ] T062 [US3] Add marketplace search, category/status filters, reward range filters, and pagination in `app/(marketplace)/viec-lam/page.tsx`
 - [ ] T063 [US3] Implement Cloudflare R2 Storage upload flow for proof screenshots in `lib/services/storage.ts`
 - [ ] T064 [US3] Add friendly full-slot and duplicate-submission error states across claim and submission UI
 - [ ] T065 [US3] Add Vercel Cron configuration and cron secret validation for auto-approve route
