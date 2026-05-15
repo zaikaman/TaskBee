@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { TaskType } from "@/lib/generated/prisma/client";
+import { TaskType } from "@/lib/generated/prisma/browser";
 import { createTask, initialCreateTaskState } from "@/lib/services/task";
 import { CreateTaskStep1 } from "./create-task-step-1";
 import { CreateTaskStep2 } from "./create-task-step-2";

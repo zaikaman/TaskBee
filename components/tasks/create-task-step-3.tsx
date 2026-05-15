@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { calculateEmployerTaskCharge, formatVnd } from "@/lib/utils/money";
-import { TaskType } from "@/lib/generated/prisma/client";
+import { TaskType } from "@/lib/generated/prisma/browser";
 import type { CreateTaskState } from "@/lib/services/task";
 import type { TaskFormData } from "./create-task-form";
 

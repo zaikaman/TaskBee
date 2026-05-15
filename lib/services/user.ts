@@ -175,3 +175,54 @@ export async function updateProfile(
     message: avatarFile ? "Hồ sơ và ảnh đại diện đã được cập nhật." : "Hồ sơ đã được cập nhật.",
   };
 }
+
+/**
+ * Switch user role between EMPLOYER and WORKER
+ * Admins cannot switch roles
+ */
+export async function switchRole(): Promise<{ ok: boolean; error?: string; newRole?: string }> {
+  const session = await requireVerifiedUser();
+  const profile = session.profile;
+
+  if (!profile) {
+    return {
+      ok: false,
+      error: "Hồ sơ TaskBee chưa được khởi tạo.",
+    };
+  }
+
+  if (profile.status !== UserStatus.ACTIVE) {
+    return {
+      ok: false,
+      error: "Tài khoản đang bị hạn chế nên không thể chuyển đổi vai trò.",
+    };
+  }
+
+  // Admins cannot switch roles
+  if (profile.role === "ADMIN") {
+    return {
+      ok: false,
+      error: "Quản trị viên không thể chuyển đổi vai trò.",
+    };
+  }
+
+  const newRole = profile.role === "EMPLOYER" ? "WORKER" : "EMPLOYER";
+  const prisma = getPrisma();
+
+  await prisma.user.update({
+    where: {
+      id: profile.id,
+    },
+    data: {
+      role: newRole,
+    },
+  });
+
+  // Revalidate all relevant paths
+  revalidatePath("/", "layout");
+
+  return {
+    ok: true,
+    newRole,
+  };
+}

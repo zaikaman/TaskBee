@@ -11,8 +11,10 @@ import {
 import { APP_NAME } from "@/config/app";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth/session";
+import { UserRole } from "@/lib/generated/prisma/client";
 import { PrimaryNav } from "./primary-nav";
 import { ProfileMenu } from "./profile-menu";
+import { RoleSwitcher } from "./role-switcher";
 
 export async function AppNavbar() {
   const session = await getCurrentUser();
@@ -35,13 +37,11 @@ export async function AppNavbar() {
         <PrimaryNav />
 
         <div className="flex items-center gap-3">
-          <div className="hidden items-center gap-2 text-sm lg:flex">
-            <span className="text-slate-500">người thuê</span>
-            <span className="relative inline-flex h-5 w-10 rounded-full bg-slate-200 p-0.5">
-              <span className="size-4 translate-x-5 rounded-full bg-emerald-600 shadow-sm" />
-            </span>
-            <span className="font-medium text-emerald-700">người làm thuê</span>
-          </div>
+          {isAuthenticated && session?.profile?.role && (
+            <div className="hidden lg:block">
+              <RoleSwitcher currentRole={session.profile.role} />
+            </div>
+          )}
 
           {isAuthenticated ? (
             <div className="hidden items-center gap-1 text-slate-500 sm:flex">
@@ -72,10 +72,17 @@ export async function AppNavbar() {
           )}
 
           <Button asChild className="hidden rounded bg-emerald-600 px-4 text-white hover:bg-emerald-700 sm:inline-flex">
-            <Link href="/viec-lam">
-              <Search className="size-4" />
-              Tìm việc
-            </Link>
+            {session?.profile?.role === UserRole.EMPLOYER ? (
+              <Link href="/dashboard/employer/tasks/create">
+                <Search className="size-4" />
+                Tạo công việc
+              </Link>
+            ) : (
+              <Link href="/viec-lam">
+                <Search className="size-4" />
+                Tìm việc
+              </Link>
+            )}
           </Button>
           <Button asChild variant="outline" size="icon" className="sm:hidden">
             <Link href={isAuthenticated ? "/dashboard/wallet" : "/login"} aria-label="Ví tiền">

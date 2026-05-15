@@ -11,21 +11,29 @@ type LoginPageProps = {
   }>;
 };
 
-function normalizeRedirectTo(redirectTo?: string) {
-  if (!redirectTo || !redirectTo.startsWith("/") || redirectTo.startsWith("//")) {
-    return "/viec-lam";
+function normalizeRedirectTo(redirectTo?: string, userRole?: string) {
+  // If user has a custom redirect, validate and use it
+  if (redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//")) {
+    if (!redirectTo.startsWith("/login") && !redirectTo.startsWith("/register")) {
+      return redirectTo;
+    }
   }
 
-  if (redirectTo.startsWith("/login") || redirectTo.startsWith("/register")) {
-    return "/viec-lam";
+  // Default redirect based on role
+  if (userRole === "EMPLOYER") {
+    return "/dashboard/employer/tasks";
+  } else if (userRole === "ADMIN") {
+    return "/dashboard/admin";
   }
-
-  return redirectTo;
+  
+  // Default for WORKER or no role
+  return "/viec-lam";
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const [session, params] = await Promise.all([getCurrentUser(), searchParams]);
-  const redirectTo = normalizeRedirectTo(params?.redirectTo);
+  const userRole = session?.profile?.role;
+  const redirectTo = normalizeRedirectTo(params?.redirectTo, userRole);
 
   if (session) {
     redirect(redirectTo);

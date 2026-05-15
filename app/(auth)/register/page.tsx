@@ -9,7 +9,15 @@ export default async function RegisterPage() {
   const session = await getCurrentUser();
 
   if (session) {
-    redirect("/viec-lam");
+    // Redirect based on role if already logged in
+    const userRole = session.profile?.role;
+    if (userRole === "EMPLOYER") {
+      redirect("/dashboard/employer/tasks");
+    } else if (userRole === "ADMIN") {
+      redirect("/dashboard/admin");
+    } else {
+      redirect("/viec-lam");
+    }
   }
 
   return (

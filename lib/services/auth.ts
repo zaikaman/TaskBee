@@ -444,7 +444,12 @@ export async function confirmRegistrationOtp(
     },
   });
 
-  redirect("/viec-lam?registered=1");
+  // Redirect based on role
+  if (role === UserRole.EMPLOYER) {
+    redirect("/dashboard/employer/tasks?registered=1");
+  } else {
+    redirect("/viec-lam?registered=1");
+  }
 }
 
 export async function requestLoginOtp(
@@ -589,7 +594,20 @@ export async function confirmLoginOtp(
     };
   }
 
-  redirect(normalizeRedirectTo(parsed.data.redirectTo));
+  // Redirect based on user role
+  let finalRedirect = normalizeRedirectTo(parsed.data.redirectTo);
+  
+  // If default redirect (/viec-lam), use role-specific default
+  if (finalRedirect === "/viec-lam") {
+    if (profile.role === UserRole.EMPLOYER) {
+      finalRedirect = "/dashboard/employer/tasks";
+    } else if (profile.role === UserRole.ADMIN) {
+      finalRedirect = "/dashboard/admin";
+    }
+    // WORKER stays at /viec-lam
+  }
+
+  redirect(finalRedirect);
 }
 
 export async function logout() {
