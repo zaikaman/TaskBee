@@ -5,11 +5,16 @@ import { requireRole } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/db/prisma";
 import { uploadProofImage } from "@/lib/services/storage";
 import {
+  approveSubmissionTransaction,
+  loadSubmissionReviewContext,
+  rejectSubmissionTransaction,
+  type SubmissionReviewContext,
+} from "@/lib/services/submission-workflow";
+import {
   Prisma,
   SubmissionStatus,
   TaskClaimStatus,
   TaskStatus,
-  TransactionType,
   UserRole,
 } from "@/lib/generated/prisma/client";
 import { formatVnd } from "@/lib/utils/money";
@@ -207,35 +212,8 @@ function revalidateSubmissionPaths(taskId: string) {
 async function validateSubmissionOwnership(
   submissionId: string,
   employerId: string,
-) {
-  const prisma = getPrisma();
-
-  const submission = await prisma.submission.findUnique({
-    where: { id: submissionId },
-    include: {
-      task: {
-        select: {
-          id: true,
-          employerId: true,
-          title: true,
-          rewardAmount: true,
-          status: true,
-        },
-      },
-      worker: {
-        select: {
-          id: true,
-          email: true,
-        },
-      },
-      claim: {
-        select: {
-          id: true,
-          status: true,
-        },
-      },
-    },
-  });
+): Promise<SubmissionReviewContext> {
+  const submission = await loadSubmissionReviewContext(submissionId);
 
   if (!submission) {
     throw new Error("Không tìm thấy submission này.");
@@ -438,217 +416,24 @@ export async function createSubmission(
 }
 
 async function approveSubmission(
-  submissionId: string,
-  employerId: string,
+  submission: SubmissionReviewContext,
   feedback?: string,
 ) {
   const prisma = getPrisma();
-  const now = new Date();
 
   return prisma.$transaction(async (tx) => {
-    const submission = await tx.submission.findUniqueOrThrow({
-      where: { id: submissionId },
-      include: {
-        task: true,
-        worker: true,
-        claim: true,
-      },
-    });
-
-    // Update submission status
-    await tx.submission.update({
-      where: { id: submissionId },
-      data: {
-        status: SubmissionStatus.APPROVED,
-        employerFeedback: feedback ?? null,
-        reviewedAt: now,
-      },
-    });
-
-    // Update claim status
-    await tx.taskClaim.update({
-      where: { id: submission.claimId },
-      data: {
-        status: TaskClaimStatus.SUBMITTED,
-      },
-    });
-
-    // Update task counters
-    const updatedTask = await tx.task.update({
-      where: { id: submission.taskId },
-      data: {
-        approvedSlots: { increment: 1 },
-        availableSlots: { decrement: 1 },
-      },
-    });
-
-    const rewardAmount = submission.task.rewardAmount.toString();
-
-    // Release escrow from employer
-    await tx.user.update({
-      where: { id: employerId },
-      data: {
-        escrowBalance: { decrement: rewardAmount },
-      },
-    });
-
-    // Transfer reward to worker
-    const updatedWorker = await tx.user.update({
-      where: { id: submission.workerId },
-      data: {
-        availableBalance: { increment: rewardAmount },
-      },
-    });
-
-    const workerBalanceAfter = updatedWorker.availableBalance.toString();
-
-    // Record transaction for worker
-    await tx.transaction.create({
-      data: {
-        userId: submission.workerId,
-        type: TransactionType.TASK_REWARD,
-        amount: rewardAmount,
-        balanceAfter: workerBalanceAfter,
-        referenceId: submission.taskId,
-        description: `Nhận thưởng cho task "${submission.task.title}".`,
-        metadata: {
-          taskId: submission.taskId,
-          submissionId: submission.id,
-          rewardAmount,
-        },
-      },
-    });
-
-    // Record escrow release for employer
-    const employer = await tx.user.findUniqueOrThrow({
-      where: { id: employerId },
-      select: { escrowBalance: true },
-    });
-
-    await tx.transaction.create({
-      data: {
-        userId: employerId,
-        type: TransactionType.TASK_ESCROW_RELEASE,
-        amount: `-${rewardAmount}`,
-        balanceAfter: employer.escrowBalance.toString(),
-        referenceId: submission.taskId,
-        description: `Giải phóng escrow cho submission của task "${submission.task.title}".`,
-        metadata: {
-          taskId: submission.taskId,
-          submissionId: submission.id,
-          workerId: submission.workerId,
-          rewardAmount,
-        },
-      },
-    });
-
-    // Check if task is completed
-    if (updatedTask.availableSlots === 0) {
-      await tx.task.update({
-        where: { id: submission.taskId },
-        data: {
-          status: TaskStatus.COMPLETED,
-        },
-      });
-    }
-
-    return {
-      submission,
-      rewardAmount,
-      taskCompleted: updatedTask.availableSlots === 0,
-    };
+    return approveSubmissionTransaction(tx, submission, feedback);
   });
 }
 
 async function rejectSubmission(
-  submissionId: string,
-  employerId: string,
+  submission: SubmissionReviewContext,
   feedback?: string,
 ) {
   const prisma = getPrisma();
-  const now = new Date();
 
   return prisma.$transaction(async (tx) => {
-    const submission = await tx.submission.findUniqueOrThrow({
-      where: { id: submissionId },
-      include: {
-        task: true,
-        worker: true,
-        claim: true,
-      },
-    });
-
-    // Count previous rejections for this worker on this task
-    const previousRejections = await tx.submission.count({
-      where: {
-        taskId: submission.taskId,
-        workerId: submission.workerId,
-        status: SubmissionStatus.REJECTED,
-        id: { not: submissionId }, // Don't count current submission
-      },
-    });
-
-    const isSecondRejection = previousRejections >= 1;
-
-    // Update submission status
-    await tx.submission.update({
-      where: { id: submissionId },
-      data: {
-        status: SubmissionStatus.REJECTED,
-        employerFeedback: feedback ?? null,
-        reviewedAt: now,
-      },
-    });
-
-    if (isSecondRejection) {
-      // Second rejection: Cancel the claim and free up the slot
-      await tx.taskClaim.update({
-        where: { id: submission.claimId },
-        data: {
-          status: TaskClaimStatus.CANCELLED,
-        },
-      });
-
-      // Update task counters - free up the slot
-      await tx.task.update({
-        where: { id: submission.taskId },
-        data: {
-          rejectedSlots: { increment: 1 },
-          claimedSlots: { decrement: 1 },
-          submittedSlots: { decrement: 1 },
-          availableSlots: { increment: 1 }, // Return slot to available pool
-        },
-      });
-
-      return {
-        submission,
-        isSecondRejection: true,
-        message: `Submission đã bị từ chối lần thứ 2. Worker này đã bị hủy job và slot đã được trả lại.`,
-      };
-    } else {
-      // First rejection: Worker gets another chance
-      await tx.taskClaim.update({
-        where: { id: submission.claimId },
-        data: {
-          status: TaskClaimStatus.CLAIMED, // Reset to CLAIMED so worker can resubmit
-        },
-      });
-
-      // Update task counters
-      await tx.task.update({
-        where: { id: submission.taskId },
-        data: {
-          rejectedSlots: { increment: 1 },
-          submittedSlots: { decrement: 1 }, // Decrease submitted count
-        },
-      });
-
-      return {
-        submission,
-        isSecondRejection: false,
-        message: `Submission đã bị từ chối. Worker có thêm 1 cơ hội để resubmit.`,
-      };
-    }
+    return rejectSubmissionTransaction(tx, submission, feedback);
   });
 }
 
@@ -687,11 +472,7 @@ export async function reviewSubmission(
     );
 
     if (input.action === "APPROVE") {
-      const result = await approveSubmission(
-        input.submissionId,
-        profile.id,
-        input.feedback,
-      );
+      const result = await approveSubmission(submission, input.feedback);
 
       revalidateSubmissionPaths(submission.taskId);
 
@@ -700,11 +481,7 @@ export async function reviewSubmission(
         message: `Submission đã được chấp nhận và ${formatVnd(result.rewardAmount)} đã được chuyển cho worker.${result.taskCompleted ? " Task đã hoàn thành." : ""}`,
       };
     } else if (input.action === "REJECT") {
-      const result = await rejectSubmission(
-        input.submissionId,
-        profile.id,
-        input.feedback,
-      );
+      const result = await rejectSubmission(submission, input.feedback);
 
       revalidateSubmissionPaths(submission.taskId);
 

@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "headers": [
+    {
+      "source": "/api/cron/auto-approve",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    }
+  ],
+  "functions": {
+    "app/api/**/*.ts": {
+      "maxDuration": 60
+    }
+  }
+}

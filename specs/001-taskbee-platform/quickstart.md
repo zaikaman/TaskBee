@@ -25,6 +25,7 @@
    SUPABASE_SERVICE_ROLE_KEY=
    DATABASE_URL=
    DIRECT_URL=
+   CRON_SECRET=
    ```
 
 3. **Supabase & Prisma Setup**
@@ -40,6 +41,12 @@
    npm run dev
    ```
    Server will be available at `http://localhost:3000`.
+
+5. **Thiết lập cron bên ngoài**
+   - Tạo job external cron chạy mỗi `5 phút` hoặc theo nhu cầu vận hành.
+   - Gọi `GET` hoặc `POST` tới `https://<domain>/api/cron/auto-approve`.
+   - Gửi header `x-cron-secret: <CRON_SECRET>` để xác thực request.
+   - Không bật Vercel Cron cho endpoint này; xem thêm [deployment.md](deployment.md).
 
 ## Testing
 - Unit tests: `npm run test`

@@ -29,8 +29,8 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
+## Deployment
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Bạn có thể deploy ứng dụng trên Vercel hoặc bất kỳ nền tảng nào hỗ trợ Next.js App Router. Job auto-approve phải được chạy bởi external cron service và gọi vào `/api/cron/auto-approve` với `CRON_SECRET`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Xem chi tiết trong [specs/001-taskbee-platform/deployment.md](specs/001-taskbee-platform/deployment.md).
