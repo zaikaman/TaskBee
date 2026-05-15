@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/db/prisma";
 import { uploadProofImage } from "@/lib/services/storage";
-import { uploadProofImage } from "@/lib/services/storage";
 import {
   Prisma,
   SubmissionStatus,

@@ -27,9 +27,6 @@ export default function MarketplaceLayout({
             <div className="flex items-end justify-between border-b border-slate-200 px-3 pt-3">
               <div className="flex gap-2">
                 <JobsDropdown isActive={true} />
-                <Button variant="ghost" className="rounded-b-none rounded-t text-slate-500">
-                  Khảo sát
-                </Button>
               </div>
               <Button variant="ghost" size="icon" aria-label="Bộ lọc">
                 <SlidersHorizontal className="size-4" />

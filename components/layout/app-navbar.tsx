@@ -113,7 +113,7 @@ export async function AppNavbar() {
               </Link>
             ) : (
               <Link href="/viec-lam" className="font-medium text-emerald-700">
-                Khảo sát trả phí (20)
+                Việc làm nhỏ
               </Link>
             )}
           </div>

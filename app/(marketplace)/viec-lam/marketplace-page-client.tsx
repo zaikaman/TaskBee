@@ -8,14 +8,6 @@ import { useEffect } from "react";
 
 const demoTasks = [
   {
-    title: "Đăng ký bằng Google và hoàn thành 1 khảo sát",
-    reward: "18.000 VNĐ",
-    claimed: 190,
-    total: 500,
-    featured: true,
-    accent: "border-l-violet-500",
-  },
-  {
     title: "Tải ứng dụng, xác minh KYC và gửi ảnh chụp màn hình",
     reward: "12.000 VNĐ",
     claimed: 128,

@@ -50,22 +50,6 @@ async function main() {
 
   const demoTasks = [
     {
-      id: "11111111-1111-4111-8111-111111111111",
-      title: "Đăng ký bằng Google và hoàn thành 1 khảo sát",
-      description: "Hoàn thành đăng ký và gửi ảnh chụp màn hình trang kết quả.",
-      instructions: "Mở liên kết, đăng ký bằng Google, hoàn thành khảo sát đầu tiên.",
-      proofRequirements: "Ảnh chụp màn hình tài khoản và trang hoàn thành khảo sát.",
-      category: "Khảo sát",
-      rewardAmount: "18000",
-      totalSlots: 500,
-      availableSlots: 310,
-      claimedSlots: 190,
-      escrowAmount: "9000000",
-      platformFeeAmount: "900000",
-      status: "ACTIVE" as const,
-      publishedAt: new Date(),
-    },
-    {
       id: "22222222-2222-4222-8222-222222222222",
       title: "Tải ứng dụng, xác minh KYC và gửi ảnh chụp màn hình",
       description: "Cài ứng dụng, hoàn thành KYC và nộp bằng chứng.",

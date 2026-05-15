@@ -81,13 +81,13 @@ Phase 1 (Setup)
 - [x] T022 [US3] Create individual Task Details view in `app/(marketplace)/viec-lam/[id]/page.tsx`
 - [x] T023 [US3] Implement Server Action to process Worker proof submissions (`createSubmission`) in `lib/services/submission.ts`
 - [x] T024 [P] [US3] Create the proof submission upload UI (images/text) in `components/tasks/submission-form.tsx`
-- [ ] T036 [US3] Implement background job (CRON/Vercel trigger) to auto-approve expired pending submissions in `app/api/cron/auto-approve/route.ts`
+- [ ] T036 [US3] Implement background job (cron-job.org) to auto-approve expired pending submissions in `app/api/cron/auto-approve/route.ts`
 - [ ] T060 [US3] Persist task claims and prevent duplicate active claims per worker/task in `lib/services/task.ts`
 - [ ] T061 [US3] Create Worker "My Tasks" dashboard for claimed, pending, approved, and rejected submissions in `app/(dashboard)/worker/tasks/page.tsx`
 - [ ] T062 [US3] Add marketplace search, category/status filters, reward range filters, and pagination in `app/(marketplace)/viec-lam/page.tsx`
 - [x] T063 [US3] Implement Cloudflare R2 Storage upload flow for proof screenshots in `lib/services/storage.ts`
 - [ ] T064 [US3] Add friendly full-slot and duplicate-submission error states across claim and submission UI
-- [ ] T065 [US3] Add Vercel Cron configuration and cron secret validation for auto-approve route
+- [ ] T065 [US3] Add Cron configuration and cron secret validation for auto-approve route
 
 ## Phase 6: User Story 4 - Wallet and Escrow Management
 *Goal: Track user balances and handle manual withdrawal requests.*
