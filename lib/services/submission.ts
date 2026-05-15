@@ -205,8 +205,8 @@ function revalidateSubmissionPaths(taskId: string) {
   revalidatePath("/dashboard/employer/tasks");
   revalidatePath(`/dashboard/employer/tasks/${taskId}`);
   revalidatePath("/dashboard/worker/tasks");
-  revalidatePath("/viec-lam");
-  revalidatePath(`/viec-lam/${taskId}`);
+  revalidatePath("/marketplace");
+  revalidatePath(`/marketplace/${taskId}`);
 }
 
 async function validateSubmissionOwnership(

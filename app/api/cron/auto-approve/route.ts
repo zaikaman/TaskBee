@@ -96,11 +96,11 @@ async function handleAutoApproveCron(request: NextRequest) {
   if (approvedCount > 0) {
     revalidatePath("/dashboard/employer/tasks");
     revalidatePath("/dashboard/worker/tasks");
-    revalidatePath("/viec-lam");
+    revalidatePath("/marketplace");
 
     for (const taskId of affectedTaskIds) {
       revalidatePath(`/dashboard/employer/tasks/${taskId}`);
-      revalidatePath(`/viec-lam/${taskId}`);
+      revalidatePath(`/marketplace/${taskId}`);
     }
   }
 

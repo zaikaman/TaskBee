@@ -16,7 +16,7 @@ type LoginOtpFormProps = {
   redirectTo?: string;
 };
 
-export function LoginOtpForm({ redirectTo = "/viec-lam" }: LoginOtpFormProps) {
+export function LoginOtpForm({ redirectTo = "/marketplace" }: LoginOtpFormProps) {
   const [sendState, sendAction, sendPending] = useActionState(requestLoginOtp, {
     ...initialState,
     redirectTo,

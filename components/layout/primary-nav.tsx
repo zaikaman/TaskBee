@@ -6,7 +6,7 @@ import { ChevronDown } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
 const primaryLinks = [
-  { href: "/viec-lam", label: "Việc làm nhỏ", hasMenu: true },
+  { href: "/marketplace", label: "Việc làm nhỏ", hasMenu: true },
   { href: "/dashboard/wallet", label: "Ví tiền" },
 ];
 
@@ -120,7 +120,7 @@ export function PrimaryNav({ currentRole }: { currentRole?: string }) {
                     ) : (
                       <>
                         <Link
-                          href="/viec-lam"
+                          href="/marketplace"
                           className="block w-full px-4 py-3 text-left text-sm hover:bg-slate-50"
                           onClick={() => setIsJobsMenuOpen(false)}
                         >

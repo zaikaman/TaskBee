@@ -31,7 +31,7 @@ export default function LandingPage() {
           </Link>
 
           <nav className="hidden items-center gap-14 text-sm font-bold text-[#203259] md:flex">
-            <Link href="/viec-lam" className="hover:text-[#22ab59]">
+            <Link href="/marketplace" className="hover:text-[#22ab59]">
               Khám phá việc
             </Link>
             <Link href="/referrals" className="hover:text-[#22ab59]">
@@ -78,7 +78,7 @@ export default function LandingPage() {
                 Đăng việc nhỏ
               </Link>
               <Link
-                href="/viec-lam"
+                href="/marketplace"
                 className="text-xl text-[#22ab59] hover:text-[#005924]"
                 onClick={() =>
                   posthog.capture("landing_browse_tasks_clicked", { location: "hero_cta" })
@@ -136,7 +136,7 @@ export default function LandingPage() {
 
             <div className="absolute right-[-70px] top-[102px] hidden rounded-[7px] bg-white px-5 py-4 shadow-[0_18px_45px_rgba(32,50,89,0.14)] xl:block">
               <p className="text-base text-[#30394d]">Bạn có 2 lời mời việc mới</p>
-              <Link href="/viec-lam" className="mt-2 inline-block text-[#22ab59] underline">
+              <Link href="/marketplace" className="mt-2 inline-block text-[#22ab59] underline">
                 Đi tới việc của tôi
               </Link>
             </div>
@@ -164,7 +164,7 @@ export default function LandingPage() {
         <div className="mt-9 grid gap-4 md:grid-cols-4">
           {categories.map((category) => (
             <Link
-              href="/viec-lam"
+              href="/marketplace"
               key={category}
               className="rounded-[7px] border border-[#f0f2f5] bg-white p-5 font-bold text-[#203259] shadow-sm hover:border-[#22ab59] hover:text-[#22ab59]"
               onClick={() =>

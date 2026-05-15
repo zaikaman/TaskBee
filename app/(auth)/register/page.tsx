@@ -16,7 +16,7 @@ export default async function RegisterPage() {
     } else if (userRole === "ADMIN") {
       redirect("/dashboard/admin");
     } else {
-      redirect("/viec-lam");
+      redirect("/marketplace");
     }
   }
 
@@ -31,7 +31,7 @@ export default async function RegisterPage() {
         </Link>
 
         <nav className="hidden items-center gap-14 text-sm font-bold text-[#203259] md:flex">
-          <Link href="/viec-lam" className="hover:text-[#22ab59]">
+          <Link href="/marketplace" className="hover:text-[#22ab59]">
             Khám phá việc
           </Link>
           <Link href="/referrals" className="hover:text-[#22ab59]">

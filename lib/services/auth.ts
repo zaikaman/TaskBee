@@ -101,11 +101,11 @@ function normalizeEmail(email: string) {
 
 function normalizeRedirectTo(redirectTo?: string) {
   if (!redirectTo || !redirectTo.startsWith("/") || redirectTo.startsWith("//")) {
-    return "/viec-lam";
+    return "/marketplace";
   }
 
   if (redirectTo.startsWith("/login") || redirectTo.startsWith("/register")) {
-    return "/viec-lam";
+    return "/marketplace";
   }
 
   return redirectTo;
@@ -448,7 +448,7 @@ export async function confirmRegistrationOtp(
   if (role === UserRole.EMPLOYER) {
     redirect("/dashboard/employer/tasks?registered=1");
   } else {
-    redirect("/viec-lam?registered=1");
+    redirect("/marketplace?registered=1");
   }
 }
 
@@ -597,14 +597,14 @@ export async function confirmLoginOtp(
   // Redirect based on user role
   let finalRedirect = normalizeRedirectTo(parsed.data.redirectTo);
   
-  // If default redirect (/viec-lam), use role-specific default
-  if (finalRedirect === "/viec-lam") {
+  // If default redirect (/marketplace), use role-specific default
+  if (finalRedirect === "/marketplace") {
     if (profile.role === UserRole.EMPLOYER) {
       finalRedirect = "/dashboard/employer/tasks";
     } else if (profile.role === UserRole.ADMIN) {
       finalRedirect = "/dashboard/admin";
     }
-    // WORKER stays at /viec-lam
+    // WORKER stays at /marketplace
   }
 
   redirect(finalRedirect);

@@ -411,8 +411,8 @@ export async function createTask(
     revalidatePath(`/dashboard/employer/tasks/${result.task.id}`);
 
     if (submissionMode === "publish") {
-      revalidatePath("/viec-lam");
-      revalidatePath(`/viec-lam/${result.task.id}`);
+      revalidatePath("/marketplace");
+      revalidatePath(`/marketplace/${result.task.id}`);
     }
 
     return {
@@ -533,8 +533,8 @@ export async function pauseTask(taskId: string): Promise<{
     });
 
     revalidatePath("/dashboard/employer/tasks");
-    revalidatePath("/viec-lam");
-    revalidatePath(`/viec-lam/${taskId}`);
+    revalidatePath("/marketplace");
+    revalidatePath(`/marketplace/${taskId}`);
 
     return {
       ok: true,
@@ -624,8 +624,8 @@ export async function resumeTask(taskId: string): Promise<{
     });
 
     revalidatePath("/dashboard/employer/tasks");
-    revalidatePath("/viec-lam");
-    revalidatePath(`/viec-lam/${taskId}`);
+    revalidatePath("/marketplace");
+    revalidatePath(`/marketplace/${taskId}`);
 
     return {
       ok: true,
@@ -796,8 +796,8 @@ export async function closeTask(taskId: string): Promise<{
     };
   } finally {
     revalidatePath("/dashboard/employer/tasks");
-    revalidatePath("/viec-lam");
-    revalidatePath(`/viec-lam/${taskId}`);
+    revalidatePath("/marketplace");
+    revalidatePath(`/marketplace/${taskId}`);
   }
 }
 
@@ -964,8 +964,8 @@ export async function cancelTask(taskId: string, reason?: string): Promise<{
     };
   } finally {
     revalidatePath("/dashboard/employer/tasks");
-    revalidatePath("/viec-lam");
-    revalidatePath(`/viec-lam/${taskId}`);
+    revalidatePath("/marketplace");
+    revalidatePath(`/marketplace/${taskId}`);
   }
 }
 
@@ -1051,8 +1051,8 @@ export async function updateTask(
 
       revalidatePath("/dashboard/employer/tasks");
       revalidatePath(`/dashboard/employer/tasks/${taskId}`);
-      revalidatePath("/viec-lam");
-      revalidatePath(`/viec-lam/${taskId}`);
+      revalidatePath("/marketplace");
+      revalidatePath(`/marketplace/${taskId}`);
 
       return {
         ok: true,
@@ -1289,8 +1289,8 @@ export async function claimTaskSlot(taskId: string): Promise<{
     };
   } finally {
     // Revalidate các path liên quan
-    revalidatePath("/viec-lam");
-    revalidatePath(`/viec-lam/${taskId}`);
+    revalidatePath("/marketplace");
+    revalidatePath(`/marketplace/${taskId}`);
     revalidatePath("/dashboard/employer/tasks");
     revalidatePath(`/dashboard/employer/tasks/${taskId}`);
     revalidatePath("/dashboard/worker/tasks");

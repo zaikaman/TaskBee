@@ -161,7 +161,7 @@ export default function WorkerTasksPage() {
                   )}
                 </TableCell>
                 <TableCell className="font-medium text-[#203259]">
-                  <Link href={`/viec-lam/${task.id}`} className="hover:underline hover:text-[#22ab59]">
+                  <Link href={`/marketplace/${task.id}`} className="hover:underline hover:text-[#22ab59]">
                     {task.name}
                   </Link>
                 </TableCell>

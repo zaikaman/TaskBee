@@ -82,7 +82,7 @@ export async function AppNavbar() {
                 Tạo công việc
               </Link>
             ) : (
-              <Link href="/viec-lam">
+              <Link href="/marketplace">
                 <Search className="size-4" />
                 Tìm việc
               </Link>
@@ -112,7 +112,7 @@ export async function AppNavbar() {
                 Nạp tiền
               </Link>
             ) : (
-              <Link href="/viec-lam" className="font-medium text-emerald-700">
+              <Link href="/marketplace" className="font-medium text-emerald-700">
                 Việc làm nhỏ
               </Link>
             )}

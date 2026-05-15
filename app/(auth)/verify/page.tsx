@@ -12,7 +12,7 @@ export default async function VerifyPage() {
   }
 
   if (session.emailVerified && session.profile?.emailVerified) {
-    redirect("/viec-lam");
+    redirect("/marketplace");
   }
 
   return (
@@ -38,7 +38,7 @@ export default async function VerifyPage() {
               <Link href="/login">Về trang đăng nhập</Link>
             </Button>
             <Button asChild variant="outline" className="rounded">
-              <Link href="/viec-lam">Xem trang công khai</Link>
+              <Link href="/marketplace">Xem trang công khai</Link>
             </Button>
           </div>
         </section>

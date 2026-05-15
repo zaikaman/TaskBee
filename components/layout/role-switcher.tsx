@@ -34,7 +34,7 @@ export function RoleSwitcher({ currentRole }: RoleSwitcherProps) {
 
       // Determine where to redirect based on new role and current path
       const newRole = result.newRole;
-      let redirectPath = "/viec-lam"; // Default to marketplace
+      let redirectPath = "/marketplace"; // Default to marketplace
 
       // If switching to EMPLOYER, redirect to My Jobs
       if (newRole === "EMPLOYER") {
@@ -43,7 +43,7 @@ export function RoleSwitcher({ currentRole }: RoleSwitcherProps) {
       
       // If switching to WORKER, redirect to marketplace
       if (newRole === "WORKER") {
-        redirectPath = "/viec-lam";
+        redirectPath = "/marketplace";
       }
 
       // Dùng điều hướng cứng để thoát khỏi tree hiện tại ngay lập tức.

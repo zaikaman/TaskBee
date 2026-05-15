@@ -27,7 +27,7 @@ function normalizeRedirectTo(redirectTo?: string, userRole?: string) {
   }
   
   // Default for WORKER or no role
-  return "/viec-lam";
+  return "/marketplace";
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
@@ -50,7 +50,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         </Link>
 
         <nav className="hidden items-center gap-14 text-sm font-bold text-[#203259] md:flex">
-          <Link href="/viec-lam" className="hover:text-[#22ab59]">
+          <Link href="/marketplace" className="hover:text-[#22ab59]">
             Khám phá việc
           </Link>
           <Link href="/referrals" className="hover:text-[#22ab59]">
