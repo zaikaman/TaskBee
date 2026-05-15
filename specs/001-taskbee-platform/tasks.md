@@ -65,7 +65,7 @@ Phase 1 (Setup)
 - [x] T016 [US2] Implement `createTask` Server Action (with Wallet Escrow lock logic) in `lib/services/task.ts`
 - [x] T017 [US2] Create the Task Creation Form UI in `components/tasks/create-task-form.tsx`
 - [x] T018 [US2] Create Task listing dashboard for Employers in `app/(dashboard)/employer/tasks/page.tsx`
-- [ ] T019 [US2] Implement submission approval/rejection action (`reviewSubmission`) in `lib/services/submission.ts`
+- [x] T019 [US2] Implement submission approval/rejection action (`reviewSubmission`) in `lib/services/submission.ts`
 - [ ] T055 [US2] Add task proof requirement fields to validators, schema, create form, and detail view
 - [ ] T056 [US2] Implement Employer 10% task creation fee calculation and ledger entries in `lib/services/task.ts`
 - [ ] T057 [US2] Implement task pause, resume, close, and cancel actions with escrow refund handling in `lib/services/task.ts`
