@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { PLATFORM_FEES } from "@/config/app";
+import { PLATFORM_FEES, TEST_WHITELIST_EMAILS } from "@/config/app";
 import { requireRole } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/db/prisma";
 import {
@@ -148,26 +148,31 @@ async function createTaskRecord(employerId: string, data: CreateTaskInput) {
       },
       select: {
         availableBalance: true,
+        email: true,
       },
     });
 
     const currentBalance = currentUser.availableBalance.toString();
+    const isWhitelisted = TEST_WHITELIST_EMAILS.includes(currentUser.email as any);
     
-    // Kiểm tra số dư đủ để trừ cả escrow và phí
-    if (toMinorUnits(currentBalance) < toMinorUnits(charge.totalCharge)) {
+    // Kiểm tra số dư đủ để trừ cả escrow và phí (bypass cho whitelist users)
+    if (!isWhitelisted && toMinorUnits(currentBalance) < toMinorUnits(charge.totalCharge)) {
       throw new Error(
         `Số dư không đủ. Cần ${formatVnd(charge.totalCharge)} nhưng chỉ có ${formatVnd(currentBalance)}.`
       );
     }
 
     // Cập nhật ví: trừ tổng số tiền từ available, cộng escrow vào escrow balance
+    // Whitelist users: cho phép balance âm để test
     const walletUpdate = await tx.user.updateMany({
       where: {
         id: employerId,
         role: UserRole.EMPLOYER,
-        availableBalance: {
-          gte: charge.totalCharge,
-        },
+        ...(isWhitelisted ? {} : {
+          availableBalance: {
+            gte: charge.totalCharge,
+          },
+        }),
       },
       data: {
         availableBalance: {
@@ -179,7 +184,9 @@ async function createTaskRecord(employerId: string, data: CreateTaskInput) {
       },
     });
 
-    assertSufficientBalance(walletUpdate.count);
+    if (!isWhitelisted) {
+      assertSufficientBalance(walletUpdate.count);
+    }
 
     // Tạo task record
     const task = await tx.task.create({

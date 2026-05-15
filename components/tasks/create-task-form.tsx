@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { TaskType } from "@/lib/generated/prisma/browser";
 import { createTask } from "@/lib/services/task";
 import type { CreateTaskState } from "@/lib/services/task";
@@ -68,10 +68,12 @@ export function CreateTaskForm({ onSuccess }: CreateTaskFormProps) {
     proofRequirements: state.fields?.proofRequirements ?? formData.proofRequirements,
   };
 
-  // Handle success
-  if (state.ok && state.taskId && onSuccess) {
-    onSuccess(state.taskId);
-  }
+  // Handle success - use useEffect to avoid calling during render
+  useEffect(() => {
+    if (state.ok && state.taskId && onSuccess) {
+      onSuccess(state.taskId);
+    }
+  }, [state.ok, state.taskId, onSuccess]);
 
   const handleNext = (stepData: Partial<TaskFormData>) => {
     setFormData((prev) => ({ ...prev, ...stepData }));

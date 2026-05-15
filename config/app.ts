@@ -1,5 +1,10 @@
 export const APP_NAME = "TaskBee";
 
+// Whitelist emails cho testing - bypass balance check
+export const TEST_WHITELIST_EMAILS = [
+  "zaikaman123@gmail.com",
+] as const;
+
 export const PLATFORM_FEES = {
   employerTaskCreationRate: 0.1,
   workerWithdrawalRate: 0.1,
