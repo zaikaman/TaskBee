@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { addMoney, formatVnd } from "@/lib/utils/money";
+import { addMoney, calculateEmployerTaskCharge, formatVnd } from "@/lib/utils/money";
 import type { TaskStatus, TaskType } from "@/lib/generated/prisma/browser";
 import {
   DropdownMenu,
@@ -29,13 +29,13 @@ type Task = {
   title: string;
   status: TaskStatus;
   taskType: TaskType;
+  rewardAmount: string;
   totalSlots: number;
   availableSlots: number;
   claimedSlots: number;
   submittedSlots: number;
   approvedSlots: number;
   rejectedSlots: number;
-  rewardAmount: string;
   escrowAmount: string;
   platformFeeAmount: string;
   createdAt: Date;
@@ -69,6 +69,14 @@ function normalizeSearchText(value: string) {
     .replace(/[đĐ]/g, "d")
     .toLowerCase()
     .trim();
+}
+
+function getTaskDisplayedCost(task: Task) {
+  if (task.status === "DRAFT") {
+    return calculateEmployerTaskCharge(task.rewardAmount, task.totalSlots).totalCharge;
+  }
+
+  return addMoney(task.escrowAmount, task.platformFeeAmount);
 }
 
 export function EmployerTasksList({ tasks }: EmployerTasksListProps) {
@@ -326,7 +334,7 @@ export function EmployerTasksList({ tasks }: EmployerTasksListProps) {
                   {/* Cost */}
                   <td className="px-6 py-4">
                     <div className="text-sm font-medium text-[#1b1b1b]">
-                      {formatVnd(addMoney(task.escrowAmount, task.platformFeeAmount))}
+                      {formatVnd(getTaskDisplayedCost(task))}
                     </div>
                   </td>
 
