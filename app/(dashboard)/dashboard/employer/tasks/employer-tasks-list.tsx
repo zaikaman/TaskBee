@@ -2,8 +2,27 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { addMoney, formatVnd } from "@/lib/utils/money";
 import type { TaskStatus, TaskType } from "@/lib/generated/prisma/browser";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Edit, Copy, Trash2, MoreVertical } from "lucide-react";
+import { duplicateTask, deleteTask } from "./actions";
 
 type Task = {
   id: string;
@@ -53,11 +72,66 @@ function normalizeSearchText(value: string) {
 }
 
 export function EmployerTasksList({ tasks }: EmployerTasksListProps) {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<TaskStatus | "ALL">("ALL");
   const [sortBy, setSortBy] = useState<"newest" | "oldest">("newest");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDuplicating, setIsDuplicating] = useState<string | null>(null);
 
   const normalizedSearchQuery = normalizeSearchText(searchQuery);
+
+  // Handle edit task
+  const handleEdit = (taskId: string) => {
+    router.push(`/dashboard/employer/tasks/${taskId}/edit`);
+  };
+
+  // Handle duplicate task
+  const handleDuplicate = async (taskId: string) => {
+    try {
+      setIsDuplicating(taskId);
+      const result = await duplicateTask(taskId);
+      if (result.success && result.taskId) {
+        router.push(`/dashboard/employer/tasks/${result.taskId}`);
+        router.refresh();
+      } else {
+        alert(result.error || "Không thể nhân bản công việc");
+      }
+    } catch (error) {
+      alert("Đã xảy ra lỗi khi nhân bản công việc");
+    } finally {
+      setIsDuplicating(null);
+    }
+  };
+
+  // Handle delete task
+  const handleDelete = async () => {
+    if (!taskToDelete) return;
+    
+    try {
+      setIsDeleting(true);
+      const result = await deleteTask(taskToDelete);
+      if (result.success) {
+        setDeleteDialogOpen(false);
+        setTaskToDelete(null);
+        router.refresh();
+      } else {
+        alert(result.error || "Không thể xóa công việc");
+      }
+    } catch (error) {
+      alert("Đã xảy ra lỗi khi xóa công việc");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Open delete confirmation dialog
+  const confirmDelete = (taskId: string) => {
+    setTaskToDelete(taskId);
+    setDeleteDialogOpen(true);
+  };
 
   // Filter and sort tasks
   const filteredTasks = tasks
@@ -184,9 +258,9 @@ export function EmployerTasksList({ tasks }: EmployerTasksListProps) {
           </Link>
         </div>
       ) : (
-        <div className="overflow-hidden rounded border border-[#f0f2f5]">
+        <div className="overflow-visible rounded border border-[#f0f2f5]">
           <table className="w-full">
-            <thead className="bg-[#f5f7fa]">
+            <thead className="bg-[#f5f7fa] [&>tr>th:first-child]:rounded-tl [&>tr>th:last-child]:rounded-tr">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-[#686d77]">
                   Trạng thái
@@ -258,15 +332,44 @@ export function EmployerTasksList({ tasks }: EmployerTasksListProps) {
 
                   {/* Actions */}
                   <td className="px-6 py-4">
-                    <button
-                      aria-label="Thêm hành động"
-                      className="text-[#686d77] hover:text-[#1b1b1b]"
-                      type="button"
-                    >
-                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                      </svg>
-                    </button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        aria-label="Thêm hành động"
+                        className="inline-flex items-center justify-center rounded p-1 text-[#686d77] hover:bg-gray-100 hover:text-[#1b1b1b] focus:outline-none disabled:opacity-50"
+                        disabled={isDuplicating === task.id}
+                      >
+                        {isDuplicating === task.id ? (
+                          <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                        ) : (
+                          <MoreVertical className="h-5 w-5" />
+                        )}
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        {task.status === "DRAFT" && (
+                          <DropdownMenuItem onClick={() => handleEdit(task.id)}>
+                            <Edit className="h-4 w-4" />
+                            <span>Chỉnh sửa</span>
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem
+                          onClick={() => handleDuplicate(task.id)}
+                          disabled={isDuplicating === task.id}
+                        >
+                          <Copy className="h-4 w-4" />
+                          <span>Nhân bản</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => confirmDelete(task.id)}
+                          className="text-red-500 hover:bg-red-50 hover:text-red-600 focus:bg-red-50 focus:text-red-600"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span>Xóa</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </td>
                 </tr>
               ))}
@@ -274,6 +377,29 @@ export function EmployerTasksList({ tasks }: EmployerTasksListProps) {
           </table>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận xóa công việc</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có chắc chắn muốn xóa công việc này không? Hành động này không thể hoàn tác.
+              Tất cả dữ liệu liên quan đến công việc sẽ bị xóa vĩnh viễn.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              {isDeleting ? "Đang xóa..." : "Xóa"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

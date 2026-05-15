@@ -9,7 +9,7 @@ import { useEffect } from "react";
 const demoTasks = [
   {
     title: "Đăng ký bằng Google và hoàn thành 1 khảo sát",
-    reward: "18.000 VND",
+    reward: "18.000 VNĐ",
     claimed: 190,
     total: 500,
     featured: true,
@@ -17,7 +17,7 @@ const demoTasks = [
   },
   {
     title: "Tải ứng dụng, xác minh KYC và gửi ảnh chụp màn hình",
-    reward: "12.000 VND",
+    reward: "12.000 VNĐ",
     claimed: 128,
     total: 1200,
     featured: true,
@@ -25,7 +25,7 @@ const demoTasks = [
   },
   {
     title: "YouTube: đăng ký kênh và bình luận theo yêu cầu",
-    reward: "7.500 VND",
+    reward: "7.500 VNĐ",
     claimed: 6,
     total: 62,
     featured: true,

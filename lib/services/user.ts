@@ -101,7 +101,7 @@ export async function updateProfile(
     return {
       ok: false,
       fields,
-      error: "Hồ sơ TaskBee chưa được khởi tạo. Vui lòng hoàn tất đăng nhập hoặc onboarding.",
+      error: "Hồ sơ TaskBee chưa được khởi tạo. Vui lòng hoàn tất đăng nhập hoặc thiết lập ban đầu.",
     };
   }
 
@@ -177,8 +177,8 @@ export async function updateProfile(
 }
 
 /**
- * Switch user role between EMPLOYER and WORKER
- * Admins cannot switch roles
+ * Chuyển vai trò người dùng giữa EMPLOYER và WORKER
+ * Quản trị viên không thể tự chuyển vai trò
  */
 export async function switchRole(): Promise<{ ok: boolean; error?: string; newRole?: string }> {
   const session = await requireVerifiedUser();
@@ -198,7 +198,6 @@ export async function switchRole(): Promise<{ ok: boolean; error?: string; newRo
     };
   }
 
-  // Admins cannot switch roles
   if (profile.role === "ADMIN") {
     return {
       ok: false,

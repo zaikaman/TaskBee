@@ -2,7 +2,6 @@
 
 import { useMemo } from "react";
 import { calculateEmployerTaskCharge, formatVnd } from "@/lib/utils/money";
-import { TaskType } from "@/lib/generated/prisma/browser";
 import type { CreateTaskState } from "@/lib/services/task";
 import type { TaskFormData } from "./create-task-form";
 
@@ -12,6 +11,8 @@ type CreateTaskStep3Props = {
   isPending: boolean;
   state: CreateTaskState;
   onBack: () => void;
+  taskId?: string;
+  isEdit?: boolean;
 };
 
 export function CreateTaskStep3({
@@ -20,6 +21,8 @@ export function CreateTaskStep3({
   isPending,
   state,
   onBack,
+  taskId,
+  isEdit = false,
 }: CreateTaskStep3Props) {
   // Calculate costs
   const costs = useMemo(() => {
@@ -40,9 +43,13 @@ export function CreateTaskStep3({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-[#203259]">Xác nhận & Thanh toán</h2>
+        <h2 className="text-2xl font-bold text-[#203259]">
+          {isEdit ? "Xác nhận thao tác" : "Xác nhận và chọn hành động"}
+        </h2>
         <p className="mt-2 text-sm text-[#7f8aa0]">
-          Kiểm tra lại thông tin và xác nhận đăng công việc
+          {isEdit
+            ? "Chọn lưu bản nháp hoặc đăng việc để kích hoạt công việc"
+            : "Kiểm tra lại thông tin trước khi lưu bản nháp hoặc đăng việc"}
         </p>
       </div>
 
@@ -63,13 +70,13 @@ export function CreateTaskStep3({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <span className="text-xs font-bold text-[#7f8aa0] uppercase">Phần thưởng/slot</span>
+              <span className="text-xs font-bold text-[#7f8aa0] uppercase">Phần thưởng/suất</span>
               <p className="mt-1 text-sm text-[#203259] font-medium">
                 {Number(data.rewardAmount.replace(/,/g, "")).toLocaleString("vi-VN")} VNĐ
               </p>
             </div>
             <div>
-              <span className="text-xs font-bold text-[#7f8aa0] uppercase">Số lượng slot</span>
+              <span className="text-xs font-bold text-[#7f8aa0] uppercase">Số lượng suất</span>
               <p className="mt-1 text-sm text-[#203259] font-medium">{data.totalSlots}</p>
             </div>
           </div>
@@ -81,14 +88,14 @@ export function CreateTaskStep3({
         </div>
       </div>
 
-      {/* Cost Breakdown */}
-      {costs && (
+      {/* Cost Breakdown - Only show for new tasks */}
+      {!isEdit && costs && (
         <div className="bg-white border-2 border-[#22ab59] p-6 space-y-4">
-          <h3 className="text-lg font-bold text-[#203259]">Chi phí</h3>
+          <h3 className="text-lg font-bold text-[#203259]">Chi phí khi đăng việc</h3>
 
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-[#7f8aa0]">Tổng thưởng cho workers</span>
+              <span className="text-sm text-[#7f8aa0]">Tổng thưởng cho người làm</span>
               <span className="text-sm font-medium text-[#203259]">
                 {formatVnd(costs.escrowAmount)}
               </span>
@@ -113,13 +120,21 @@ export function CreateTaskStep3({
 
           <div className="bg-[#fff6f6] border border-[#fce3e5] p-4 mt-4">
             <p className="text-xs text-[#e63e46]">
-              <strong>Lưu ý:</strong> Số tiền này sẽ được khóa trong ví escrow của bạn. Tiền sẽ
-              được giải phóng khi bạn duyệt submission hoặc tự động duyệt sau{" "}
+              <strong>Lưu ý:</strong> Số tiền này sẽ được khóa trong ví ký quỹ của bạn. Tiền sẽ
+              được giải phóng khi bạn duyệt bài nộp hoặc tự động duyệt sau {" "}
               {data.autoApproveDays} ngày.
             </p>
           </div>
         </div>
       )}
+
+      <div className="border border-[#d7f4e2] bg-[#f0fdf4] p-4">
+        <p className="text-sm text-[#005924]">
+          {isEdit
+            ? "Bạn đang chỉnh sửa một bản nháp. Lưu bản nháp sẽ giữ việc ở trạng thái nháp, còn Đăng việc sẽ kích hoạt việc và khóa ví ký quỹ."
+            : "Bạn có thể lưu bản nháp miễn phí để hoàn thiện sau, hoặc bấm Đăng việc để khóa ví ký quỹ và kích hoạt việc."}
+        </p>
+      </div>
 
       {/* Error/Success Messages */}
       {state.error && (
@@ -137,7 +152,8 @@ export function CreateTaskStep3({
       {/* Form with hidden fields */}
       <form action={formAction} className="space-y-4">
         {/* Hidden fields for all form data */}
-        <input name="taskType" type="hidden" value={TaskType.EXPRESS} />
+        {isEdit && taskId && <input name="taskId" type="hidden" value={taskId} />}
+        <input name="taskType" type="hidden" value={data.taskType} />
         <input name="title" type="hidden" value={data.title} />
         <input name="description" type="hidden" value={data.description} />
         <input name="instructions" type="hidden" value={data.instructions} />
@@ -159,13 +175,26 @@ export function CreateTaskStep3({
           >
             Quay lại
           </button>
-          <button
-            className="h-[46px] px-8 bg-[#22ab59] text-sm font-black uppercase text-white hover:bg-[#005924] disabled:opacity-60"
-            disabled={isPending || !costs}
-            type="submit"
-          >
-            {isPending ? "Đang đăng..." : "Đăng công việc"}
-          </button>
+          <div className="flex gap-3">
+            <button
+              className="h-[46px] px-8 border-2 border-[#22ab59] bg-white text-sm font-black uppercase text-[#22ab59] hover:bg-[#f0f9f4] disabled:opacity-60"
+              disabled={isPending}
+              name="taskAction"
+              type="submit"
+              value="draft"
+            >
+              {isPending ? "Đang lưu..." : "Lưu bản nháp"}
+            </button>
+            <button
+              className="h-[46px] px-8 bg-[#22ab59] text-sm font-black uppercase text-white hover:bg-[#005924] disabled:opacity-60"
+              disabled={isPending || !costs}
+              name="taskAction"
+              type="submit"
+              value="publish"
+            >
+              {isPending ? "Đang đăng..." : "Đăng việc"}
+            </button>
+          </div>
         </div>
       </form>
 

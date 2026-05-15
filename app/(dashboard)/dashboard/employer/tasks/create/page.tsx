@@ -17,7 +17,7 @@ export default async function CreateTaskPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-[#203259]">Đăng công việc mới</h1>
           <p className="mt-2 text-[#7f8aa0]">
-            Tạo công việc mới và bắt đầu nhận submission từ workers
+            Tạo công việc mới, lưu bản nháp hoặc đăng ngay khi sẵn sàng
           </p>
         </div>
 

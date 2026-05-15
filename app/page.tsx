@@ -192,8 +192,8 @@ export default function LandingPage() {
         <div>
           <h2 className="text-4xl font-black text-[#30394d]">Sẵn sàng chạy thử TaskBee?</h2>
           <p className="mt-3 max-w-xl text-lg text-[#686d77]">
-            Landing page này là bản tạm để khóa phong cách. Các luồng đăng ký, đăng việc và ví
-            tiền sẽ được nối ở các phase tiếp theo.
+            Trang này là bản tạm để khóa phong cách. Các luồng đăng ký, đăng việc và ví tiền sẽ
+            được nối ở các giai đoạn tiếp theo.
           </p>
         </div>
         <Link

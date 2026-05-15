@@ -158,7 +158,7 @@ export function CreateTaskStep1({ data, onNext }: CreateTaskStep1Props) {
           {errors.description ? (
             <span className="text-xs text-[#e63e46]">{errors.description}</span>
           ) : (
-            <span className="text-xs text-[#7f8aa0]">Mô tả rõ ràng để worker hiểu công việc</span>
+            <span className="text-xs text-[#7f8aa0]">Mô tả rõ ràng để người làm hiểu công việc</span>
           )}
           <span className="text-xs text-[#7f8aa0]">
             {formData.description.length}/{TASK_LIMITS.descriptionMaxLength}
@@ -186,7 +186,7 @@ export function CreateTaskStep1({ data, onNext }: CreateTaskStep1Props) {
             <span className="text-xs text-[#e63e46]">{errors.instructions}</span>
           ) : (
             <span className="text-xs text-[#7f8aa0]">
-              Hướng dẫn từng bước để worker hoàn thành công việc
+              Hướng dẫn từng bước để người làm hoàn thành công việc
             </span>
           )}
           <span className="text-xs text-[#7f8aa0]">

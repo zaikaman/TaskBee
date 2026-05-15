@@ -6,11 +6,11 @@ import {
 } from "@/config/app";
 
 /**
- * Schema cho việc tạo task mới
- * Employer sử dụng để tạo task với đầy đủ thông tin
+ * Schema cho việc tạo việc mới
+ * Nhà tuyển việc sử dụng để tạo việc với đầy đủ thông tin
  */
 export const createTaskSchema = z.object({
-  // Task type - MVP chỉ support EXPRESS, sau này mở rộng CLASSIC và LIST
+  // Loại việc - MVP chỉ hỗ trợ EXPRESS, sau này mở rộng CLASSIC và LIST
   taskType: z
     .enum([TaskType.EXPRESS, TaskType.CLASSIC, TaskType.LIST])
     .default(TaskType.EXPRESS),
@@ -49,7 +49,7 @@ export const createTaskSchema = z.object({
     .optional()
     .nullable(),
 
-  // Subcategory - dùng cho CLASSIC job type (future)
+  // Danh mục con - dùng cho loại việc CLASSIC (trong tương lai)
   subcategory: z
     .string()
     .min(2, "Danh mục con phải có ít nhất 2 ký tự")
@@ -58,7 +58,7 @@ export const createTaskSchema = z.object({
     .optional()
     .nullable(),
 
-  // Target list ID - dùng cho LIST job type (future)
+  // ID danh sách mục tiêu - dùng cho loại việc LIST (trong tương lai)
   targetListId: z
     .string()
     .uuid("ID danh sách không hợp lệ")
@@ -70,14 +70,14 @@ export const createTaskSchema = z.object({
     .positive("Phần thưởng phải là số dương")
     .min(WALLET_LIMITS.minimumTaskRewardVnd, `Phần thưởng tối thiểu là ${WALLET_LIMITS.minimumTaskRewardVnd.toLocaleString("vi-VN")} VNĐ`)
     .max(WALLET_LIMITS.maximumTaskRewardVnd, `Phần thưởng tối đa là ${WALLET_LIMITS.maximumTaskRewardVnd.toLocaleString("vi-VN")} VNĐ`)
-    .multipleOf(1000, "Phần thưởng phải là bội số của 1,000 VNĐ"),
+    .multipleOf(1000, "Phần thưởng phải là bội số của 1.000 VNĐ"),
 
   totalSlots: z
     .number()
-    .int("Số lượng slot phải là số nguyên")
-    .positive("Số lượng slot phải là số dương")
-    .min(WALLET_LIMITS.minimumTaskSlots, `Số lượng slot tối thiểu là ${WALLET_LIMITS.minimumTaskSlots}`)
-    .max(WALLET_LIMITS.maximumTaskSlots, `Số lượng slot tối đa là ${WALLET_LIMITS.maximumTaskSlots}`),
+    .int("Số lượng suất phải là số nguyên")
+    .positive("Số lượng suất phải là số dương")
+    .min(WALLET_LIMITS.minimumTaskSlots, `Số lượng suất tối thiểu là ${WALLET_LIMITS.minimumTaskSlots}`)
+    .max(WALLET_LIMITS.maximumTaskSlots, `Số lượng suất tối đa là ${WALLET_LIMITS.maximumTaskSlots}`),
 
   autoApproveDays: z
     .number()
@@ -96,8 +96,8 @@ export const createTaskSchema = z.object({
 export type CreateTaskInput = z.infer<typeof createTaskSchema>;
 
 /**
- * Schema cho việc cập nhật task
- * Cho phép Employer chỉnh sửa một số trường của task
+ * Schema cho việc cập nhật việc
+ * Cho phép nhà tuyển việc chỉnh sửa một số trường của việc
  */
 export const updateTaskSchema = z.object({
   title: z
@@ -147,11 +147,11 @@ export const updateTaskSchema = z.object({
 export type UpdateTaskInput = z.infer<typeof updateTaskSchema>;
 
 /**
- * Schema cho việc thay đổi trạng thái task
- * Employer có thể pause, resume, close, hoặc cancel task
+ * Schema cho việc thay đổi trạng thái việc
+ * Nhà tuyển việc có thể tạm dừng, tiếp tục, hoàn tất hoặc hủy việc
  */
 export const taskStatusChangeSchema = z.object({
-  taskId: z.string().uuid("ID task không hợp lệ"),
+  taskId: z.string().uuid("ID việc không hợp lệ"),
   newStatus: z.enum([TaskStatus.ACTIVE, TaskStatus.PAUSED, TaskStatus.COMPLETED, TaskStatus.CANCELLED], {
     message: "Trạng thái không hợp lệ",
   }),
@@ -166,8 +166,8 @@ export const taskStatusChangeSchema = z.object({
 export type TaskStatusChangeInput = z.infer<typeof taskStatusChangeSchema>;
 
 /**
- * Schema cho việc lọc và tìm kiếm task trong marketplace
- * Worker sử dụng để browse tasks
+ * Schema cho việc lọc và tìm kiếm việc trong marketplace
+ * Người làm sử dụng để duyệt việc
  */
 export const taskFilterSchema = z.object({
   search: z
@@ -246,24 +246,24 @@ export type TaskFilterInput = z.infer<typeof taskFilterSchema>;
  * Worker sử dụng để claim một slot của task
  */
 export const claimTaskSlotSchema = z.object({
-  taskId: z.string().uuid("ID task không hợp lệ"),
+  taskId: z.string().uuid("ID việc không hợp lệ"),
 });
 
 export type ClaimTaskSlotInput = z.infer<typeof claimTaskSlotSchema>;
 
 /**
- * Schema cho việc publish task từ DRAFT sang ACTIVE
- * Employer sử dụng sau khi tạo task và muốn publish
+ * Schema cho việc đăng việc từ NHÁP sang ĐANG HOẠT ĐỘNG
+ * Nhà tuyển việc sử dụng sau khi tạo việc và muốn đăng
  */
 export const publishTaskSchema = z.object({
-  taskId: z.string().uuid("ID task không hợp lệ"),
+  taskId: z.string().uuid("ID việc không hợp lệ"),
 });
 
 export type PublishTaskInput = z.infer<typeof publishTaskSchema>;
 
 /**
- * Schema cho việc lấy danh sách task của Employer
- * Employer dashboard sử dụng
+ * Schema cho việc lấy danh sách việc của nhà tuyển việc
+ * Bảng điều khiển nhà tuyển việc sử dụng
  */
 export const employerTaskListSchema = z.object({
   status: z
@@ -303,7 +303,7 @@ export type EmployerTaskListInput = z.infer<typeof employerTaskListSchema>;
  * Schema cho việc lấy chi tiết task
  */
 export const getTaskByIdSchema = z.object({
-  taskId: z.string().uuid("ID task không hợp lệ"),
+  taskId: z.string().uuid("ID việc không hợp lệ"),
 });
 
 export type GetTaskByIdInput = z.infer<typeof getTaskByIdSchema>;

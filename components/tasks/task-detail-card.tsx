@@ -1,11 +1,11 @@
 "use client";
 
-import { Task } from "@/lib/generated/prisma/browser";
 import { formatVnd } from "@/lib/utils/money";
+import type { SerializableTask } from "@/lib/utils/task-serialization";
 
 type TaskDetailCardProps = {
   task: Pick<
-    Task,
+    SerializableTask,
     | "id"
     | "title"
     | "description"
@@ -38,13 +38,13 @@ export function TaskDetailCard({ task }: TaskDetailCardProps) {
         <div className="bg-[#edf4ff] p-4">
           <span className="text-xs font-bold text-[#7f8aa0] uppercase">Phần thưởng</span>
           <p className="mt-1 text-xl font-black text-[#22ab59]">
-            {formatVnd(task.rewardAmount.toString())}
+            {formatVnd(task.rewardAmount)}
           </p>
-          <span className="text-xs text-[#7f8aa0]">mỗi slot</span>
+          <span className="text-xs text-[#7f8aa0]">mỗi suất</span>
         </div>
 
         <div className="bg-[#edf4ff] p-4">
-          <span className="text-xs font-bold text-[#7f8aa0] uppercase">Slot khả dụng</span>
+          <span className="text-xs font-bold text-[#7f8aa0] uppercase">Suất khả dụng</span>
           <p className="mt-1 text-xl font-black text-[#203259]">
             {task.availableSlots} / {task.totalSlots}
           </p>
