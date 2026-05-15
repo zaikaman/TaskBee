@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/db/prisma";
+import { uploadProofImage } from "@/lib/services/storage";
+import { uploadProofImage } from "@/lib/services/storage";
 import {
   Prisma,
   SubmissionStatus,
@@ -725,5 +727,48 @@ export async function reviewSubmission(
           ? error.message
           : "Không thể review submission lúc này. Vui lòng thử lại sau.",
     };
+  }
+}
+export type UploadProofState = {
+  ok: boolean;
+  url?: string;
+  error?: string;
+};
+
+export async function uploadProofFileAction(
+  _prevState: UploadProofState,
+  formData: FormData,
+): Promise<UploadProofState> {
+  try {
+    const session = await requireRole(UserRole.WORKER);
+    const profile = session.profile;
+
+    if (!profile) {
+      return { ok: false, error: "Bạn chưa đăng nhập hoặc không có quyền Worker." };
+    }
+
+    const taskId = formData.get("taskId");
+    const file = formData.get("file");
+
+    if (!taskId || typeof taskId !== "string") {
+      return { ok: false, error: "Thiếu thông tin taskId." };
+    }
+
+    if (!file || !(file instanceof File)) {
+      return { ok: false, error: "Vui lòng chọn ảnh để tải lên." };
+    }
+
+    const result = await uploadProofImage({
+      userId: profile.id,
+      taskId,
+      file,
+    });
+
+    return {
+      ok: true,
+      url: result.url,
+    };
+  } catch (err: any) {
+    return { ok: false, error: err?.message || "Lỗi tải ảnh. Vui lòng thử lại." };
   }
 }

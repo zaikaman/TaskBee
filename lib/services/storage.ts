@@ -147,3 +147,54 @@ export async function uploadAvatarImage(params: {
     size: file.size,
   };
 }
+
+const PROOF_MAX_BYTES = 5 * 1024 * 1024;
+const PROOF_CACHE_CONTROL = "public, max-age=31536000, immutable";
+
+export async function uploadProofImage(params: {
+  userId: string;
+  taskId: string;
+  file: File;
+}): Promise<{ url: string; key: string }> {
+  const { file, userId, taskId } = params;
+
+  if (file.size < 1) {
+    throw new Error("Vui lòng chọn ảnh bằng chứng trước khi tải lên.");
+  }
+
+  if (file.size > PROOF_MAX_BYTES) {
+    throw new Error("Ảnh bằng chứng không được vượt quá 5 MB.");
+  }
+
+  if (!isSupportedAvatarContentType(file.type)) {
+    throw new Error("Ảnh bằng chứng chỉ hỗ trợ JPG, PNG hoặc WebP.");
+  }
+
+  const bytes = await readFileBytes(file);
+  assertAvatarSignature(file.type as AvatarContentType, bytes);
+
+  const timestamp = Date.now();
+  const randomStr = Math.random().toString(36).substring(2, 8);
+  const ext = avatarContentTypes[file.type as AvatarContentType];
+  const fileName = `proof-${timestamp}-${randomStr}.${ext}`;
+  const key = createR2ObjectKey(`tasks/${taskId}/proofs/${userId}`, fileName);
+
+  const upload = await uploadR2Object({
+    bucketKey: "proof",
+    key,
+    body: bytes,
+    contentType: file.type,
+    cacheControl: PROOF_CACHE_CONTROL,
+    metadata: {
+      userId,
+      taskId,
+      purpose: "proof",
+    },
+  });
+
+  return {
+    key: upload.key,
+    url: buildR2PublicUrl("proof", upload.key),
+  };
+}
+

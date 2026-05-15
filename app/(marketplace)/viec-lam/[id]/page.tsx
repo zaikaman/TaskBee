@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Lock, Info, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
+import { SubmissionForm } from "@/components/tasks/submission-form";
 import { formatVnd } from "@/lib/utils/money";
 
 export default async function TaskDetailPage({ params }: { params: { id: string } }) {
@@ -159,37 +160,7 @@ export default async function TaskDetailPage({ params }: { params: { id: string 
       <hr className="my-8" />
 
       {/* Submit Proofs Form */}
-      <div id="submit-proof" className="mb-10">
-        <div className="flex items-center gap-2 mb-6">
-          <div className="bg-[#e7faef] text-[#22ab59] rounded w-5 h-5 flex items-center justify-center font-bold text-xs">?</div>
-          <h2 className="font-semibold text-base">Gửi bằng chứng của bạn dưới đây</h2>
-        </div>
-
-        <form className="space-y-8">
-          {mockTask.proofRequirements.map((proof, idx) => (
-            <div key={idx} className="space-y-3">
-              <Label className="text-sm font-medium">
-                {idx + 1}. {proof.description} {proof.type === 'image' && <span className="text-muted-foreground font-normal">- tải ảnh lên (Tối đa 2MB)</span>}
-              </Label>
-              
-              {proof.type === 'image' ? (
-                <div className="space-y-3">
-                  <Input type="file" accept="image/*" className="max-w-md bg-slate-50 cursor-pointer" />
-                  <p className="text-xs text-muted-foreground">Tùy chọn, thêm bình luận. (Vui lòng không gửi link, chỉ tải ảnh lên)</p>
-                  <Textarea placeholder="Nhập bình luận của bạn vào đây" className="resize-none bg-slate-50" rows={3} />
-                </div>
-              ) : (
-                <Textarea placeholder="Nhập văn bản bằng chứng vào đây" className="resize-none bg-slate-50" rows={3} />
-              )}
-            </div>
-          ))}
-
-          <div className="flex items-center justify-between pt-6 border-t">
-            <Button variant="outline" type="button" className="text-[#22ab59] border-[#22ab59] hover:bg-[#e7faef]">HỦY</Button>
-            <Button type="button" className="bg-[#22ab59] hover:bg-[#01a149] text-white px-8">GỬI BẰNG CHỨNG</Button>
-          </div>
-        </form>
-      </div>
+      <SubmissionForm taskId={params.id} proofRequirements={mockTask.proofRequirements.map(p => p.description).join("\n")} />
 
     </div>
   );
