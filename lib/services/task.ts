@@ -36,7 +36,7 @@ export type CreateTaskState = {
   }>;
 };
 
-export const initialCreateTaskState: CreateTaskState = {
+const initialCreateTaskState: CreateTaskState = {
   ok: false,
 };
 

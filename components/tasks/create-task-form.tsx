@@ -2,7 +2,12 @@
 
 import { useActionState, useState } from "react";
 import { TaskType } from "@/lib/generated/prisma/browser";
-import { createTask, initialCreateTaskState } from "@/lib/services/task";
+import { createTask } from "@/lib/services/task";
+import type { CreateTaskState } from "@/lib/services/task";
+
+const initialCreateTaskState: CreateTaskState = {
+  ok: false,
+};
 import { CreateTaskStep1 } from "./create-task-step-1";
 import { CreateTaskStep2 } from "./create-task-step-2";
 import { CreateTaskStep3 } from "./create-task-step-3";

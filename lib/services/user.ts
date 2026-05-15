@@ -218,9 +218,6 @@ export async function switchRole(): Promise<{ ok: boolean; error?: string; newRo
     },
   });
 
-  // Revalidate all relevant paths
-  revalidatePath("/", "layout");
-
   return {
     ok: true,
     newRole,

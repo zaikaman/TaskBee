@@ -14,9 +14,9 @@ export default async function EmployerTasksPage() {
   const prisma = getPrisma();
 
   // Fetch employer's tasks
-  const tasks = await prisma.task.findMany({
+  const rawTasks = await prisma.task.findMany({
     where: {
-      employerId: session.profile.id,
+      employerId: session.profile?.id,
     },
     orderBy: {
       createdAt: "desc",
@@ -39,6 +39,13 @@ export default async function EmployerTasksPage() {
       publishedAt: true,
     },
   });
+
+  const tasks = rawTasks.map((task) => ({
+    ...task,
+    rewardAmount: task.rewardAmount.toString(),
+    escrowAmount: task.escrowAmount.toString(),
+    platformFeeAmount: task.platformFeeAmount.toString(),
+  }));
 
   return (
     <div className="min-h-screen bg-white">

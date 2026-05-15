@@ -1,8 +1,24 @@
 import Link from "next/link";
 import { ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getCurrentUser } from "@/lib/auth/session";
 
-export default function ForbiddenPage() {
+function getBackHref(role?: string | null) {
+  if (role === "EMPLOYER") {
+    return "/dashboard/employer/tasks";
+  }
+
+  if (role === "WORKER") {
+    return "/viec-lam";
+  }
+
+  return "/login";
+}
+
+export default async function ForbiddenPage() {
+  const session = await getCurrentUser();
+  const backHref = getBackHref(session?.profile?.role);
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-50 px-6">
       <section className="w-full max-w-lg bg-white p-8 text-center shadow-sm ring-1 ring-slate-100">
@@ -14,7 +30,7 @@ export default function ForbiddenPage() {
           Tài khoản của bạn không có vai trò phù hợp để mở khu vực này.
         </p>
         <Button asChild className="mt-6 rounded bg-emerald-600 text-white hover:bg-emerald-700">
-          <Link href="/viec-lam">Về trang việc làm</Link>
+          <Link href={backHref}>{session?.profile?.role === "EMPLOYER" ? "Về dashboard công việc" : session?.profile?.role === "WORKER" ? "Về trang việc làm" : "Về trang đăng nhập"}</Link>
         </Button>
       </section>
     </main>

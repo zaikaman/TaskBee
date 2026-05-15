@@ -37,12 +37,6 @@ export function CreateTaskStep3({
     }
   }, [data.rewardAmount, data.totalSlots]);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    formAction(formData);
-  };
-
   return (
     <div className="space-y-6">
       <div>
@@ -141,7 +135,7 @@ export function CreateTaskStep3({
       )}
 
       {/* Form with hidden fields */}
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form action={formAction} className="space-y-4">
         {/* Hidden fields for all form data */}
         <input name="taskType" type="hidden" value={TaskType.EXPRESS} />
         <input name="title" type="hidden" value={data.title} />

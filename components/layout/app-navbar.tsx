@@ -35,7 +35,7 @@ export async function AppNavbar() {
           <span className="text-xl font-bold">{APP_NAME}</span>
         </Link>
 
-        <PrimaryNav />
+        <PrimaryNav currentRole={session?.profile?.role} />
 
         <div className="flex items-center gap-3">
           {isAuthenticated && session?.profile?.role && (

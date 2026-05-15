@@ -1,7 +1,6 @@
 "use client";
 
-import { useRouter, usePathname } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { switchRole } from "@/lib/services/user";
 import type { UserRole } from "@/lib/generated/prisma/browser";
 
@@ -10,9 +9,7 @@ type RoleSwitcherProps = {
 };
 
 export function RoleSwitcher({ currentRole }: RoleSwitcherProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const [isPending, startTransition] = useTransition();
+  const [isSwitching, setIsSwitching] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Don't show switcher for admins
@@ -24,37 +21,37 @@ export function RoleSwitcher({ currentRole }: RoleSwitcherProps) {
 
   const handleSwitch = async () => {
     setError(null);
+    setIsSwitching(true);
     
-    startTransition(async () => {
-      try {
-        const result = await switchRole();
-        
-        if (!result.ok) {
-          setError(result.error ?? "Không thể chuyển đổi vai trò");
-          return;
-        }
-
-        // Determine where to redirect based on new role and current path
-        const newRole = result.newRole;
-        let redirectPath = "/viec-lam"; // Default to marketplace
-
-        // If switching to EMPLOYER, redirect to My Jobs
-        if (newRole === "EMPLOYER") {
-          redirectPath = "/dashboard/employer/tasks";
-        }
-        
-        // If switching to WORKER, redirect to marketplace
-        if (newRole === "WORKER") {
-          redirectPath = "/viec-lam";
-        }
-
-        // Navigate to appropriate page
-        router.push(redirectPath);
-        router.refresh();
-      } catch (err) {
-        setError("Đã xảy ra lỗi khi chuyển đổi vai trò");
+    try {
+      const result = await switchRole();
+      
+      if (!result.ok) {
+        setError(result.error ?? "Không thể chuyển đổi vai trò");
+        setIsSwitching(false);
+        return;
       }
-    });
+
+      // Determine where to redirect based on new role and current path
+      const newRole = result.newRole;
+      let redirectPath = "/viec-lam"; // Default to marketplace
+
+      // If switching to EMPLOYER, redirect to My Jobs
+      if (newRole === "EMPLOYER") {
+        redirectPath = "/dashboard/employer/tasks";
+      }
+      
+      // If switching to WORKER, redirect to marketplace
+      if (newRole === "WORKER") {
+        redirectPath = "/viec-lam";
+      }
+
+      // Dùng điều hướng cứng để thoát khỏi tree hiện tại ngay lập tức.
+      window.location.assign(redirectPath);
+    } catch (err) {
+      setError("Đã xảy ra lỗi khi chuyển đổi vai trò");
+      setIsSwitching(false);
+    }
   };
 
   return (
@@ -66,7 +63,7 @@ export function RoleSwitcher({ currentRole }: RoleSwitcherProps) {
         <button
           aria-label={`Chuyển sang ${isEmployer ? "người làm thuê" : "người thuê"}`}
           className="relative inline-flex h-5 w-10 rounded-full bg-slate-200 p-0.5 transition-colors hover:bg-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          disabled={isPending}
+          disabled={isSwitching}
           onClick={handleSwitch}
           type="button"
         >
