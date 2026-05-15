@@ -130,7 +130,7 @@ export function PrimaryNav({ currentRole }: { currentRole?: string }) {
                         <div className="my-1 h-px bg-slate-100" />
 
                         <Link
-                          href="/viec-lam/finished"
+                          href="/dashboard/worker/tasks"
                           className="block w-full px-4 py-3 text-left text-sm hover:bg-slate-50"
                           onClick={() => setIsJobsMenuOpen(false)}
                         >
@@ -141,7 +141,7 @@ export function PrimaryNav({ currentRole }: { currentRole?: string }) {
                         </Link>
 
                         <Link
-                          href="/viec-lam/paid"
+                          href="/dashboard/worker/tasks?status=paid"
                           className="block w-full px-4 py-3 text-left text-sm hover:bg-slate-50"
                           onClick={() => setIsJobsMenuOpen(false)}
                         >
@@ -152,7 +152,7 @@ export function PrimaryNav({ currentRole }: { currentRole?: string }) {
                         </Link>
 
                         <Link
-                          href="/viec-lam/pending"
+                          href="/dashboard/worker/tasks?status=pending"
                           className="block w-full px-4 py-3 text-left text-sm hover:bg-slate-50"
                           onClick={() => setIsJobsMenuOpen(false)}
                         >

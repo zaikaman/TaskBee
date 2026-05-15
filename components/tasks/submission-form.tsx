@@ -109,6 +109,13 @@ export function SubmissionForm({ taskId, proofRequirements }: SubmissionFormProp
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
+        {proofRequirements ? (
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-700">
+            <p className="font-semibold text-slate-900">Yêu cầu bằng chứng</p>
+            <p className="mt-2 whitespace-pre-wrap leading-6">{proofRequirements}</p>
+          </div>
+        ) : null}
+
         <div className="space-y-4">
           <Label className="text-sm font-medium block">
             Mô tả bằng chứng

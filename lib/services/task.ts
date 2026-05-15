@@ -411,8 +411,8 @@ export async function createTask(
     revalidatePath(`/dashboard/employer/tasks/${result.task.id}`);
 
     if (submissionMode === "publish") {
-      revalidatePath("/marketplace");
-      revalidatePath(`/marketplace/tasks/${result.task.id}`);
+      revalidatePath("/viec-lam");
+      revalidatePath(`/viec-lam/${result.task.id}`);
     }
 
     return {
@@ -533,8 +533,8 @@ export async function pauseTask(taskId: string): Promise<{
     });
 
     revalidatePath("/dashboard/employer/tasks");
-    revalidatePath("/marketplace");
-    revalidatePath(`/marketplace/tasks/${taskId}`);
+    revalidatePath("/viec-lam");
+    revalidatePath(`/viec-lam/${taskId}`);
 
     return {
       ok: true,
@@ -624,8 +624,8 @@ export async function resumeTask(taskId: string): Promise<{
     });
 
     revalidatePath("/dashboard/employer/tasks");
-    revalidatePath("/marketplace");
-    revalidatePath(`/marketplace/tasks/${taskId}`);
+    revalidatePath("/viec-lam");
+    revalidatePath(`/viec-lam/${taskId}`);
 
     return {
       ok: true,
@@ -796,8 +796,8 @@ export async function closeTask(taskId: string): Promise<{
     };
   } finally {
     revalidatePath("/dashboard/employer/tasks");
-    revalidatePath("/marketplace");
-    revalidatePath(`/marketplace/tasks/${taskId}`);
+    revalidatePath("/viec-lam");
+    revalidatePath(`/viec-lam/${taskId}`);
   }
 }
 
@@ -964,8 +964,8 @@ export async function cancelTask(taskId: string, reason?: string): Promise<{
     };
   } finally {
     revalidatePath("/dashboard/employer/tasks");
-    revalidatePath("/marketplace");
-    revalidatePath(`/marketplace/tasks/${taskId}`);
+    revalidatePath("/viec-lam");
+    revalidatePath(`/viec-lam/${taskId}`);
   }
 }
 
@@ -1051,8 +1051,8 @@ export async function updateTask(
 
       revalidatePath("/dashboard/employer/tasks");
       revalidatePath(`/dashboard/employer/tasks/${taskId}`);
-      revalidatePath("/marketplace");
-      revalidatePath(`/marketplace/tasks/${taskId}`);
+      revalidatePath("/viec-lam");
+      revalidatePath(`/viec-lam/${taskId}`);
 
       return {
         ok: true,
