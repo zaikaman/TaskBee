@@ -16,6 +16,7 @@ import { UserRole } from "@/lib/generated/prisma/client";
 import { PrimaryNav } from "./primary-nav";
 import { ProfileMenu } from "./profile-menu";
 import { RoleSwitcher } from "./role-switcher";
+import { formatCurrency } from "@/lib/utils";
 
 export async function AppNavbar() {
   const session = await getCurrentUser();
@@ -24,6 +25,8 @@ export async function AppNavbar() {
     session?.profile?.username ??
     session?.email?.split("@")[0] ??
     "người dùng";
+  const isEmployer = session?.profile?.role === UserRole.EMPLOYER;
+  const isWorker = session?.profile?.role === UserRole.WORKER;
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white">
@@ -104,20 +107,34 @@ export async function AppNavbar() {
               Giới thiệu
             </Link>
             <span className="text-amber-300">|</span>
-            <Link href="/viec-lam" className="font-medium text-emerald-700">
-              Khảo sát trả phí (20)
-            </Link>
+            {isEmployer ? (
+              <Link href="/dashboard/wallet" className="font-medium text-emerald-700">
+                Nạp tiền
+              </Link>
+            ) : (
+              <Link href="/viec-lam" className="font-medium text-emerald-700">
+                Khảo sát trả phí (20)
+              </Link>
+            )}
           </div>
           <div className="flex items-center gap-4 font-medium text-slate-700">
-            <span>
-              Đã thu: <span className="text-emerald-700">0 VND</span>
-            </span>
-            <span>
-              Chờ duyệt: <span className="text-amber-600">0 VND</span>
-            </span>
-            <span className="flex items-center gap-1 text-slate-600">
-              <Clock3 className="size-4" /> 180s
-            </span>
+            {isEmployer ? (
+              <span>
+                Số dư: <span className="text-emerald-700">{formatCurrency(session?.profile?.availableBalance)} VND</span>
+              </span>
+            ) : (
+              <>
+                <span>
+                  Đã kiếm: <span className="text-emerald-700">{formatCurrency(session?.profile?.availableBalance)} VND</span>
+                </span>
+                <span>
+                  Chờ duyệt: <span className="text-amber-600">{formatCurrency(session?.profile?.pendingBalance)} VND</span>
+                </span>
+                <span className="flex items-center gap-1 text-slate-600">
+                  <Clock3 className="size-4" /> 180s
+                </span>
+              </>
+            )}
           </div>
         </div>
       </div>
