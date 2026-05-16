@@ -9,6 +9,7 @@ import {
   TransactionType,
   UserStatus,
 } from "@/lib/generated/prisma/client";
+import { settleConfirmedDepositIntent } from "@/lib/services/payments/deposit-confirmation";
 import { formatVnd, fromMinorUnits, toMinorUnits } from "@/lib/utils/money";
 
 const SEPAY_INCOMING_TRANSFER_TYPES = new Set(["in", "incoming", "credit"]);
@@ -274,6 +275,39 @@ export async function processSePayWebhookPayload(
       message: "Giao dịch SePay đã được xử lý trước đó, không cộng ví lần hai.",
     };
   }
+
+  const settledResult = await settleConfirmedDepositIntent({
+    provider: DepositProvider.SEPAY,
+    paymentCode,
+    providerTransactionId: payload.providerTransactionId,
+    providerReference: payload.providerReference,
+    providerEventId: payload.providerTransactionId,
+    confirmations: 1,
+    confirmedAmountVnd: payload.amount,
+    providerReportedAmountVnd: payload.amount,
+    rawProviderMetadata: createWebhookMetadata(payload),
+    ledgerDescription: (depositIntent) =>
+      `Nạp tiền SePay ${formatVnd(payload.amount)} với mã thanh toán ${depositIntent.paymentCode}.`,
+    ledgerMetadata: (depositIntent) =>
+      ({
+        depositIntentId: depositIntent.id,
+        paymentCode: depositIntent.paymentCode,
+        provider: "SEPAY",
+        providerTransactionId: payload.providerTransactionId,
+        providerReference: payload.providerReference,
+        rawPayload: payload.rawPayload,
+      }) as Prisma.InputJsonValue,
+  });
+
+  if (settledResult.status === "PROCESSED") {
+    revalidatePath("/dashboard/wallet");
+    revalidatePath("/dashboard/wallet/deposit");
+  }
+
+  return {
+    ok: true as const,
+    ...settledResult,
+  };
 
   const prisma = getPrisma();
   const result = await prisma.$transaction(async (tx) => {

@@ -1040,23 +1040,17 @@ export async function processNowPaymentsUsdtWebhookPayload(
       }
     }
 
-    const updatedUser = await tx.user.update({
-      where: {
-        id: depositIntent.userId,
-      },
-      data: {
-        availableBalance: {
-          increment: depositIntent.amount.toString(),
-        },
-      },
-      select: {
-        availableBalance: true,
-      },
-    });
+    await tx.$queryRaw(
+      Prisma.sql`SELECT id FROM "User" WHERE id = ${depositIntent.userId}::uuid FOR UPDATE`,
+    );
 
-    await tx.depositIntent.update({
+    const updatedDepositIntent = await tx.depositIntent.updateMany({
       where: {
         id: depositIntent.id,
+        status: {
+          not: DepositIntentStatus.PAID,
+        },
+        providerTransactionId: null,
       },
       data: {
         status: DepositIntentStatus.PAID,
@@ -1068,6 +1062,30 @@ export async function processNowPaymentsUsdtWebhookPayload(
         confirmedAmount: depositIntent.amount.toString(),
         confirmedAt: new Date(),
         rawProviderMetadata: createProviderMetadata(payload),
+      },
+    });
+
+    if (updatedDepositIntent.count !== 1) {
+      return {
+        ok: true as const,
+        status: "DUPLICATED" as const,
+        depositIntentId: depositIntent.id,
+        paymentCode: depositIntent.paymentCode,
+        message: "Lệnh nạp USDT đã được xử lý bởi tiến trình khác, không cộng ví lần hai.",
+      };
+    }
+
+    const updatedUser = await tx.user.update({
+      where: {
+        id: depositIntent.userId,
+      },
+      data: {
+        availableBalance: {
+          increment: depositIntent.amount.toString(),
+        },
+      },
+      select: {
+        availableBalance: true,
       },
     });
 
