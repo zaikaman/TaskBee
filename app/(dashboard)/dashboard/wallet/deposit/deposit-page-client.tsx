@@ -15,12 +15,17 @@ import {
   TimerReset,
   WalletCards,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  DepositStatusBadge,
+  DepositStatusCallout,
+  DepositStatusTimeline,
+  getDepositStatusLabel,
+  isDepositStatusRefreshable,
+} from "@/components/wallet";
 import { PAYMENT_CONFIG } from "@/config/app";
 import {
-  DepositIntentStatus,
   DepositNetwork,
   DepositProvider,
 } from "@/lib/generated/prisma/browser";
@@ -43,10 +48,6 @@ type DepositMethod = "SEPAY" | "USDT";
 
 const quickDepositAmounts = ["100000", "250000", "500000", "1000000", "2000000", "5000000"];
 const initialState: CreateDepositActionState = { ok: false };
-const refreshableStatuses = new Set<DepositIntentStatus>([
-  DepositIntentStatus.PENDING,
-  DepositIntentStatus.CONFIRMING,
-]);
 
 function formatDateTime(value: Date | string) {
   return new Intl.DateTimeFormat("vi-VN", {
@@ -71,34 +72,6 @@ function formatRemainingTime(expiresAt: Date | string) {
 
 function normalizeNumericAmount(value: string) {
   return value.replace(/[^\d]/g, "");
-}
-
-function getStatusLabel(status: DepositIntentStatus) {
-  const labels: Record<DepositIntentStatus, string> = {
-    PENDING: "Đang chờ thanh toán",
-    CONFIRMING: "Đang xác nhận",
-    PAID: "Đã cộng ví",
-    EXPIRED: "Đã hết hạn",
-    CANCELLED: "Đã hủy",
-    FAILED: "Thất bại",
-    UNDERPAID: "Thanh toán thiếu",
-    OVERPAID: "Thanh toán thừa",
-    MANUAL_REVIEW_REQUIRED: "Cần kiểm tra thủ công",
-  };
-
-  return labels[status];
-}
-
-function getStatusClassName(status: DepositIntentStatus) {
-  if (status === DepositIntentStatus.PAID) {
-    return "border-[#b8e8ca] bg-[#e8f7ef] text-[#007d3e]";
-  }
-
-  if (status === DepositIntentStatus.PENDING || status === DepositIntentStatus.CONFIRMING) {
-    return "border-[#ffe4a3] bg-[#fff3cf] text-[#996500]";
-  }
-
-  return "border-[#f4b8bd] bg-[#fce3e5] text-[#8a1218]";
 }
 
 function resolveNetworkName(network: DepositNetwork | null) {
@@ -377,7 +350,7 @@ function DepositIntentPanel({
   const [remainingTime, setRemainingTime] = useState(intent ? formatRemainingTime(intent.expiresAt) : "");
 
   useEffect(() => {
-    if (!intent || !refreshableStatuses.has(intent.status)) {
+    if (!intent || !isDepositStatusRefreshable(intent.status)) {
       return;
     }
 
@@ -407,9 +380,7 @@ function DepositIntentPanel({
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-lg font-black text-[#001b49]">Lệnh nạp {intent.paymentCode}</h2>
-            <Badge className={getStatusClassName(intent.status)} variant="outline">
-              {getStatusLabel(intent.status)}
-            </Badge>
+            <DepositStatusBadge status={intent.status} />
           </div>
           <p className="mt-1 text-sm text-[#686d77]">
             Tạo lúc {formatDateTime(intent.createdAt)} · Hết hạn lúc {formatDateTime(intent.expiresAt)}
@@ -418,7 +389,9 @@ function DepositIntentPanel({
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex h-9 items-center gap-2 bg-white px-3 text-sm font-black text-[#001b49]">
             <TimerReset className="size-4 text-[#22ab59]" aria-hidden="true" />
-            {refreshableStatuses.has(intent.status) ? remainingTime : getStatusLabel(intent.status)}
+            {isDepositStatusRefreshable(intent.status)
+              ? remainingTime
+              : getDepositStatusLabel(intent.status)}
           </div>
           <Button className="h-9 rounded-none" onClick={onRefresh} type="button" variant="outline">
             {isRefreshing ? (
@@ -431,6 +404,14 @@ function DepositIntentPanel({
         </div>
       </header>
       <div className="p-5">
+        <DepositStatusCallout className="mb-5" status={intent.status} />
+        <DepositStatusTimeline
+          className="mb-5"
+          confirmationStatus={intent.confirmationStatus}
+          confirmations={intent.confirmations}
+          requiredConfirmations={intent.requiredConfirmations}
+          status={intent.status}
+        />
         {intent.provider === DepositProvider.SEPAY ? (
           <SePayInstruction intent={intent} />
         ) : (
@@ -453,9 +434,7 @@ function RecentDeposits({ deposits }: { deposits: DepositIntentDetails[] }) {
             <div className="grid gap-2 border border-[#e5eaf1] p-3" key={deposit.id}>
               <div className="flex items-center justify-between gap-3">
                 <p className="font-mono text-sm font-black text-[#001b49]">{deposit.paymentCode}</p>
-                <Badge className={getStatusClassName(deposit.status)} variant="outline">
-                  {getStatusLabel(deposit.status)}
-                </Badge>
+                <DepositStatusBadge status={deposit.status} />
               </div>
               <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-[#686d77]">
                 <span>{deposit.provider === DepositProvider.SEPAY ? "SePay" : `USDT ${deposit.network}`}</span>
@@ -483,7 +462,7 @@ export function DepositPageClient({
   const [currentIntent, setCurrentIntent] = useState<DepositIntentDetails | null>(initialDepositIntent);
   const [state, formAction, isPending] = useActionState(createDepositAction, initialState);
   const [isRefreshing, startRefreshTransition] = useTransition();
-  const hasRefreshableIntent = currentIntent ? refreshableStatuses.has(currentIntent.status) : false;
+  const hasRefreshableIntent = currentIntent ? isDepositStatusRefreshable(currentIntent.status) : false;
 
   useEffect(() => {
     if (state.ok && state.depositIntent) {
