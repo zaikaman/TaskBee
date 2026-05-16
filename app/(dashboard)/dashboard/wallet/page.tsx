@@ -16,6 +16,7 @@ import {
   type TransactionHistoryItem,
 } from "@/lib/services/wallet";
 import { formatVnd, toMinorUnits } from "@/lib/utils/money";
+import { SePayDepositSection } from "./sepay-deposit-section";
 
 export const dynamic = "force-dynamic";
 
@@ -297,27 +298,6 @@ function WorkerWallet({
   );
 }
 
-function AmountGrid({ disabled = false }: { disabled?: boolean }) {
-  return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-      {quickDepositAmounts.map((amount) => (
-        <button
-          className={
-            disabled
-              ? "h-10 bg-[#a9a9a9] text-sm font-bold text-white"
-              : "h-10 bg-[#f5f7fa] text-sm font-bold text-[#00a650]"
-          }
-          disabled={disabled}
-          key={amount}
-          type="button"
-        >
-          {formatVnd(amount)}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 function PaymentBox({
   icon,
   title,
@@ -354,40 +334,7 @@ function EmployerDepositPanel({ balance }: { balance: Awaited<ReturnType<typeof 
           subtitle="Tự động ghi nhận khi SePay xác nhận giao dịch"
           title="Chuyển khoản ngân hàng qua SePay"
         >
-          <div className="grid gap-8 xl:grid-cols-[1fr_220px]">
-            <div>
-              <AmountGrid />
-              <div className="mt-6">
-                <label className="mb-2 block text-sm font-bold" htmlFor="sepay-custom-amount">
-                  Số tiền tùy chỉnh
-                </label>
-                <div className="grid gap-3 sm:grid-cols-[1fr_150px]">
-                  <input
-                    className="h-10 bg-[#f5f7fa] px-4 text-sm outline-none"
-                    id="sepay-custom-amount"
-                    inputMode="numeric"
-                    placeholder="Nhập số tiền"
-                  />
-                  <button className="bg-[#a9a9a9] text-sm font-bold uppercase text-white" disabled>
-                    Tạo lệnh nạp
-                  </button>
-                </div>
-              </div>
-              <div className="mt-4 bg-[#fff3cf] p-4 text-sm text-[#996500]">
-                Lệnh nạp SePay sẽ dùng mã chuyển khoản riêng cho từng giao dịch để hệ thống tự đối
-                soát và cộng số dư.
-              </div>
-            </div>
-
-            <div className="bg-[#f5f7fa] p-5 text-sm leading-6 text-[#001b49]">
-              <p className="font-bold">Quy trình tự động</p>
-              <ol className="mt-3 space-y-2">
-                <li>1. Tạo lệnh nạp với mã chuyển khoản riêng.</li>
-                <li>2. Chuyển đúng nội dung qua ngân hàng.</li>
-                <li>3. SePay xác nhận và ví được cộng tự động.</li>
-              </ol>
-            </div>
-          </div>
+          <SePayDepositSection quickDepositAmounts={quickDepositAmounts} />
         </PaymentBox>
       </div>
 
