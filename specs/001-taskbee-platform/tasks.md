@@ -110,7 +110,7 @@ Phase 1 (Setup)
 - [x] T093 [US4] Create Employer deposit UI with tabs for SePay bank transfer and USDT, Vietnamese payment instructions, QR/payment code display, expiry countdown, and real-time status refresh in `app/(dashboard)/wallet/deposit/page.tsx`
 - [x] T094 [US4] Add deposit status components for pending, confirming, paid, expired, failed, underpaid, overpaid, and manual-review-required states in `components/wallet/`
 - [x] T095 [US4] Implement scheduled reconciliation job for SePay and USDT deposits to recover missed webhooks without resetting or manually editing balances in `app/api/cron/reconcile-deposits/route.ts`
-- [ ] T096 [US4] Record immutable ledger entries for confirmed deposits, escrow locks, escrow releases, rewards, withdrawals, provider fees, task fees, withdrawal fees, and adjustment entries
+- [x] T096 [US4] Record immutable ledger entries for confirmed deposits, escrow locks, escrow releases, rewards, withdrawals, provider fees, task fees, withdrawal fees, and adjustment entries
 
 ## Phase 7: User Story 5 - System Moderation and Anti-Abuse
 *Goal: Admins manage users, manual transactions, and limit abuse.*

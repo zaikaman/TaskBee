@@ -5,6 +5,7 @@ import {
   Prisma,
   TaskStatus,
   TransactionType,
+  UserStatus,
   WithdrawalStatus,
 } from "@/lib/generated/prisma/client";
 import { fromMinorUnits, toMinorUnits } from "@/lib/utils/money";
@@ -69,6 +70,14 @@ export type ReconcileLedgerOptions = {
   includeHealthyUsers?: boolean;
 };
 
+export type AdminAdjustmentLedgerInput = {
+  adminId: string;
+  targetUserId: string;
+  amount: string;
+  reason: string;
+  metadata?: Prisma.InputJsonValue;
+};
+
 type WalletBucket = "available" | "escrow";
 
 type WalletEffect = {
@@ -122,6 +131,111 @@ function compareMoney(left: bigint, right: bigint) {
 
 function toMoneyString(value: bigint) {
   return fromMinorUnits(value);
+}
+
+function assertNonZeroMoneyAmount(amount: string) {
+  const amountMinor = toMinorUnits(amount);
+
+  if (amountMinor === BigInt(0)) {
+    throw new Error("Bút toán điều chỉnh phải có số tiền khác 0.");
+  }
+
+  return amountMinor;
+}
+
+function assertAdjustmentReason(reason: string) {
+  const normalizedReason = reason.trim();
+
+  if (normalizedReason.length < 10) {
+    throw new Error("Lý do điều chỉnh ledger phải có ít nhất 10 ký tự.");
+  }
+
+  if (normalizedReason.length > 500) {
+    throw new Error("Lý do điều chỉnh ledger không được vượt quá 500 ký tự.");
+  }
+
+  return normalizedReason;
+}
+
+function createAdjustmentMetadata(params: {
+  adminId: string;
+  targetUserId: string;
+  reason: string;
+  metadata?: Prisma.InputJsonValue;
+}) {
+  return {
+    kind: "ADMIN_ADJUSTMENT",
+    adminId: params.adminId,
+    targetUserId: params.targetUserId,
+    reason: params.reason,
+    source: "LEDGER_ADJUSTMENT_SERVICE",
+    metadata: params.metadata ?? null,
+  } satisfies Prisma.InputJsonValue;
+}
+
+export async function recordAdminAdjustmentLedgerEntry(input: AdminAdjustmentLedgerInput) {
+  const prisma = getPrisma();
+  const amountMinor = assertNonZeroMoneyAmount(input.amount);
+  const normalizedAmount = fromMinorUnits(amountMinor);
+  const reason = assertAdjustmentReason(input.reason);
+
+  return prisma.$transaction(async (tx) => {
+    await tx.$queryRaw(
+      Prisma.sql`SELECT id FROM "User" WHERE id = ${input.targetUserId}::uuid FOR UPDATE`,
+    );
+
+    const targetUser = await tx.user.findUniqueOrThrow({
+      where: {
+        id: input.targetUserId,
+      },
+      select: {
+        availableBalance: true,
+        status: true,
+      },
+    });
+
+    if (targetUser.status !== UserStatus.ACTIVE) {
+      throw new Error("Chỉ có thể ghi điều chỉnh ledger cho tài khoản đang hoạt động.");
+    }
+
+    const currentAvailableMinor = toMinorUnits(targetUser.availableBalance.toString());
+    const nextAvailableMinor = currentAvailableMinor + amountMinor;
+
+    if (nextAvailableMinor < BigInt(0)) {
+      throw new Error("Điều chỉnh ledger sẽ làm số dư khả dụng âm nên đã bị từ chối.");
+    }
+
+    const updatedUser = await tx.user.update({
+      where: {
+        id: input.targetUserId,
+      },
+      data: {
+        availableBalance: {
+          increment: normalizedAmount,
+        },
+      },
+      select: {
+        availableBalance: true,
+      },
+    });
+
+    return tx.transaction.create({
+      data: {
+        userId: input.targetUserId,
+        type: TransactionType.ADMIN_ADJUSTMENT,
+        amount: normalizedAmount,
+        balanceAfter: updatedUser.availableBalance.toString(),
+        referenceId: null,
+        description: `Điều chỉnh số dư bởi quản trị viên. Lý do: ${reason}`,
+        metadata: createAdjustmentMetadata({
+          adminId: input.adminId,
+          targetUserId: input.targetUserId,
+          reason,
+          metadata: input.metadata,
+        }),
+      },
+    });
+  });
 }
 
 function parseMoneyIssue(
