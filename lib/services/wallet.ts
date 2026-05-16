@@ -7,6 +7,10 @@ import { PAYMENT_CONFIG } from "@/config/app";
 import { requireAuth, requireVerifiedUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/db/prisma";
 import {
+  buildSePayBankTransferInstructions,
+  type SePayBankTransferInstructions,
+} from "@/lib/services/payments/sepay";
+import {
   DepositConfirmationStatus,
   DepositIntentStatus,
   DepositNetwork,
@@ -109,6 +113,7 @@ export type DepositIntentDetails = {
   expiresAt: Date;
   createdAt: Date;
   updatedAt: Date;
+  sepayTransferInstructions: SePayBankTransferInstructions | null;
 };
 
 export type CreateDepositIntentResult = {
@@ -340,6 +345,13 @@ function serializeDepositIntent(depositIntent: DepositIntentRecord): DepositInte
     expiresAt: depositIntent.expiresAt,
     createdAt: depositIntent.createdAt,
     updatedAt: depositIntent.updatedAt,
+    sepayTransferInstructions:
+      depositIntent.provider === DepositProvider.SEPAY
+        ? buildSePayBankTransferInstructions({
+            amount: depositIntent.amount.toString(),
+            paymentCode: depositIntent.paymentCode,
+          })
+        : null,
   };
 }
 
@@ -521,6 +533,13 @@ export async function createDepositIntent(
     const network = normalizedInput.usdtNetwork as DepositNetwork | null;
     const destinationAddress =
       normalizedInput.provider === DepositProvider.USDT ? resolveUsdtDestinationAddress(network) : null;
+
+    if (normalizedInput.provider === DepositProvider.SEPAY) {
+      buildSePayBankTransferInstructions({
+        amount: normalizedInput.amount,
+        paymentCode,
+      });
+    }
 
     const depositIntent = await prisma.$transaction(async (tx) => {
       await tx.$queryRaw(
