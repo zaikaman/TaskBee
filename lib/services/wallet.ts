@@ -114,6 +114,7 @@ export type DepositIntentDetails = {
   expiresAt: Date;
   createdAt: Date;
   updatedAt: Date;
+  exchangeRateSnapshot: Prisma.JsonValue | null;
   sepayTransferInstructions: SePayBankTransferInstructions | null;
 };
 
@@ -348,6 +349,7 @@ function serializeDepositIntent(depositIntent: DepositIntentRecord): DepositInte
     expiresAt: depositIntent.expiresAt,
     createdAt: depositIntent.createdAt,
     updatedAt: depositIntent.updatedAt,
+    exchangeRateSnapshot: depositIntent.exchangeRateSnapshot,
     sepayTransferInstructions:
       depositIntent.provider === DepositProvider.SEPAY
         ? buildSePayBankTransferInstructions({

@@ -104,7 +104,7 @@ function WalletTabs({ tabs, activeTab }: { tabs: WalletTab[]; activeTab: string 
               ? "border-b-2 border-[#22ab59] pb-5 text-[#001b49]"
               : "pb-5 text-[#001b49] hover:text-[#22ab59]"
           }
-          href={`/dashboard/wallet?tab=${tab.key}`}
+          href={tab.key === "deposit" ? "/dashboard/wallet/deposit" : `/dashboard/wallet?tab=${tab.key}`}
           key={tab.key}
         >
           {tab.label}
