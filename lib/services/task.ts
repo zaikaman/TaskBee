@@ -26,6 +26,7 @@ import {
   subtractMoney,
   toMinorUnits,
 } from "@/lib/utils/money";
+import { enforceRateLimit, getRateLimitErrorMessage } from "@/lib/utils/rate-limit";
 import { createTaskSchema, type CreateTaskInput } from "@/lib/validators/task";
 
 export type CreateTaskState = {
@@ -397,6 +398,20 @@ export async function createTask(
     return {
       ok: false,
       error: "Hồ sơ nhà tuyển việc chưa được khởi tạo. Vui lòng đăng nhập lại.",
+    };
+  }
+
+  try {
+    await enforceRateLimit({
+      scope: "task:create",
+      key: profile.id,
+      limit: 20,
+      windowSeconds: 60 * 60,
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      error: getRateLimitErrorMessage(error) ?? "Bạn thao tác quá nhanh. Vui lòng thử lại sau.",
     };
   }
 
@@ -1001,6 +1016,20 @@ export async function updateTask(
     };
   }
 
+  try {
+    await enforceRateLimit({
+      scope: "task:update",
+      key: profile.id,
+      limit: 30,
+      windowSeconds: 60 * 60,
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      error: getRateLimitErrorMessage(error) ?? "Bạn thao tác quá nhanh. Vui lòng thử lại sau.",
+    };
+  }
+
   const raw = parseFormData(formData);
   const taskId = raw.taskId as string;
   const submissionMode = getTaskSubmissionMode(raw);
@@ -1155,6 +1184,13 @@ export async function claimTaskSlot(taskId: string): Promise<{
         error: "Hồ sơ người làm chưa được khởi tạo. Vui lòng đăng nhập lại.",
       };
     }
+
+    await enforceRateLimit({
+      scope: "task:claim",
+      key: profile.id,
+      limit: 60,
+      windowSeconds: 60 * 60,
+    });
 
     const prisma = getPrisma();
     const now = new Date();
@@ -1315,9 +1351,10 @@ export async function claimTaskSlot(taskId: string): Promise<{
     return {
       ok: false,
       error:
-        error instanceof Error
+        getRateLimitErrorMessage(error) ??
+        (error instanceof Error
           ? error.message
-          : "Không thể nhận việc lúc này. Vui lòng thử lại sau.",
+          : "Không thể nhận việc lúc này. Vui lòng thử lại sau."),
     };
   } finally {
     // Revalidate các path liên quan

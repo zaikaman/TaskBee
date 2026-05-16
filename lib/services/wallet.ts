@@ -28,6 +28,7 @@ import {
   fromMinorUnits,
   toMinorUnits,
 } from "@/lib/utils/money";
+import { enforceRateLimit, getRateLimitErrorMessage } from "@/lib/utils/rate-limit";
 import {
   bankDetailsSchema,
   depositRequestSchema,
@@ -498,6 +499,13 @@ export async function createDepositIntent(
     }
 
     const userId = session.profile.id;
+    await enforceRateLimit({
+      scope: "wallet:deposit:create",
+      key: userId,
+      limit: 30,
+      windowSeconds: 60 * 60,
+    });
+
     const normalizedInput = depositRequestSchema.parse(input);
     const now = new Date();
     const reusableIntent = await findReusableDepositIntent(userId, normalizedInput, now);
@@ -610,7 +618,7 @@ export async function createDepositIntent(
 
     return {
       ok: false,
-      error: getWalletValidationError(error),
+      error: getRateLimitErrorMessage(error) ?? getWalletValidationError(error),
     };
   }
 }
@@ -1034,6 +1042,13 @@ export async function requestWithdrawal(
     }
 
     const userId = session.profile.id;
+    await enforceRateLimit({
+      scope: "wallet:withdrawal:create",
+      key: userId,
+      limit: 10,
+      windowSeconds: 60 * 60,
+    });
+
     const input = normalizeWithdrawalInput(amount, bankDetails);
     const { fee, netAmount } = calculateWithdrawalNet(input.amount);
     const feeMinor = toMinorUnits(fee);
@@ -1183,7 +1198,7 @@ export async function requestWithdrawal(
 
     return {
       ok: false,
-      error: getWalletValidationError(error),
+      error: getRateLimitErrorMessage(error) ?? getWalletValidationError(error),
       errorCode: error instanceof WithdrawalRequestError ? error.code : undefined,
     };
   }

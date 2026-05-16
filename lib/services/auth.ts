@@ -5,6 +5,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/auth/server";
 import { getPrisma } from "@/lib/db/prisma";
 import { UserRole, UserStatus } from "@/lib/generated/prisma/client";
+import { checkRateLimit } from "@/lib/utils/rate-limit";
 
 const OTP_RESEND_COOLDOWN_MS = 60_000;
 
@@ -295,6 +296,10 @@ function mapLoginAuthError(error: { message: string }) {
   return "Không thể xử lý đăng nhập lúc này. Vui lòng thử lại sau.";
 }
 
+function buildTooManyAttemptsMessage(retryAfterSeconds: number) {
+  return `Bạn thao tác quá nhanh. Vui lòng thử lại sau ${retryAfterSeconds} giây.`;
+}
+
 export async function requestRegistrationOtp(
   _prevState: RegisterState = initialState,
   formData: FormData,
@@ -303,6 +308,20 @@ export async function requestRegistrationOtp(
   const parsed = registrationSchema.safeParse(raw);
 
   if (!parsed.success) {
+    const rateLimit = await checkRateLimit({
+      scope: "auth:register:invalid",
+      key: null,
+      limit: 20,
+      windowSeconds: 60,
+    });
+
+    if (!rateLimit.allowed) {
+      return {
+        phase: "form",
+        error: buildTooManyAttemptsMessage(rateLimit.retryAfterSeconds),
+      };
+    }
+
     return {
       phase: "form",
       error: parsed.error.issues[0]?.message ?? "Dữ liệu đăng ký không hợp lệ.",
@@ -317,6 +336,20 @@ export async function requestRegistrationOtp(
   }
 
   const email = normalizeEmail(parsed.data.email);
+  const rateLimit = await checkRateLimit({
+    scope: "auth:register:request",
+    key: email,
+    limit: 5,
+    windowSeconds: 15 * 60,
+  });
+
+  if (!rateLimit.allowed) {
+    return {
+      phase: "form",
+      error: buildTooManyAttemptsMessage(rateLimit.retryAfterSeconds),
+    };
+  }
+
   const profile = {
     firstName: parsed.data.firstName,
     lastName: parsed.data.lastName,
@@ -404,6 +437,21 @@ export async function confirmRegistrationOtp(
     };
   }
 
+  const rateLimit = await checkRateLimit({
+    scope: "auth:register:confirm",
+    key: normalizeEmail(parsed.data.email),
+    limit: 10,
+    windowSeconds: 15 * 60,
+  });
+
+  if (!rateLimit.allowed) {
+    return {
+      phase: "otp",
+      error: buildTooManyAttemptsMessage(rateLimit.retryAfterSeconds),
+      email: parsed.data.email,
+    };
+  }
+
   const supabase = await createClient();
   const { data, error } = await supabase.auth.verifyOtp({
     email: parsed.data.email,
@@ -460,6 +508,20 @@ export async function requestLoginOtp(
   const parsed = loginEmailSchema.safeParse(raw);
 
   if (!parsed.success) {
+    const rateLimit = await checkRateLimit({
+      scope: "auth:login:invalid",
+      key: null,
+      limit: 20,
+      windowSeconds: 60,
+    });
+
+    if (!rateLimit.allowed) {
+      return {
+        phase: "form",
+        error: buildTooManyAttemptsMessage(rateLimit.retryAfterSeconds),
+      };
+    }
+
     return {
       phase: "form",
       error: parsed.error.issues[0]?.message ?? "Dữ liệu đăng nhập không hợp lệ.",
@@ -467,6 +529,21 @@ export async function requestLoginOtp(
   }
 
   const email = normalizeEmail(parsed.data.email);
+  const rateLimit = await checkRateLimit({
+    scope: "auth:login:request",
+    key: email,
+    limit: 8,
+    windowSeconds: 15 * 60,
+  });
+
+  if (!rateLimit.allowed) {
+    return {
+      phase: "form",
+      email,
+      error: buildTooManyAttemptsMessage(rateLimit.retryAfterSeconds),
+    };
+  }
+
   const redirectTo = normalizeRedirectTo(parsed.data.redirectTo);
   const rememberMe = parsed.data.rememberMe ?? false;
   const emailSlot = await reserveLoginOtpEmailSlot(email);
@@ -544,6 +621,23 @@ export async function confirmLoginOtp(
   }
 
   const email = normalizeEmail(parsed.data.email);
+  const rateLimit = await checkRateLimit({
+    scope: "auth:login:confirm",
+    key: email,
+    limit: 10,
+    windowSeconds: 15 * 60,
+  });
+
+  if (!rateLimit.allowed) {
+    return {
+      phase: "otp",
+      error: buildTooManyAttemptsMessage(rateLimit.retryAfterSeconds),
+      email,
+      rememberMe: parsed.data.rememberMe ?? false,
+      redirectTo: normalizeRedirectTo(parsed.data.redirectTo),
+    };
+  }
+
   const supabase = await createClient();
   const { data, error } = await supabase.auth.verifyOtp({
     email,

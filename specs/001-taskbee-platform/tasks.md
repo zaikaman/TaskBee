@@ -117,16 +117,16 @@ Phase 1 (Setup)
 *Test Criteria: Admin reviews withdrawal requests, applies limits, and tests user bans.*
 
 - [x] T029 [P] [US5] Implement `processWithdrawal` Server Action (Approve/Reject) in `lib/services/admin.ts`
-- [ ] T030 [US5] Create the unified Admin Dashboard in `app/(admin)/dashboard/page.tsx`
-- [ ] T031 [US5] Create interface for Admins to view pending withdrawals in `app/(admin)/withdrawals/page.tsx`
-- [ ] T032 [US5] Add rate-limiting utility wrapper for critical Server Actions in `lib/utils/rate-limit.ts`
-- [ ] T072 [US5] Implement Admin exception review flow for failed, underpaid, overpaid, duplicated, or suspicious SePay/USDT deposits in `lib/services/admin.ts`
-- [ ] T073 [US5] Create Admin deposit exception review UI with provider evidence, raw payload metadata, and audit-safe adjustment actions in `app/(admin)/deposits/page.tsx`
-- [ ] T074 [US5] Implement Admin user search, role/status management, suspension, and ban actions in `lib/services/admin.ts`
-- [ ] T075 [US5] Cancel pending withdrawals and freeze funds automatically when Admin suspends a user
-- [ ] T076 [US5] Create Admin user management UI in `app/(admin)/users/page.tsx`
-- [ ] T077 [P] [US5] Record admin audit logs for withdrawals, deposits, task moderation, and user status changes
-- [ ] T078 [P] [US5] Apply rate-limit wrappers to registration, login, task creation, slot claim, submission, withdrawal, and admin actions
+- [x] T030 [US5] Create the unified Admin Dashboard in `app/(admin)/dashboard/page.tsx`
+- [x] T031 [US5] Create interface for Admins to view pending withdrawals in `app/(admin)/withdrawals/page.tsx`
+- [x] T032 [US5] Add rate-limiting utility wrapper for critical Server Actions in `lib/utils/rate-limit.ts`
+- [x] T072 [US5] Implement Admin exception review flow for failed, underpaid, overpaid, duplicated, or suspicious SePay/USDT deposits in `lib/services/admin.ts`
+- [x] T073 [US5] Create Admin deposit exception review UI with provider evidence, raw payload metadata, and audit-safe adjustment actions in `app/(admin)/deposits/page.tsx`
+- [x] T074 [US5] Implement Admin user search, role/status management, suspension, and ban actions in `lib/services/admin.ts`
+- [x] T075 [US5] Cancel pending withdrawals and freeze funds automatically when Admin suspends a user
+- [x] T076 [US5] Create Admin user management UI in `app/(admin)/users/page.tsx`
+- [x] T077 [P] [US5] Record admin audit logs for withdrawals, deposits, task moderation, and user status changes
+- [x] T078 [P] [US5] Apply rate-limit wrappers to registration, login, task creation, slot claim, submission, withdrawal, and admin actions
 
 ## Phase 8: Polish & Cross-Cutting
 *Goal: UI/UX polish and deployment configuration to hit performance constraints.*

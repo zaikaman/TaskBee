@@ -19,6 +19,7 @@ import {
   UserRole,
 } from "@/lib/generated/prisma/client";
 import { formatVnd } from "@/lib/utils/money";
+import { enforceRateLimit, getRateLimitErrorMessage } from "@/lib/utils/rate-limit";
 
 const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
 const SUBMISSION_PROOF_TEXT_MAX_LENGTH = 2000;
@@ -403,6 +404,13 @@ export async function createSubmission(
   }
 
   try {
+    await enforceRateLimit({
+      scope: "submission:create",
+      key: profile.id,
+      limit: 40,
+      windowSeconds: 60 * 60,
+    });
+
     const input = parseCreateSubmissionInput(formData);
     const result = await createSubmissionRecord(profile.id, input);
 
@@ -419,9 +427,10 @@ export async function createSubmission(
     return {
       ok: false,
       error:
-        error instanceof Error
+        getRateLimitErrorMessage(error) ??
+        (error instanceof Error
           ? error.message
-          : "Không thể gửi submission lúc này. Vui lòng thử lại sau.",
+          : "Không thể gửi submission lúc này. Vui lòng thử lại sau."),
     };
   }
 }
@@ -476,6 +485,13 @@ export async function reviewSubmission(
   };
 
   try {
+    await enforceRateLimit({
+      scope: "submission:review",
+      key: profile.id,
+      limit: 120,
+      windowSeconds: 60 * 60,
+    });
+
     // Validate ownership and submission state
     const submission = await validateSubmissionOwnership(
       input.submissionId,
@@ -510,9 +526,10 @@ export async function reviewSubmission(
     return {
       ok: false,
       error:
-        error instanceof Error
+        getRateLimitErrorMessage(error) ??
+        (error instanceof Error
           ? error.message
-          : "Không thể review submission lúc này. Vui lòng thử lại sau.",
+          : "Không thể review submission lúc này. Vui lòng thử lại sau."),
     };
   }
 }
