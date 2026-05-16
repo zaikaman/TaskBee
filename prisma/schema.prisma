@@ -22,6 +22,7 @@ model User {
   updatedAt        DateTime        @updatedAt
   adminAuditLogs   AdminAuditLog[] @relation("AdminAuditActor")
   affectedAudits   AdminAuditLog[] @relation("AdminAuditTarget")
+  depositIntents   DepositIntent[]
   manualDeposits   ManualDeposit[] @relation("EmployerDeposits")
   notifications    Notification[]
   submissions      Submission[]    @relation("WorkerSubmissions")
@@ -164,6 +165,42 @@ model ManualDeposit {
   @@index([employerId, status])
 }
 
+model DepositIntent {
+  id                    String                    @id @default(uuid()) @db.Uuid
+  userId                String                    @db.Uuid
+  amount                Decimal                   @db.Decimal(14, 2)
+  currency              String                    @db.VarChar(12)
+  status                DepositIntentStatus       @default(PENDING)
+  provider              DepositProvider
+  providerReference     String?                   @db.VarChar(191)
+  providerTransactionId String?                   @db.VarChar(191)
+  providerEventId       String?                   @db.VarChar(191)
+  idempotencyKey        String                    @unique @db.VarChar(191)
+  paymentCode           String                    @unique @db.VarChar(64)
+  paymentMethod         DepositPaymentMethod
+  network               DepositNetwork?
+  destinationAddress    String?                   @db.VarChar(191)
+  exchangeRateSnapshot  Json?
+  confirmationStatus    DepositConfirmationStatus @default(UNCONFIRMED)
+  confirmations         Int                       @default(0)
+  requiredConfirmations Int                       @default(1)
+  rawProviderMetadata   Json?
+  confirmedAmount       Decimal?                  @db.Decimal(14, 2)
+  confirmedAt           DateTime?
+  expiresAt             DateTime
+  createdAt             DateTime                  @default(now())
+  updatedAt             DateTime                  @updatedAt
+  user                  User                      @relation(fields: [userId], references: [id])
+
+  @@unique([provider, providerReference])
+  @@unique([provider, providerTransactionId])
+  @@unique([provider, providerEventId])
+  @@index([userId, status, createdAt])
+  @@index([status, expiresAt])
+  @@index([provider, status, createdAt])
+  @@index([paymentMethod, network, status])
+}
+
 model Notification {
   id        String           @id @default(uuid()) @db.Uuid
   userId    String           @db.Uuid
@@ -275,6 +312,41 @@ enum ManualDepositStatus {
   APPROVED
   REJECTED
   CANCELLED
+}
+
+enum DepositProvider {
+  SEPAY
+  USDT
+}
+
+enum DepositPaymentMethod {
+  BANK_TRANSFER
+  CRYPTO_TRANSFER
+}
+
+enum DepositNetwork {
+  TRC20
+  BEP20
+  ERC20
+}
+
+enum DepositIntentStatus {
+  PENDING
+  CONFIRMING
+  PAID
+  EXPIRED
+  CANCELLED
+  FAILED
+  UNDERPAID
+  OVERPAID
+  MANUAL_REVIEW_REQUIRED
+}
+
+enum DepositConfirmationStatus {
+  UNCONFIRMED
+  PARTIALLY_CONFIRMED
+  CONFIRMED
+  REJECTED
 }
 
 enum NotificationType {

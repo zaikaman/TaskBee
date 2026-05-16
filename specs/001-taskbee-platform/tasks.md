@@ -99,7 +99,7 @@ Phase 1 (Setup)
 - [x] T028 [US4] Create the Transaction History Table UI component in `components/wallet/transaction-history.tsx`
 - [x] T066 [US4] Create bank detail Zod validators and reusable bank transfer form components in `lib/validators/wallet.ts` and `components/wallet/`
 - [x] T067 [US4] Enforce minimum withdrawal threshold and insufficient-balance errors in `requestWithdrawal`
-- [ ] T068 [US4] Extend wallet data model for production deposit intents, provider references, idempotency keys, payment method, network, exchange rate snapshot, confirmation status, expiry, and raw provider metadata in `prisma/schema.prisma`
+- [x] T068 [US4] Extend wallet data model for production deposit intents, provider references, idempotency keys, payment method, network, exchange rate snapshot, confirmation status, expiry, and raw provider metadata in `prisma/schema.prisma`
 - [ ] T069 [US4] Add payment configuration for SePay bank transfer and USDT deposit networks, minimum/maximum deposit limits, confirmation thresholds, webhook secrets, and supported currency metadata in `config/app.ts` and `.env.example`
 - [ ] T070 [US4] Create deposit validators for amount, provider, currency, USDT network, and destination wallet constraints in `lib/validators/wallet.ts`
 - [ ] T071 [P] [US4] Create ledger reconciliation utility to verify wallet totals and transaction consistency in `lib/services/ledger.ts`
