@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { PLATFORM_FEES } from "@/config/app";
+import { PLATFORM_FEES, WALLET_LIMITS } from "@/config/app";
 import { requireAuth, requireVerifiedUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/db/prisma";
 import {
@@ -69,10 +69,17 @@ export type RequestWithdrawalResult = {
   ok: boolean;
   message?: string;
   error?: string;
+  errorCode?: WithdrawalRequestErrorCode;
   withdrawalId?: string;
   fee?: string;
   netAmount?: string;
 };
+
+export type WithdrawalRequestErrorCode =
+  | "MINIMUM_WITHDRAWAL_NOT_MET"
+  | "INSUFFICIENT_AVAILABLE_BALANCE"
+  | "ACCOUNT_NOT_ACTIVE"
+  | "PROFILE_REQUIRED";
 
 type NormalizedWithdrawalInput = {
   amount: string;
@@ -80,9 +87,68 @@ type NormalizedWithdrawalInput = {
   bankDetails: BankDetails;
 };
 
+class WithdrawalRequestError extends Error {
+  constructor(
+    message: string,
+    readonly code: WithdrawalRequestErrorCode,
+  ) {
+    super(message);
+    this.name = "WithdrawalRequestError";
+  }
+}
+
+function createMinimumWithdrawalError() {
+  return new WithdrawalRequestError(
+    `Số tiền rút tối thiểu là ${formatVnd(WALLET_LIMITS.minimumWithdrawalVnd)}.`,
+    "MINIMUM_WITHDRAWAL_NOT_MET",
+  );
+}
+
+function createInsufficientBalanceError(availableBalance: string, requestedAmount: string) {
+  return new WithdrawalRequestError(
+    `Số dư khả dụng không đủ. Bạn có ${formatVnd(availableBalance)} nhưng cần ${formatVnd(requestedAmount)} để tạo yêu cầu rút tiền.`,
+    "INSUFFICIENT_AVAILABLE_BALANCE",
+  );
+}
+
+function assertMinimumWithdrawalThreshold(amountMinor: bigint) {
+  const minimumWithdrawalMinor = toMinorUnits(WALLET_LIMITS.minimumWithdrawalVnd);
+
+  if (amountMinor < minimumWithdrawalMinor) {
+    throw createMinimumWithdrawalError();
+  }
+}
+
+function tryParseWithdrawalAmountMinor(amount: string | number) {
+  try {
+    const amountMinor = toMinorUnits(amount);
+
+    if (amountMinor > BigInt(0) && amountMinor % BigInt(100) === BigInt(0)) {
+      return amountMinor;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
 function normalizeWithdrawalAmount(amount: string | number) {
-  const normalizedAmount = withdrawalAmountSchema.parse(amount);
+  const normalizedAmountResult = withdrawalAmountSchema.safeParse(amount);
+
+  if (!normalizedAmountResult.success) {
+    const amountMinor = tryParseWithdrawalAmountMinor(amount);
+
+    if (amountMinor !== null) {
+      assertMinimumWithdrawalThreshold(amountMinor);
+    }
+
+    throw normalizedAmountResult.error;
+  }
+
+  const normalizedAmount = normalizedAmountResult.data;
   const amountMinor = toMinorUnits(normalizedAmount);
+  assertMinimumWithdrawalThreshold(amountMinor);
 
   return {
     amount: fromMinorUnits(amountMinor),
@@ -289,6 +355,7 @@ export async function requestWithdrawal(
       return {
         ok: false,
         error: "Vui lòng hoàn tất hồ sơ trước khi thực hiện rút tiền.",
+        errorCode: "PROFILE_REQUIRED",
       };
     }
 
@@ -316,15 +383,16 @@ export async function requestWithdrawal(
       });
 
       if (currentUser.status !== UserStatus.ACTIVE) {
-        throw new Error("Tài khoản không ở trạng thái hoạt động nên không thể rút tiền.");
+        throw new WithdrawalRequestError(
+          "Tài khoản không ở trạng thái hoạt động nên không thể rút tiền.",
+          "ACCOUNT_NOT_ACTIVE",
+        );
       }
 
       const currentAvailableMinor = toMinorUnits(currentUser.availableBalance.toString());
 
       if (currentAvailableMinor < input.amountMinor) {
-        throw new Error(
-          `Số dư không đủ. Bạn có ${formatVnd(currentUser.availableBalance.toString())} nhưng cần ${formatVnd(input.amount)} để rút tiền.`,
-        );
+        throw createInsufficientBalanceError(currentUser.availableBalance.toString(), input.amount);
       }
 
       const walletUpdate = await tx.user.updateMany({
@@ -346,7 +414,7 @@ export async function requestWithdrawal(
       });
 
       if (walletUpdate.count !== 1) {
-        throw new Error("Số dư ví không đủ để tạo yêu cầu rút tiền.");
+        throw createInsufficientBalanceError(currentUser.availableBalance.toString(), input.amount);
       }
 
       const updatedUser = await tx.user.findUniqueOrThrow({
@@ -435,10 +503,14 @@ export async function requestWithdrawal(
       netAmount: result.netAmount,
     };
   } catch (error) {
-    console.error("Lỗi khi tạo yêu cầu rút tiền:", error);
+    if (!(error instanceof WithdrawalRequestError)) {
+      console.error("Lỗi khi tạo yêu cầu rút tiền:", error);
+    }
+
     return {
       ok: false,
       error: getWalletValidationError(error),
+      errorCode: error instanceof WithdrawalRequestError ? error.code : undefined,
     };
   }
 }
