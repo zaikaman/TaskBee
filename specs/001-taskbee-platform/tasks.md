@@ -116,7 +116,7 @@ Phase 1 (Setup)
 *Goal: Admins manage users, manual transactions, and limit abuse.*
 *Test Criteria: Admin reviews withdrawal requests, applies limits, and tests user bans.*
 
-- [ ] T029 [P] [US5] Implement `processWithdrawal` Server Action (Approve/Reject) in `lib/services/admin.ts`
+- [x] T029 [P] [US5] Implement `processWithdrawal` Server Action (Approve/Reject) in `lib/services/admin.ts`
 - [ ] T030 [US5] Create the unified Admin Dashboard in `app/(admin)/dashboard/page.tsx`
 - [ ] T031 [US5] Create interface for Admins to view pending withdrawals in `app/(admin)/withdrawals/page.tsx`
 - [ ] T032 [US5] Add rate-limiting utility wrapper for critical Server Actions in `lib/utils/rate-limit.ts`
