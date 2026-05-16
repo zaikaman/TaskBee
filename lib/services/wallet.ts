@@ -1,21 +1,19 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { PLATFORM_FEES, WALLET_LIMITS } from "@/config/app";
-import { requireAuth } from "@/lib/auth/session";
+import { PLATFORM_FEES, SUPPORTED_BANKS, WALLET_LIMITS } from "@/config/app";
+import { requireAuth, requireVerifiedUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/db/prisma";
 import {
   Prisma,
   TransactionType,
+  UserStatus,
   WithdrawalStatus,
-  type Transaction,
-  type User,
 } from "@/lib/generated/prisma/client";
 import {
   calculateWithdrawalNet,
   formatVnd,
   fromMinorUnits,
-  subtractMoney,
   toMinorUnits,
 } from "@/lib/utils/money";
 
@@ -79,6 +77,81 @@ export type BankDetails = {
   accountNumber: string;
   accountName: string;
 };
+
+type NormalizedWithdrawalInput = {
+  amount: string;
+  amountMinor: bigint;
+  bankDetails: BankDetails;
+};
+
+function normalizeWithdrawalAmount(amount: string | number) {
+  const amountMinor = toMinorUnits(amount);
+
+  if (amountMinor <= BigInt(0)) {
+    throw new Error("Số tiền rút phải lớn hơn 0.");
+  }
+
+  if (amountMinor % BigInt(100) !== BigInt(0)) {
+    throw new Error("Số tiền rút phải là số nguyên VND.");
+  }
+
+  const minimumWithdrawalMinor = toMinorUnits(WALLET_LIMITS.minimumWithdrawalVnd);
+
+  if (amountMinor < minimumWithdrawalMinor) {
+    throw new Error(
+      `Số tiền rút tối thiểu là ${formatVnd(WALLET_LIMITS.minimumWithdrawalVnd)}.`,
+    );
+  }
+
+  return {
+    amount: fromMinorUnits(amountMinor),
+    amountMinor,
+  };
+}
+
+function normalizeBankDetails(bankDetails: BankDetails): BankDetails {
+  if (!bankDetails || typeof bankDetails !== "object") {
+    throw new Error("Thông tin ngân hàng không đầy đủ.");
+  }
+
+  const bankCode = bankDetails.bankCode?.trim().toUpperCase();
+  const supportedBank = SUPPORTED_BANKS.find((bank) => bank.code === bankCode);
+
+  if (!supportedBank) {
+    throw new Error("Ngân hàng nhận tiền không được hỗ trợ.");
+  }
+
+  const accountNumber = bankDetails.accountNumber?.replaceAll(/[\s.-]/g, "");
+
+  if (!/^\d{4,32}$/.test(accountNumber)) {
+    throw new Error("Số tài khoản ngân hàng không hợp lệ.");
+  }
+
+  const accountName = bankDetails.accountName?.trim().replaceAll(/\s+/g, " ");
+
+  if (!accountName || accountName.length < 2 || accountName.length > 100) {
+    throw new Error("Tên chủ tài khoản ngân hàng không hợp lệ.");
+  }
+
+  return {
+    bankCode: supportedBank.code,
+    bankName: supportedBank.name,
+    accountNumber,
+    accountName: accountName.toLocaleUpperCase("vi-VN"),
+  };
+}
+
+function normalizeWithdrawalInput(
+  amount: string | number,
+  bankDetails: BankDetails,
+): NormalizedWithdrawalInput {
+  const normalizedAmount = normalizeWithdrawalAmount(amount);
+
+  return {
+    ...normalizedAmount,
+    bankDetails: normalizeBankDetails(bankDetails),
+  };
+}
 
 /**
  * Lấy thông tin số dư ví của người dùng hiện tại
@@ -261,90 +334,75 @@ export async function requestWithdrawal(
   bankDetails: BankDetails,
 ): Promise<RequestWithdrawalResult> {
   try {
-    const session = await requireAuth();
+    const session = await requireVerifiedUser();
 
     if (!session.profile) {
       return {
         ok: false,
-        error: "Vui lòng đăng nhập để thực hiện rút tiền.",
+        error: "Vui lòng hoàn tất hồ sơ trước khi thực hiện rút tiền.",
       };
     }
 
-    // Validate amount
-    const amountMinor = toMinorUnits(amount);
-
-    if (amountMinor <= BigInt(0)) {
-      return {
-        ok: false,
-        error: "Số tiền rút phải lớn hơn 0.",
-      };
-    }
-
-    // Kiểm tra ngưỡng rút tiền tối thiểu
-    const minimumWithdrawalMinor = toMinorUnits(WALLET_LIMITS.minimumWithdrawalVnd);
-
-    if (amountMinor < minimumWithdrawalMinor) {
-      return {
-        ok: false,
-        error: `Số tiền rút tối thiểu là ${formatVnd(WALLET_LIMITS.minimumWithdrawalVnd)}.`,
-      };
-    }
-
-    // Validate bank details
-    if (
-      !bankDetails.bankCode ||
-      !bankDetails.bankName ||
-      !bankDetails.accountNumber ||
-      !bankDetails.accountName
-    ) {
-      return {
-        ok: false,
-        error: "Thông tin ngân hàng không đầy đủ.",
-      };
-    }
-
-    // Tính phí và số tiền thực nhận
-    const { fee, netAmount } = calculateWithdrawalNet(amount);
+    const userId = session.profile.id;
+    const input = normalizeWithdrawalInput(amount, bankDetails);
+    const { fee, netAmount } = calculateWithdrawalNet(input.amount);
+    const feeMinor = toMinorUnits(fee);
+    const netAmountMinor = toMinorUnits(netAmount);
 
     const prisma = getPrisma();
 
-    // Thực hiện transaction
     const result = await prisma.$transaction(async (tx) => {
-      // Lấy thông tin user hiện tại
+      await tx.$queryRaw(
+        Prisma.sql`SELECT id FROM "User" WHERE id = ${userId}::uuid FOR UPDATE`,
+      );
+
       const currentUser = await tx.user.findUniqueOrThrow({
         where: {
-          id: session.profile!.id,
+          id: userId,
         },
         select: {
-          id: true,
           availableBalance: true,
-          pendingBalance: true,
-          email: true,
+          status: true,
         },
       });
 
-      const currentAvailable = currentUser.availableBalance.toString();
-      const currentPending = currentUser.pendingBalance.toString();
+      if (currentUser.status !== UserStatus.ACTIVE) {
+        throw new Error("Tài khoản không ở trạng thái hoạt động nên không thể rút tiền.");
+      }
 
-      // Kiểm tra số dư khả dụng
-      if (toMinorUnits(currentAvailable) < amountMinor) {
+      const currentAvailableMinor = toMinorUnits(currentUser.availableBalance.toString());
+
+      if (currentAvailableMinor < input.amountMinor) {
         throw new Error(
-          `Số dư không đủ. Bạn có ${formatVnd(currentAvailable)} nhưng cần ${formatVnd(amount)} để rút tiền.`,
+          `Số dư không đủ. Bạn có ${formatVnd(currentUser.availableBalance.toString())} nhưng cần ${formatVnd(input.amount)} để rút tiền.`,
         );
       }
 
-      // Cập nhật số dư: trừ available, cộng pending
-      const updatedUser = await tx.user.update({
+      const walletUpdate = await tx.user.updateMany({
         where: {
-          id: session.profile!.id,
+          id: userId,
+          status: UserStatus.ACTIVE,
+          availableBalance: {
+            gte: input.amount,
+          },
         },
         data: {
           availableBalance: {
-            decrement: amount,
+            decrement: input.amount,
           },
           pendingBalance: {
-            increment: amount,
+            increment: input.amount,
           },
+        },
+      });
+
+      if (walletUpdate.count !== 1) {
+        throw new Error("Số dư ví không đủ để tạo yêu cầu rút tiền.");
+      }
+
+      const updatedUser = await tx.user.findUniqueOrThrow({
+        where: {
+          id: userId,
         },
         select: {
           availableBalance: true,
@@ -355,52 +413,74 @@ export async function requestWithdrawal(
       const newAvailableBalance = updatedUser.availableBalance.toString();
       const newPendingBalance = updatedUser.pendingBalance.toString();
 
-      // Tạo withdrawal request
       const withdrawal = await tx.withdrawal.create({
         data: {
-          userId: session.profile!.id,
-          amount: amount.toString(),
+          userId,
+          amount: input.amount,
           fee: fee,
           netAmount: netAmount,
           status: WithdrawalStatus.PENDING,
-          bankDetails: bankDetails as Prisma.InputJsonValue,
+          bankDetails: input.bankDetails as Prisma.InputJsonValue,
         },
       });
 
-      // Ghi bút toán withdrawal vào ledger
-      await tx.transaction.create({
-        data: {
-          userId: session.profile!.id,
+      const ledgerEntries: Prisma.TransactionCreateManyInput[] = [
+        {
+          userId,
           type: TransactionType.WITHDRAWAL,
-          amount: `-${amount}`,
-          balanceAfter: newAvailableBalance,
+          amount: `-${netAmount}`,
+          balanceAfter: fromMinorUnits(currentAvailableMinor - netAmountMinor),
           referenceId: withdrawal.id,
-          description: `Yêu cầu rút tiền ${formatVnd(amount)} (phí ${formatVnd(fee)}, thực nhận ${formatVnd(netAmount)}) về tài khoản ${bankDetails.bankName} - ${bankDetails.accountNumber}.`,
+          description: `Tạo yêu cầu rút tiền ${formatVnd(input.amount)} về tài khoản ${input.bankDetails.bankName} - ${input.bankDetails.accountNumber}. Số tiền thực nhận dự kiến là ${formatVnd(netAmount)}.`,
           metadata: {
             withdrawalId: withdrawal.id,
-            requestedAmount: amount.toString(),
-            fee: fee,
-            netAmount: netAmount,
+            requestedAmount: input.amount,
+            fee,
+            netAmount,
             feeRate: PLATFORM_FEES.workerWithdrawalRate,
-            bankDetails: bankDetails,
+            bankDetails: input.bankDetails,
+            pendingBalanceAfter: newPendingBalance,
           } as Prisma.InputJsonValue,
         },
+      ];
+
+      if (feeMinor > BigInt(0)) {
+        ledgerEntries.push({
+          userId,
+          type: TransactionType.WITHDRAWAL_FEE,
+          amount: `-${fee}`,
+          balanceAfter: newAvailableBalance,
+          referenceId: withdrawal.id,
+          description: `Phí rút tiền ${formatVnd(fee)} (10% của ${formatVnd(input.amount)}).`,
+          metadata: {
+            withdrawalId: withdrawal.id,
+            requestedAmount: input.amount,
+            fee,
+            netAmount,
+            feeRate: PLATFORM_FEES.workerWithdrawalRate,
+            pendingBalanceAfter: newPendingBalance,
+          } as Prisma.InputJsonValue,
+        });
+      }
+
+      await tx.transaction.createMany({
+        data: ledgerEntries,
       });
 
       return {
         withdrawalId: withdrawal.id,
         fee,
         netAmount,
+        requestedAmount: input.amount,
       };
     });
 
-    // Revalidate các trang liên quan
     revalidatePath("/dashboard/wallet");
     revalidatePath("/dashboard/wallet/history");
 
     return {
       ok: true,
-      message: `Yêu cầu rút tiền ${formatVnd(amount)} đã được tạo thành công. Bạn sẽ nhận ${formatVnd(result.netAmount)} sau khi admin duyệt (phí ${formatVnd(result.fee)}).`,
+      message: `Yêu cầu rút tiền ${formatVnd(result.requestedAmount)} đã được tạo thành công. Bạn sẽ nhận ${formatVnd(result.netAmount)} sau khi admin duyệt (phí ${formatVnd(result.fee)}).`,
       withdrawalId: result.withdrawalId,
       fee: result.fee,
       netAmount: result.netAmount,

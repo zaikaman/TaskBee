@@ -94,7 +94,7 @@ Phase 1 (Setup)
 *Test Criteria: Người dùng xem được số dư, tạo lệnh nạp, hệ thống tự cộng tiền sau khi bên thanh toán xác nhận, xem lịch sử giao dịch và gửi yêu cầu rút tiền về ngân hàng.*
 
 - [x] T025 [P] [US4] Implement `wallet.ts` actions to fetch balances and calculate transaction history in `lib/services/wallet.ts`
-- [ ] T026 [US4] Implement `requestWithdrawal` Server Action including 10% fee calculation in `lib/services/wallet.ts`
+- [x] T026 [US4] Implement `requestWithdrawal` Server Action including 10% fee calculation in `lib/services/wallet.ts`
 - [ ] T027 [US4] Create Wallet Dashboard UI (Available/Pending/Escrow) in `app/(dashboard)/wallet/page.tsx`
 - [ ] T028 [US4] Create the Transaction History Table UI component in `components/wallet/transaction-history.tsx`
 - [ ] T066 [US4] Create bank detail Zod validators and reusable bank transfer form components in `lib/validators/wallet.ts` and `components/wallet/`
