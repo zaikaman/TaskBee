@@ -569,6 +569,16 @@ export async function requestLoginOtp(
 
   const redirectTo = normalizeRedirectTo(parsed.data.redirectTo);
   const rememberMe = parsed.data.rememberMe ?? false;
+  if (!(await emailCanLogin(email))) {
+    return {
+      phase: "form",
+      email,
+      rememberMe,
+      redirectTo,
+      error: "Email này chưa có tài khoản TaskBee. Vui lòng đăng ký trước khi đăng nhập.",
+    };
+  }
+
   const emailSlot = await reserveLoginOtpEmailSlot(email);
 
   if (!emailSlot.allowed) {
@@ -581,17 +591,6 @@ export async function requestLoginOtp(
       redirectTo,
       resendAvailableAt: emailSlot.resendAvailableAt,
       error: `Vui lòng chờ ${retryAfterSeconds} giây trước khi gửi lại mã OTP.`,
-    };
-  }
-
-  if (!(await emailCanLogin(email))) {
-    return {
-      phase: "form",
-      email,
-      rememberMe,
-      redirectTo,
-      resendAvailableAt: emailSlot.resendAvailableAt,
-      message: "Nếu email đã có tài khoản TaskBee, mã OTP sẽ được gửi trong ít phút.",
     };
   }
 
