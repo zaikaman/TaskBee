@@ -7,6 +7,7 @@ import { requireRole } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/db/prisma";
 import {
   Prisma,
+  NotificationType,
   SubmissionStatus,
   TaskClaimStatus,
   TaskStatus,
@@ -19,6 +20,8 @@ import {
   getTaskClaimExpiresAt,
 } from "@/lib/services/task-claim-expiration";
 import { getWorkerAvailableBalanceMinor } from "@/lib/services/wallet";
+import { captureTaskFlowEvent } from "@/lib/services/analytics";
+import { notifyUser } from "@/lib/services/notifications";
 import {
   addMoney,
   calculateEmployerTaskCharge,
@@ -452,6 +455,33 @@ export async function createTask(
       revalidatePath("/marketplace");
       revalidatePath(`/marketplace/${result.task.id}`);
     }
+    await captureTaskFlowEvent(profile.id, "task_created", {
+      taskId: result.task.id,
+      status: result.task.status,
+      published: submissionMode === "publish",
+    });
+    await notifyUser({
+      userId: profile.id,
+      type: NotificationType.TASK_STATUS,
+      title:
+        submissionMode === "publish"
+          ? "Việc đã được đăng"
+          : "Việc đã được lưu nháp",
+      body:
+        submissionMode === "publish"
+          ? `Việc "${result.task.title}" đã được đăng và bắt đầu nhận worker.`
+          : `Việc "${result.task.title}" đã được lưu nháp. Bạn có thể đăng khi sẵn sàng.`,
+      data: {
+        taskId: result.task.id,
+        status: result.task.status,
+      },
+      email: {
+        subject:
+          submissionMode === "publish"
+            ? "TaskBee: Việc đã được đăng"
+            : "TaskBee: Việc đã được lưu nháp",
+      },
+    });
 
     return {
       ok: true,
@@ -1208,7 +1238,7 @@ export async function claimTaskSlot(taskId: string): Promise<{
     await expireStaleTaskClaims({ taskId, now });
 
     // Sử dụng transaction để đảm bảo atomicity
-    return await prisma.$transaction(async (tx) => {
+    const claimResult = await prisma.$transaction(async (tx) => {
       // 1. Kiểm tra task tồn tại và ở trạng thái ACTIVE
       const task = await tx.task.findUnique({
         where: {
@@ -1350,6 +1380,15 @@ export async function claimTaskSlot(taskId: string): Promise<{
         message: `Bạn đã nhận việc "${task.title}" thành công. Phần thưởng: ${formatVnd(task.rewardAmount.toString())}. Bạn có ${task.holdTimeMinutes} phút để gửi bằng chứng trước khi slot tự trả lại.`,
       };
     });
+
+    if (claimResult.ok && claimResult.claimId) {
+      await captureTaskFlowEvent(profile.id, "task_claimed", {
+        taskId,
+        claimId: claimResult.claimId,
+      });
+    }
+
+    return claimResult;
   } catch (error) {
     if (isUniqueConstraintError(error)) {
       return {

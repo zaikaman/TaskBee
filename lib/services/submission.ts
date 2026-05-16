@@ -13,6 +13,7 @@ import {
 import { expireStaleTaskClaims } from "@/lib/services/task-claim-expiration";
 import {
   Prisma,
+  NotificationType,
   SubmissionStatus,
   TaskClaimStatus,
   TaskStatus,
@@ -20,6 +21,8 @@ import {
 } from "@/lib/generated/prisma/client";
 import { formatVnd } from "@/lib/utils/money";
 import { enforceRateLimit, getRateLimitErrorMessage } from "@/lib/utils/rate-limit";
+import { notifyUser } from "@/lib/services/notifications";
+import { captureTaskFlowEvent } from "@/lib/services/analytics";
 
 const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
 const SUBMISSION_PROOF_TEXT_MAX_LENGTH = 2000;
@@ -274,6 +277,7 @@ async function createSubmissionRecord(
         task: {
           select: {
             id: true,
+            employerId: true,
             title: true,
             rewardAmount: true,
             status: true,
@@ -379,6 +383,7 @@ async function createSubmissionRecord(
 
     return {
       submissionId: submission.id,
+      employerId: claim.task.employerId,
       taskTitle: claim.task.title,
       rewardAmount: claim.task.rewardAmount.toString(),
       autoApproveDays: claim.task.autoApproveDays,
@@ -415,6 +420,23 @@ export async function createSubmission(
     const result = await createSubmissionRecord(profile.id, input);
 
     revalidateSubmissionPaths(input.taskId);
+    await notifyUser({
+      userId: result.employerId,
+      type: NotificationType.SUBMISSION_REVIEW,
+      title: "Có submission mới cần review",
+      body: `Worker đã gửi bằng chứng cho việc "${result.taskTitle}". Vui lòng review để thanh toán đúng hạn.`,
+      data: {
+        taskId: input.taskId,
+        submissionId: result.submissionId,
+      },
+      email: {
+        subject: `TaskBee: Submission mới cho "${result.taskTitle}"`,
+      },
+    });
+    await captureTaskFlowEvent(profile.id, "submission_created", {
+      taskId: input.taskId,
+      submissionId: result.submissionId,
+    });
 
     return {
       ok: true,
@@ -502,6 +524,25 @@ export async function reviewSubmission(
       const result = await approveSubmission(submission, input.feedback);
 
       revalidateSubmissionPaths(submission.taskId);
+      await notifyUser({
+        userId: submission.workerId,
+        type: NotificationType.SUBMISSION_REVIEW,
+        title: "Submission đã được duyệt",
+        body: `Submission cho việc "${submission.task.title}" đã được duyệt. Bạn đã nhận ${formatVnd(result.rewardAmount)} vào ví.`,
+        data: {
+          taskId: submission.taskId,
+          submissionId: submission.id,
+          status: SubmissionStatus.APPROVED,
+        },
+        email: {
+          subject: `TaskBee: Submission của bạn đã được duyệt`,
+        },
+      });
+      await captureTaskFlowEvent(profile.id, "submission_reviewed", {
+        taskId: submission.taskId,
+        submissionId: submission.id,
+        status: "APPROVED",
+      });
 
       return {
         ok: true,
@@ -511,6 +552,28 @@ export async function reviewSubmission(
       const result = await rejectSubmission(submission, input.feedback);
 
       revalidateSubmissionPaths(submission.taskId);
+      await notifyUser({
+        userId: submission.workerId,
+        type: NotificationType.SUBMISSION_REVIEW,
+        title: "Submission cần bổ sung",
+        body: result.isSecondRejection
+          ? `Submission cho việc "${submission.task.title}" đã bị từ chối lần hai và slot đã được trả lại.`
+          : `Submission cho việc "${submission.task.title}" đã bị từ chối. Bạn có thể bổ sung bằng chứng theo phản hồi của employer.`,
+        data: {
+          taskId: submission.taskId,
+          submissionId: submission.id,
+          status: SubmissionStatus.REJECTED,
+          feedback: input.feedback ?? null,
+        },
+        email: {
+          subject: `TaskBee: Submission cần bổ sung`,
+        },
+      });
+      await captureTaskFlowEvent(profile.id, "submission_reviewed", {
+        taskId: submission.taskId,
+        submissionId: submission.id,
+        status: "REJECTED",
+      });
 
       return {
         ok: true,

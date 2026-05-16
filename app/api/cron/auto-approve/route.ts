@@ -6,6 +6,9 @@ import {
   loadExpiredPendingSubmissionContexts,
 } from "@/lib/services/submission-workflow";
 import { expireStaleTaskClaims } from "@/lib/services/task-claim-expiration";
+import { NotificationType } from "@/lib/generated/prisma/client";
+import { notifyUser } from "@/lib/services/notifications";
+import { formatVnd } from "@/lib/utils/money";
 
 export const dynamic = "force-dynamic";
 
@@ -77,6 +80,19 @@ async function handleAutoApproveCron(request: NextRequest) {
 
       approvedCount += 1;
       affectedTaskIds.add(result.taskId);
+      await notifyUser({
+        userId: submission.workerId,
+        type: NotificationType.AUTO_APPROVAL,
+        title: "Submission đã được tự động duyệt",
+        body: `Submission cho việc "${result.taskTitle}" đã được TaskBee tự động duyệt. Bạn đã nhận ${formatVnd(result.rewardAmount)} vào ví.`,
+        data: {
+          taskId: result.taskId,
+          submissionId: submission.id,
+        },
+        email: {
+          subject: "TaskBee: Submission đã được tự động duyệt",
+        },
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Không thể auto-approve submission này.";
 

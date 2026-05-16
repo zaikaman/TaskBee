@@ -1,6 +1,5 @@
 import Link from "next/link";
 import {
-  Bell,
   CircleHelp,
   Clock3,
   Leaf,
@@ -17,6 +16,11 @@ import { PrimaryNav } from "./primary-nav";
 import { ProfileMenu } from "./profile-menu";
 import { RoleSwitcher } from "./role-switcher";
 import { formatCurrency } from "@/lib/utils";
+import {
+  getRecentNotifications,
+  getUnreadNotificationCount,
+} from "@/lib/services/notifications";
+import { NotificationCenter } from "@/components/notifications/notification-center";
 
 export async function AppNavbar() {
   const session = await getCurrentUser();
@@ -27,6 +31,12 @@ export async function AppNavbar() {
     "người dùng";
   const isEmployer = session?.profile?.role === UserRole.EMPLOYER;
   const isWorker = session?.profile?.role === UserRole.WORKER;
+  const [notifications, unreadCount] = session?.profile
+    ? await Promise.all([
+        getRecentNotifications(session.profile.id),
+        getUnreadNotificationCount(session.profile.id),
+      ])
+    : [[], 0];
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white">
@@ -52,10 +62,7 @@ export async function AppNavbar() {
               <Button variant="ghost" size="icon" aria-label="Trợ giúp">
                 <CircleHelp className="size-4" />
               </Button>
-              <Button variant="ghost" size="icon" aria-label="Thông báo" className="relative">
-                <Bell className="size-4" />
-                <span className="absolute right-2 top-2 size-2 rounded-full bg-red-500 ring-2 ring-white" />
-              </Button>
+              <NotificationCenter notifications={notifications} unreadCount={unreadCount} />
               <Button variant="ghost" size="icon" aria-label="Lịch sử">
                 <Clock3 className="size-4" />
               </Button>

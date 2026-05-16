@@ -18,6 +18,7 @@ import {
   DepositNetwork,
   DepositPaymentMethod,
   DepositProvider,
+  NotificationType,
   Prisma,
   TransactionType,
   UserStatus,
@@ -30,6 +31,8 @@ import {
   toMinorUnits,
 } from "@/lib/utils/money";
 import { enforceRateLimit, getRateLimitErrorMessage } from "@/lib/utils/rate-limit";
+import { notifyUser } from "@/lib/services/notifications";
+import { captureTaskFlowEvent } from "@/lib/services/analytics";
 import {
   bankDetailsSchema,
   depositRequestSchema,
@@ -700,6 +703,25 @@ export async function createDepositIntent(
 
     revalidatePath("/dashboard/wallet");
     revalidatePath("/dashboard/wallet/deposit");
+    await notifyUser({
+      userId,
+      type: NotificationType.DEPOSIT_STATUS,
+      title: "Lệnh nạp tiền đã được tạo",
+      body: `Vui lòng thanh toán đúng số tiền ${formatVnd(normalizedInput.amount)} với mã ${depositIntent.paymentCode} để TaskBee tự động ghi có.`,
+      data: {
+        depositIntentId: depositIntent.id,
+        paymentCode: depositIntent.paymentCode,
+        provider: depositIntent.provider,
+      },
+      email: {
+        subject: "TaskBee: Hướng dẫn thanh toán lệnh nạp tiền",
+      },
+    });
+    await captureTaskFlowEvent(userId, "deposit_intent_created", {
+      depositIntentId: depositIntent.id,
+      provider: depositIntent.provider,
+      paymentMethod: depositIntent.paymentMethod,
+    });
 
     return {
       ok: true,
@@ -1438,6 +1460,25 @@ export async function requestWithdrawal(
 
     revalidatePath("/dashboard/wallet");
     revalidatePath("/dashboard/wallet/history");
+    await notifyUser({
+      userId,
+      type: NotificationType.WITHDRAWAL_STATUS,
+      title: "Yêu cầu rút tiền đã được tạo",
+      body: `TaskBee đã nhận yêu cầu rút ${formatVnd(result.requestedAmount)}. Bạn sẽ nhận ${formatVnd(result.netAmount)} sau khi admin duyệt.`,
+      data: {
+        withdrawalId: result.withdrawalId,
+        amount: result.requestedAmount,
+        fee: result.fee,
+        netAmount: result.netAmount,
+      },
+      email: {
+        subject: "TaskBee: Đã nhận yêu cầu rút tiền",
+      },
+    });
+    await captureTaskFlowEvent(userId, "withdrawal_requested", {
+      withdrawalId: result.withdrawalId,
+      amount: result.requestedAmount,
+    });
 
     return {
       ok: true,

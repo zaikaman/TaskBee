@@ -1,0 +1,16 @@
+config:
+  target: "{{ $processEnvironment.TASKBEE_PERF_TARGET || 'https://taskbee-vn.vercel.app' }}"
+  phases:
+    - duration: 60
+      arrivalRate: 5
+      rampTo: 20
+      name: "Tăng tải core API"
+  ensure:
+    p95: 300
+scenarios:
+  - name: "Marketplace và trang chính"
+    flow:
+      - get:
+          url: "/"
+      - get:
+          url: "/marketplace"

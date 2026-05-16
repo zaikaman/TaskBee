@@ -17,6 +17,7 @@ import {
 } from "@/lib/generated/prisma/client";
 import { addMoney, formatVnd, fromMinorUnits, toMinorUnits } from "@/lib/utils/money";
 import { enforceRateLimit, getRateLimitErrorMessage } from "@/lib/utils/rate-limit";
+import { sendTaskBeeEmail } from "@/lib/services/notifications";
 
 const processWithdrawalSchema = z.object({
   withdrawalId: z.uuid("Mã yêu cầu rút tiền không hợp lệ."),
@@ -418,6 +419,35 @@ export async function processWithdrawal(
     revalidatePath("/admin/withdrawals");
     revalidatePath("/dashboard/wallet");
     revalidatePath("/dashboard/wallet/history");
+    const processedWithdrawal = await prisma.withdrawal.findUnique({
+      where: {
+        id: result.withdrawalId,
+      },
+      select: {
+        amount: true,
+        netAmount: true,
+        status: true,
+        user: {
+          select: {
+            email: true,
+          },
+        },
+      },
+    });
+
+    if (processedWithdrawal?.user.email) {
+      await sendTaskBeeEmail({
+        to: processedWithdrawal.user.email,
+        subject:
+          processedWithdrawal.status === WithdrawalStatus.APPROVED
+            ? "TaskBee: Yêu cầu rút tiền đã được duyệt"
+            : "TaskBee: Yêu cầu rút tiền đã bị từ chối",
+        text:
+          processedWithdrawal.status === WithdrawalStatus.APPROVED
+            ? `Yêu cầu rút ${formatVnd(processedWithdrawal.amount.toString())} đã được duyệt. Số tiền thực nhận là ${formatVnd(processedWithdrawal.netAmount.toString())}.`
+            : `Yêu cầu rút ${formatVnd(processedWithdrawal.amount.toString())} đã bị từ chối và tiền đã được hoàn lại vào ví khả dụng.`,
+      });
+    }
 
     return {
       ok: true,

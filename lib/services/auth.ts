@@ -4,7 +4,8 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/auth/server";
 import { getPrisma } from "@/lib/db/prisma";
-import { UserRole, UserStatus } from "@/lib/generated/prisma/client";
+import { NotificationType, UserRole, UserStatus } from "@/lib/generated/prisma/client";
+import { notifyUser } from "@/lib/services/notifications";
 import { checkRateLimit } from "@/lib/utils/rate-limit";
 
 const OTP_RESEND_COOLDOWN_MS = 60_000;
@@ -474,7 +475,7 @@ export async function confirmRegistrationOtp(
       : parsed.data.role;
   const nickname = (profile.nickname as string | undefined) ?? parsed.data.nickname;
 
-  await getPrisma().user.upsert({
+  const user = await getPrisma().user.upsert({
     where: { email: parsed.data.email },
     update: {
       username: buildUsername(nickname, data.user.id),
@@ -489,6 +490,18 @@ export async function confirmRegistrationOtp(
       role,
       emailVerified: true,
       status: "ACTIVE",
+    },
+  });
+  await notifyUser({
+    userId: user.id,
+    type: NotificationType.EMAIL_VERIFICATION,
+    title: "Email đã được xác minh",
+    body: "Tài khoản TaskBee của bạn đã xác minh email thành công và sẵn sàng sử dụng.",
+    data: {
+      role,
+    },
+    email: {
+      subject: "TaskBee: Email đã được xác minh",
     },
   });
 

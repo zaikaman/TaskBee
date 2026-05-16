@@ -3,11 +3,14 @@ import {
   DepositConfirmationStatus,
   DepositIntentStatus,
   DepositProvider,
+  NotificationType,
   Prisma,
   TransactionType,
   UserStatus,
 } from "@/lib/generated/prisma/client";
-import { toMinorUnits } from "@/lib/utils/money";
+import { formatVnd, toMinorUnits } from "@/lib/utils/money";
+import { captureTaskFlowEvent } from "@/lib/services/analytics";
+import { notifyUser } from "@/lib/services/notifications";
 
 export type DepositSettlementStatus =
   | "PROCESSED"
@@ -62,7 +65,7 @@ export async function settleConfirmedDepositIntent(
 ): Promise<DepositSettlementResult> {
   const prisma = getPrisma();
 
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     await tx.$queryRaw(
       Prisma.sql`SELECT id FROM "DepositIntent" WHERE "paymentCode" = ${input.paymentCode} FOR UPDATE`,
     );
@@ -254,4 +257,59 @@ export async function settleConfirmedDepositIntent(
       message: "Đã xác nhận giao dịch provider và cộng số dư ví đúng một lần.",
     };
   });
+
+  if (result.depositIntentId !== "00000000-0000-0000-0000-000000000000") {
+    const intent = await prisma.depositIntent.findUnique({
+      where: {
+        id: result.depositIntentId,
+      },
+      select: {
+        id: true,
+        userId: true,
+        amount: true,
+        status: true,
+        provider: true,
+        paymentCode: true,
+        confirmedAmount: true,
+      },
+    });
+
+    if (intent && result.status !== "DUPLICATED") {
+      const confirmedAmount = intent.confirmedAmount?.toString() ?? intent.amount.toString();
+      await notifyUser({
+        userId: intent.userId,
+        type: NotificationType.DEPOSIT_STATUS,
+        title:
+          result.status === "PROCESSED"
+            ? "Lệnh nạp tiền đã được ghi có"
+            : "Lệnh nạp tiền cần rà soát",
+        body:
+          result.status === "PROCESSED"
+            ? `TaskBee đã ghi có ${formatVnd(confirmedAmount)} cho mã nạp ${intent.paymentCode}.`
+            : `Lệnh nạp ${intent.paymentCode} có trạng thái ${intent.status}. Đội ngũ TaskBee sẽ rà soát trước khi ghi có.`,
+        data: {
+          depositIntentId: intent.id,
+          paymentCode: intent.paymentCode,
+          provider: intent.provider,
+          settlementStatus: result.status,
+        },
+        email: {
+          subject:
+            result.status === "PROCESSED"
+              ? "TaskBee: Lệnh nạp tiền đã được ghi có"
+              : "TaskBee: Lệnh nạp tiền cần rà soát",
+        },
+      });
+
+      if (result.status === "PROCESSED") {
+        await captureTaskFlowEvent(intent.userId, "deposit_confirmed", {
+          depositIntentId: intent.id,
+          provider: intent.provider,
+          amount: confirmedAmount,
+        });
+      }
+    }
+  }
+
+  return result;
 }
