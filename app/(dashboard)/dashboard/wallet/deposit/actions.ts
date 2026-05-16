@@ -2,7 +2,7 @@
 
 import {
   createDepositIntent,
-  getDepositIntent,
+  refreshDepositIntentFromProvider,
   type CreateDepositIntentResult,
   type DepositIntentDetails,
 } from "@/lib/services/wallet";
@@ -29,5 +29,5 @@ export async function createDepositAction(
 export async function refreshDepositIntentAction(
   depositIntentId: string,
 ): Promise<DepositIntentDetails | null> {
-  return getDepositIntent(depositIntentId);
+  return refreshDepositIntentFromProvider(depositIntentId);
 }

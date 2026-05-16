@@ -8,6 +8,7 @@ import { requireAuth, requireVerifiedUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/db/prisma";
 import {
   buildSePayBankTransferInstructions,
+  reconcileSePayDepositIntent,
   type SePayBankTransferInstructions,
 } from "@/lib/services/payments/sepay";
 import { createNowPaymentsUsdtExchangeRateSnapshot } from "@/lib/services/payments/nowpayments";
@@ -218,6 +219,10 @@ const DEPOSIT_REUSABLE_STATUSES = [
   DepositIntentStatus.PENDING,
   DepositIntentStatus.CONFIRMING,
 ] satisfies DepositIntentStatus[];
+const DEPOSIT_PROVIDER_REFRESHABLE_STATUSES = new Set<DepositIntentStatus>([
+  DepositIntentStatus.PENDING,
+  DepositIntentStatus.CONFIRMING,
+]);
 
 class WithdrawalRequestError extends Error {
   constructor(
@@ -837,6 +842,60 @@ export async function getDepositIntent(depositIntentId: string) {
   } catch (error) {
     console.error("Lỗi khi lấy lệnh nạp tiền:", error);
     return null;
+  }
+}
+
+export async function refreshDepositIntentFromProvider(depositIntentId: string) {
+  try {
+    const session = await requireAuth();
+
+    if (!session.profile) {
+      return null;
+    }
+
+    const prisma = getPrisma();
+    const depositIntent = await prisma.depositIntent.findUnique({
+      where: {
+        id: depositIntentId,
+        userId: session.profile.id,
+      },
+      select: depositIntentSelect,
+    });
+
+    if (!depositIntent) {
+      return null;
+    }
+
+    if (
+      depositIntent.provider === DepositProvider.SEPAY &&
+      DEPOSIT_PROVIDER_REFRESHABLE_STATUSES.has(depositIntent.status)
+    ) {
+      await enforceRateLimit({
+        scope: "wallet:deposit-provider-refresh",
+        key: `${session.profile.id}:${depositIntent.id}`,
+        limit: 12,
+        windowSeconds: 60,
+      });
+
+      const reconciliationResult = await reconcileSePayDepositIntent({
+        paymentCode: depositIntent.paymentCode,
+        expectedAmount: depositIntent.amount.toString(),
+        createdAt: depositIntent.createdAt,
+      });
+
+      console.info("Kết quả đối soát nhanh lệnh nạp SePay:", {
+        status: reconciliationResult.status,
+        depositIntentId: reconciliationResult.depositIntentId ?? depositIntent.id,
+        paymentCode: reconciliationResult.paymentCode,
+        message: reconciliationResult.message,
+      });
+    }
+
+    return getDepositIntent(depositIntentId);
+  } catch (error) {
+    console.error("Lỗi khi refresh lệnh nạp tiền từ provider:", error);
+
+    return getDepositIntent(depositIntentId);
   }
 }
 
