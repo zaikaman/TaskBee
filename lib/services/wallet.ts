@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { PLATFORM_FEES, SUPPORTED_BANKS, WALLET_LIMITS } from "@/config/app";
+import { PLATFORM_FEES } from "@/config/app";
 import { requireAuth, requireVerifiedUser } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/db/prisma";
 import {
@@ -16,6 +16,12 @@ import {
   fromMinorUnits,
   toMinorUnits,
 } from "@/lib/utils/money";
+import {
+  bankDetailsSchema,
+  getWalletValidationError,
+  withdrawalAmountSchema,
+  type BankDetails,
+} from "@/lib/validators/wallet";
 
 /**
  * Thông tin số dư ví của người dùng
@@ -68,16 +74,6 @@ export type RequestWithdrawalResult = {
   netAmount?: string;
 };
 
-/**
- * Thông tin chi tiết ngân hàng cho rút tiền
- */
-export type BankDetails = {
-  bankCode: string;
-  bankName: string;
-  accountNumber: string;
-  accountName: string;
-};
-
 type NormalizedWithdrawalInput = {
   amount: string;
   amountMinor: bigint;
@@ -85,59 +81,12 @@ type NormalizedWithdrawalInput = {
 };
 
 function normalizeWithdrawalAmount(amount: string | number) {
-  const amountMinor = toMinorUnits(amount);
-
-  if (amountMinor <= BigInt(0)) {
-    throw new Error("Số tiền rút phải lớn hơn 0.");
-  }
-
-  if (amountMinor % BigInt(100) !== BigInt(0)) {
-    throw new Error("Số tiền rút phải là số nguyên VND.");
-  }
-
-  const minimumWithdrawalMinor = toMinorUnits(WALLET_LIMITS.minimumWithdrawalVnd);
-
-  if (amountMinor < minimumWithdrawalMinor) {
-    throw new Error(
-      `Số tiền rút tối thiểu là ${formatVnd(WALLET_LIMITS.minimumWithdrawalVnd)}.`,
-    );
-  }
+  const normalizedAmount = withdrawalAmountSchema.parse(amount);
+  const amountMinor = toMinorUnits(normalizedAmount);
 
   return {
     amount: fromMinorUnits(amountMinor),
     amountMinor,
-  };
-}
-
-function normalizeBankDetails(bankDetails: BankDetails): BankDetails {
-  if (!bankDetails || typeof bankDetails !== "object") {
-    throw new Error("Thông tin ngân hàng không đầy đủ.");
-  }
-
-  const bankCode = bankDetails.bankCode?.trim().toUpperCase();
-  const supportedBank = SUPPORTED_BANKS.find((bank) => bank.code === bankCode);
-
-  if (!supportedBank) {
-    throw new Error("Ngân hàng nhận tiền không được hỗ trợ.");
-  }
-
-  const accountNumber = bankDetails.accountNumber?.replaceAll(/[\s.-]/g, "");
-
-  if (!/^\d{4,32}$/.test(accountNumber)) {
-    throw new Error("Số tài khoản ngân hàng không hợp lệ.");
-  }
-
-  const accountName = bankDetails.accountName?.trim().replaceAll(/\s+/g, " ");
-
-  if (!accountName || accountName.length < 2 || accountName.length > 100) {
-    throw new Error("Tên chủ tài khoản ngân hàng không hợp lệ.");
-  }
-
-  return {
-    bankCode: supportedBank.code,
-    bankName: supportedBank.name,
-    accountNumber,
-    accountName: accountName.toLocaleUpperCase("vi-VN"),
   };
 }
 
@@ -149,7 +98,7 @@ function normalizeWithdrawalInput(
 
   return {
     ...normalizedAmount,
-    bankDetails: normalizeBankDetails(bankDetails),
+    bankDetails: bankDetailsSchema.parse(bankDetails),
   };
 }
 
@@ -489,10 +438,7 @@ export async function requestWithdrawal(
     console.error("Lỗi khi tạo yêu cầu rút tiền:", error);
     return {
       ok: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Không thể tạo yêu cầu rút tiền lúc này. Vui lòng thử lại sau.",
+      error: getWalletValidationError(error),
     };
   }
 }
