@@ -101,8 +101,8 @@ Phase 1 (Setup)
 - [x] T067 [US4] Enforce minimum withdrawal threshold and insufficient-balance errors in `requestWithdrawal`
 - [x] T068 [US4] Extend wallet data model for production deposit intents, provider references, idempotency keys, payment method, network, exchange rate snapshot, confirmation status, expiry, and raw provider metadata in `prisma/schema.prisma`
 - [x] T069 [US4] Add payment configuration for SePay bank transfer and USDT deposit networks, minimum/maximum deposit limits, confirmation thresholds, webhook secrets, and supported currency metadata in `config/app.ts` and `.env.example`
-- [ ] T070 [US4] Create deposit validators for amount, provider, currency, USDT network, and destination wallet constraints in `lib/validators/wallet.ts`
-- [ ] T071 [P] [US4] Create ledger reconciliation utility to verify wallet totals and transaction consistency in `lib/services/ledger.ts`
+- [x] T070 [US4] Create deposit validators for amount, provider, currency, USDT network, and destination wallet constraints in `lib/validators/wallet.ts`
+- [x] T071 [P] [US4] Create ledger reconciliation utility to verify wallet totals and transaction consistency in `lib/services/ledger.ts`
 - [ ] T089 [US4] Implement provider-neutral deposit intent service with stable payment codes, pending/expired/cancelled/confirmed states, and no user-controlled balance crediting in `lib/services/wallet.ts`
 - [ ] T090 [US4] Implement SePay deposit flow: create bank transfer instructions, bind unique transfer content/payment code, verify signed webhook payloads, and confirm deposits automatically in `app/api/payments/sepay/webhook/route.ts`
 - [ ] T091 [US4] Implement USDT deposit flow: generate or assign deposit address, store expected network/amount, verify on-chain confirmations through a production provider webhook or reconciliation adapter, and confirm deposits automatically in `app/api/payments/crypto/usdt/webhook/route.ts`
