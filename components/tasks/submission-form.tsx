@@ -136,8 +136,8 @@ export function SubmissionForm({ taskId, proofRequirements }: SubmissionFormProp
         setSelectedFiles([]);
         setSubmissionError(null);
         router.refresh();
-      } catch (err: any) {
-        toast.error(err.message || "Có lỗi xảy ra, vui lòng thử lại.");
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Có lỗi xảy ra, vui lòng thử lại.");
       } finally {
         setIsUploading(false);
       }

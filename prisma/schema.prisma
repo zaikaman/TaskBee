@@ -103,6 +103,7 @@ model Submission {
   proofText        String?
   proofImages      Json?
   employerFeedback String?
+  rejectionCount   Int              @default(0)
   reviewedAt       DateTime?
   autoApproveAt    DateTime?
   createdAt        DateTime         @default(now())

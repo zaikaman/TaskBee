@@ -237,7 +237,7 @@ async function validateSubmissionOwnership(
     throw new Error("Submission này đã được review rồi.");
   }
 
-  if (submission.task.status !== TaskStatus.ACTIVE) {
+  if (submission.task.status !== TaskStatus.ACTIVE && submission.task.status !== TaskStatus.PAUSED) {
     throw new Error("Task này không còn active nên không thể review submission.");
   }
 
@@ -645,7 +645,10 @@ export async function uploadProofFileAction(
       ok: true,
       url: result.url,
     };
-  } catch (err: any) {
-    return { ok: false, error: err?.message || "Lỗi tải ảnh. Vui lòng thử lại." };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : "Lỗi tải ảnh. Vui lòng thử lại.",
+    };
   }
 }

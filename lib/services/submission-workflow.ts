@@ -272,20 +272,11 @@ export async function rejectSubmissionTransaction(
     },
   });
 
-  if (!currentTask || currentTask.status !== TaskStatus.ACTIVE) {
+  if (!currentTask || (currentTask.status !== TaskStatus.ACTIVE && currentTask.status !== TaskStatus.PAUSED)) {
     throw createInactiveTaskError();
   }
 
-  const previousRejections = await tx.submission.count({
-    where: {
-      taskId: submission.taskId,
-      workerId: submission.workerId,
-      status: SubmissionStatus.REJECTED,
-      id: {
-        not: submission.id,
-      },
-    },
-  });
+  const isSecondRejection = submission.rejectionCount >= 1;
 
   const updateResult = await tx.submission.updateMany({
     where: {
@@ -295,6 +286,9 @@ export async function rejectSubmissionTransaction(
     data: {
       status: SubmissionStatus.REJECTED,
       employerFeedback: feedback ?? null,
+      rejectionCount: {
+        increment: 1,
+      },
       reviewedAt: now,
     },
   });
@@ -303,7 +297,7 @@ export async function rejectSubmissionTransaction(
     throw createReviewConflictError();
   }
 
-  if (previousRejections >= 1) {
+  if (isSecondRejection) {
     await applyWorkerTaskIntervalAdjustment(
       tx,
       submission.workerId,

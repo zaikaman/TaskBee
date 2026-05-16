@@ -1,15 +1,8 @@
-import { Info, AlertCircle, CheckCircle2, Clock, Check, MoreHorizontal } from "lucide-react";
+import { AlertCircle, Check, Clock, MoreHorizontal, Search, XCircle } from "lucide-react";
 import Link from "next/link";
-import { formatVnd } from "@/lib/utils/money";
+import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -18,198 +11,319 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { requireRole } from "@/lib/auth/session";
+import { getPrisma } from "@/lib/db/prisma";
+import {
+  SubmissionStatus,
+  TaskClaimStatus,
+  UserRole,
+} from "@/lib/generated/prisma/client";
+import { expireStaleTaskClaims } from "@/lib/services/task-claim-expiration";
+import { formatVnd } from "@/lib/utils/money";
 
 export const metadata = {
-  title: "Nhiệm vụ đã hoàn thành | Worker Dashboard",
+  title: "Nhiệm vụ của tôi | Worker Dashboard",
 };
 
-// Mock data
-const mockTasks = [
-  {
-    id: "1",
-    status: "PENDING",
-    name: "Twitter: Update Profile + Like + Rt+ Comment",
-    date: "1 ngày trước",
-    earned: 400,
-  },
-  {
-    id: "2",
-    status: "APPROVED",
-    name: "SEO + Promote Content + Engage Qualificated",
-    date: "1 ngày trước",
-    earned: 600,
-  },
-  {
-    id: "3",
-    status: "APPROVED",
-    name: "SEO + Promote Content + Engage 1x",
-    date: "2 tuần trước",
-    earned: 400,
-  },
-  {
-    id: "4",
-    status: "APPROVED",
-    name: "Facebook: Share + Like + Comment",
-    date: "3 tuần trước",
-    earned: 300,
-  },
-  {
-    id: "5",
-    status: "APPROVED",
-    name: "Reddit: Upvote + Comment",
-    date: "1 tháng trước",
-    earned: 200,
-  },
+type WorkerTasksPageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+type WorkerTaskStatusFilter =
+  | "ALL"
+  | "CLAIMED"
+  | "PENDING"
+  | "APPROVED"
+  | "REJECTED"
+  | "EXPIRED"
+  | "CANCELLED";
+
+const statusOptions: Array<{ label: string; value: WorkerTaskStatusFilter }> = [
+  { label: "Tất cả nhiệm vụ", value: "ALL" },
+  { label: "Đang giữ slot", value: "CLAIMED" },
+  { label: "Chờ duyệt", value: "PENDING" },
+  { label: "Đã duyệt", value: "APPROVED" },
+  { label: "Bị từ chối", value: "REJECTED" },
+  { label: "Đã hết hạn", value: "EXPIRED" },
+  { label: "Đã hủy", value: "CANCELLED" },
 ];
 
-export default function WorkerTasksPage() {
+function firstValue(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function parseStatusFilter(value: string | undefined): WorkerTaskStatusFilter {
+  return statusOptions.some((option) => option.value === value)
+    ? (value as WorkerTaskStatusFilter)
+    : "ALL";
+}
+
+function formatDateTime(value: Date) {
+  return new Intl.DateTimeFormat("vi-VN", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(value);
+}
+
+function getEffectiveStatus(
+  claimStatus: TaskClaimStatus,
+  submissionStatus: SubmissionStatus | null,
+) {
+  if (submissionStatus) {
+    return submissionStatus;
+  }
+
+  return claimStatus;
+}
+
+function getStatusLabel(status: SubmissionStatus | TaskClaimStatus) {
+  switch (status) {
+    case SubmissionStatus.PENDING:
+      return "Chờ duyệt";
+    case SubmissionStatus.APPROVED:
+      return "Đã duyệt";
+    case SubmissionStatus.REJECTED:
+      return "Bị từ chối";
+    case TaskClaimStatus.CLAIMED:
+      return "Đang giữ slot";
+    case TaskClaimStatus.SUBMITTED:
+      return "Đã nộp";
+    case TaskClaimStatus.EXPIRED:
+      return "Đã hết hạn";
+    case TaskClaimStatus.CANCELLED:
+      return "Đã hủy";
+    default:
+      return status;
+  }
+}
+
+function StatusIcon({ status }: { status: SubmissionStatus | TaskClaimStatus }) {
+  if (status === SubmissionStatus.APPROVED) {
+    return (
+      <span className="inline-flex size-6 items-center justify-center rounded-full bg-[#e7faef] text-[#22ab59]">
+        <Check className="size-3 stroke-[3]" aria-hidden="true" />
+      </span>
+    );
+  }
+
+  if (status === SubmissionStatus.REJECTED || status === TaskClaimStatus.CANCELLED) {
+    return (
+      <span className="inline-flex size-6 items-center justify-center rounded-full bg-[#fce3e5] text-[#e63e46]">
+        <XCircle className="size-3" aria-hidden="true" />
+      </span>
+    );
+  }
+
+  if (status === TaskClaimStatus.CLAIMED) {
+    return (
+      <span className="inline-flex size-6 items-center justify-center rounded-full bg-[#edf4ff] text-[#203259]">
+        <Clock className="size-3" aria-hidden="true" />
+      </span>
+    );
+  }
+
+  return (
+    <span className="inline-flex size-6 items-center justify-center rounded-full bg-[#fff3cf] text-[#de9100]">
+      <MoreHorizontal className="size-3" aria-hidden="true" />
+    </span>
+  );
+}
+
+export default async function WorkerTasksPage({ searchParams }: WorkerTasksPageProps) {
+  const [session, rawSearchParams] = await Promise.all([
+    requireRole(UserRole.WORKER),
+    searchParams,
+  ]);
+
+  if (!session.profile) {
+    redirect("/forbidden");
+  }
+
+  await expireStaleTaskClaims({ workerId: session.profile.id });
+
+  const status = parseStatusFilter(firstValue(rawSearchParams?.status));
+  const search = firstValue(rawSearchParams?.search)?.trim() ?? "";
+  const prisma = getPrisma();
+
+  const claims = await prisma.taskClaim.findMany({
+    where: {
+      workerId: session.profile.id,
+      ...(status === "CLAIMED" ? { status: TaskClaimStatus.CLAIMED } : {}),
+      ...(status === "EXPIRED" ? { status: TaskClaimStatus.EXPIRED } : {}),
+      ...(status === "CANCELLED" ? { status: TaskClaimStatus.CANCELLED } : {}),
+      ...(status === "PENDING" ||
+      status === "APPROVED" ||
+      status === "REJECTED"
+        ? {
+            submission: {
+              status: status as SubmissionStatus,
+            },
+          }
+        : {}),
+      ...(search
+        ? {
+            task: {
+              OR: [
+                { title: { contains: search, mode: "insensitive" } },
+                { description: { contains: search, mode: "insensitive" } },
+                { category: { contains: search, mode: "insensitive" } },
+              ],
+            },
+          }
+        : {}),
+    },
+    include: {
+      task: {
+        select: {
+          id: true,
+          title: true,
+          rewardAmount: true,
+          status: true,
+          category: true,
+        },
+      },
+      submission: {
+        select: {
+          id: true,
+          status: true,
+          employerFeedback: true,
+          createdAt: true,
+          reviewedAt: true,
+        },
+      },
+    },
+    orderBy: [{ updatedAt: "desc" }, { claimedAt: "desc" }],
+  });
+
+  const totalEarned = claims.reduce((total, claim) => {
+    if (claim.submission?.status !== SubmissionStatus.APPROVED) {
+      return total;
+    }
+
+    return total + Number(claim.task.rewardAmount.toString());
+  }, 0);
+
   return (
     <div className="mx-auto w-full max-w-6xl py-4 sm:py-8">
-      {/* Security Banner */}
-      <div className="mb-6 flex items-start rounded-md border border-[#de9100] bg-[#fff3cf] px-3 py-3 text-sm text-[#de9100] sm:px-4">
-        <AlertCircle className="size-5 mr-3 shrink-0" />
+      <div className="mb-6 flex items-start rounded-md border border-[#de9100] bg-[#fff3cf] px-3 py-3 text-sm text-[#8a5f00] sm:px-4">
+        <AlertCircle className="mr-3 size-5 shrink-0" aria-hidden="true" />
         <div className="flex-1">
-          <span className="font-medium">Cải thiện bảo mật tài khoản của bạn.</span> Thêm email khôi phục ngay để đảm bảo quyền truy cập liên tục. Bảo vệ tài khoản của bạn trong trường hợp mất email chính.{" "}
-          <Link href="/dashboard/profile" className="font-semibold text-[#de9100] hover:underline">
-            Đến Cài đặt tài khoản &gt; Bảo mật
-          </Link>
-        </div>
-        <button className="text-[#de9100] hover:text-[#b37500] ml-3 text-lg font-bold">×</button>
-      </div>
-
-      <h1 className="mb-6 text-xl font-semibold text-[#203259] sm:text-2xl">Nhiệm vụ đã hoàn thành</h1>
-
-      {/* Warning Banner */}
-      <div className="mb-6 flex items-start rounded-md border border-[#e63e46] bg-[#fce3e5] px-3 py-3 text-sm font-medium text-[#e63e46] sm:items-center sm:px-4">
-        <AlertCircle className="size-4 mr-2 shrink-0" />
-        Nhiệm vụ cũ hơn 6 tháng không còn khả dụng.
-      </div>
-
-      {/* Search Input */}
-      <div className="mb-4 flex justify-end">
-        <div className="w-full md:w-80">
-          <Input 
-            placeholder="Nhập và nhấn enter để tìm kiếm..." 
-            className="bg-zinc-50 border-zinc-200"
-          />
+          <span className="font-medium">Theo dõi nhiệm vụ thật từ hệ thống.</span>{" "}
+          Những nhiệm vụ đang giữ slot, đang chờ duyệt hoặc cần nộp lại bằng chứng sẽ xuất hiện tại đây.
         </div>
       </div>
 
-      {/* Filters & Count */}
-      <div className="mb-4 flex flex-col items-stretch justify-between gap-4 text-sm font-medium text-[#203259] md:flex-row md:items-center">
-        <div>{mockTasks.length} kết quả</div>
-        <div className="grid gap-3 sm:grid-cols-2 md:flex md:items-center md:gap-4">
-          <div className="flex items-center justify-between gap-2">
-            <span className="mr-2">Lọc theo /</span>
-            <Select defaultValue="all">
-              <SelectTrigger className="w-[180px] h-8 border-none bg-transparent shadow-none px-2 font-bold p-0">
-                <SelectValue placeholder="Tất cả nhiệm vụ" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tất cả nhiệm vụ</SelectItem>
-                <SelectItem value="pending">Đang chờ</SelectItem>
-                <SelectItem value="approved">Đã duyệt</SelectItem>
-                <SelectItem value="rejected">Bị từ chối</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center justify-between gap-2">
-            <span className="mr-2">Sắp xếp theo /</span>
-            <Select defaultValue="recent">
-              <SelectTrigger className="w-[150px] h-8 border-none bg-transparent shadow-none px-2 font-bold p-0">
-                <SelectValue placeholder="Gần đây nhất" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="recent">Gần đây nhất</SelectItem>
-                <SelectItem value="earned">Thu nhập</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+      <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-xl font-semibold text-[#203259] sm:text-2xl">
+            Nhiệm vụ của tôi
+          </h1>
+          <p className="mt-1 text-sm text-[#7f8aa0]">
+            {claims.length} kết quả · Thu nhập đã duyệt {formatVnd(totalEarned)}
+          </p>
         </div>
-      </div>
-
-      {/* Table */}
-      <div className="mb-6 overflow-hidden rounded-md border border-zinc-200 bg-white">
-        <Table className="min-w-[680px]">
-          <TableHeader className="bg-zinc-50">
-            <TableRow className="hover:bg-zinc-50">
-              <TableHead className="w-[80px] font-bold text-center text-[#203259]">Trạng thái</TableHead>
-              <TableHead className="font-bold text-[#203259]">Tên công việc</TableHead>
-              <TableHead className="w-[150px] font-bold text-[#203259]">Ngày</TableHead>
-              <TableHead className="w-[150px] font-bold text-[#203259]">Thu nhập</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {mockTasks.map((task) => (
-              <TableRow key={task.id}>
-                <TableCell className="text-center">
-                  {task.status === "PENDING" && (
-                    <div className="inline-flex size-6 rounded-full bg-[#fff3cf] text-[#de9100] items-center justify-center">
-                      <MoreHorizontal className="size-3" />
-                    </div>
-                  )}
-                  {task.status === "APPROVED" && (
-                    <div className="inline-flex size-6 rounded-full bg-[#e7faef] text-[#22ab59] items-center justify-center">
-                      <Check className="size-3 stroke-[3]" />
-                    </div>
-                  )}
-                  {task.status === "REJECTED" && (
-                    <div className="inline-flex size-6 rounded-full bg-[#fce3e5] text-[#e63e46] items-center justify-center">
-                      <AlertCircle className="size-3" />
-                    </div>
-                  )}
-                </TableCell>
-                <TableCell className="font-medium text-[#203259]">
-                  <Link href={`/marketplace/${task.id}`} className="hover:underline hover:text-[#22ab59]">
-                    {task.name}
-                  </Link>
-                </TableCell>
-                <TableCell className="text-zinc-500">{task.date}</TableCell>
-                <TableCell className="font-medium text-[#203259]">{formatVnd(task.earned)}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* Pagination */}
-      <div className="flex justify-center mb-10">
-        <div className="flex items-center gap-1">
-          <Button variant="outline" size="icon" className="size-8 rounded text-zinc-400 border-zinc-200" disabled>
-            &lt;
-          </Button>
-          <Button variant="outline" size="icon" className="size-8 rounded border-[#22ab59] bg-[#e7faef] text-[#22ab59] hover:bg-[#e7faef] hover:text-[#22ab59] font-medium">
-            1
-          </Button>
-          <Button variant="ghost" size="icon" className="size-8 rounded font-medium hover:bg-zinc-100 text-[#203259]">
-            2
-          </Button>
-          <Button variant="ghost" size="icon" className="size-8 rounded font-medium hover:bg-zinc-100 text-[#203259]">
-            3
-          </Button>
-          <Button variant="ghost" size="icon" className="size-8 rounded font-medium hover:bg-zinc-100 text-[#203259]">
-            4
-          </Button>
-          <Button variant="ghost" size="icon" className="size-8 rounded font-medium hover:bg-zinc-100 text-[#203259]">
-            5
-          </Button>
-          <span className="px-2 text-zinc-500">...</span>
-          <Button variant="ghost" size="icon" className="size-8 rounded font-medium hover:bg-zinc-100 text-[#203259]">
-            27
-          </Button>
-          <Button variant="outline" size="icon" className="size-8 rounded text-[#203259] border-zinc-200 hover:bg-zinc-50">
-            &gt;
-          </Button>
-        </div>
-      </div>
-      
-      <div className="flex justify-center">
-        <Button className="bg-[#22ab59] hover:bg-[#01a149] text-white px-8">
-          Tìm Việc
+        <Button asChild className="bg-[#22ab59] px-6 text-white hover:bg-[#01a149]">
+          <Link href="/marketplace">Tìm việc</Link>
         </Button>
       </div>
 
+      <form className="mb-4 grid gap-3 md:grid-cols-[1fr_220px_auto]" method="get">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#7f8aa0]" />
+          <Input
+            className="border-zinc-200 bg-white pl-9"
+            defaultValue={search}
+            name="search"
+            placeholder="Tìm theo tên công việc..."
+          />
+        </div>
+        <select
+          className="h-10 rounded-md border border-zinc-200 bg-white px-3 text-sm font-medium text-[#203259] outline-none focus:border-[#22ab59]"
+          defaultValue={status}
+          name="status"
+        >
+          {statusOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <Button type="submit" variant="outline">
+          Lọc
+        </Button>
+      </form>
+
+      <div className="mb-6 overflow-hidden rounded-md border border-zinc-200 bg-white">
+        <Table className="min-w-[760px]">
+          <TableHeader className="bg-zinc-50">
+            <TableRow className="hover:bg-zinc-50">
+              <TableHead className="w-[96px] text-center font-bold text-[#203259]">
+                Trạng thái
+              </TableHead>
+              <TableHead className="font-bold text-[#203259]">Tên công việc</TableHead>
+              <TableHead className="w-[160px] font-bold text-[#203259]">Cập nhật</TableHead>
+              <TableHead className="w-[160px] font-bold text-[#203259]">Thu nhập</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {claims.length === 0 ? (
+              <TableRow>
+                <TableCell className="py-10 text-center text-sm text-[#7f8aa0]" colSpan={4}>
+                  Chưa có nhiệm vụ phù hợp với bộ lọc hiện tại.
+                </TableCell>
+              </TableRow>
+            ) : (
+              claims.map((claim) => {
+                const effectiveStatus = getEffectiveStatus(
+                  claim.status,
+                  claim.submission?.status ?? null,
+                );
+                const updatedAt =
+                  claim.submission?.reviewedAt ??
+                  claim.submission?.createdAt ??
+                  claim.submittedAt ??
+                  claim.claimedAt;
+
+                return (
+                  <TableRow key={claim.id}>
+                    <TableCell className="text-center">
+                      <div className="flex flex-col items-center gap-1">
+                        <StatusIcon status={effectiveStatus} />
+                        <span className="text-xs font-medium text-[#596274]">
+                          {getStatusLabel(effectiveStatus)}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium text-[#203259]">
+                      <Link
+                        className="hover:text-[#22ab59] hover:underline"
+                        href={`/marketplace/${claim.task.id}`}
+                      >
+                        {claim.task.title}
+                      </Link>
+                      <div className="mt-1 flex flex-wrap gap-2 text-xs text-[#7f8aa0]">
+                        <span>Task: {claim.task.status}</span>
+                        {claim.task.category ? <span>· {claim.task.category}</span> : null}
+                        {claim.submission?.employerFeedback ? (
+                          <span className="text-[#e63e46]">· Có phản hồi cần xem</span>
+                        ) : null}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm text-zinc-500">
+                      {formatDateTime(updatedAt)}
+                    </TableCell>
+                    <TableCell className="font-medium text-[#203259]">
+                      {claim.submission?.status === SubmissionStatus.APPROVED
+                        ? formatVnd(claim.task.rewardAmount.toString())
+                        : "-"}
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }

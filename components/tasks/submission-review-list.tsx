@@ -11,7 +11,7 @@ type Submission = {
   id: string;
   status: string;
   proofText: string | null;
-  proofImages: any;
+  proofImages: unknown;
   employerFeedback: string | null;
   reviewedAt: Date | null;
   createdAt: Date;
@@ -47,10 +47,8 @@ function SubmissionCard({
     { ok: false }
   );
 
-  const proofImages = submission.proofImages
-    ? Array.isArray(submission.proofImages)
-      ? submission.proofImages
-      : []
+  const proofImages = Array.isArray(submission.proofImages)
+    ? submission.proofImages.filter((url): url is string => typeof url === "string")
     : [];
 
   const isStatusPending = submission.status === "PENDING";
@@ -245,7 +243,7 @@ export function SubmissionReviewList({
   submissions,
   taskStatus,
 }: SubmissionReviewListProps) {
-  const canReview = taskStatus === "ACTIVE";
+  const canReview = taskStatus === "ACTIVE" || taskStatus === "PAUSED";
 
   // Sắp xếp: PENDING lên đầu, sau đó theo thời gian
   const sortedSubmissions = [...submissions].sort((a, b) => {
@@ -263,7 +261,7 @@ export function SubmissionReviewList({
       {!canReview && (
         <div className="bg-[#fff6f6] border border-[#e63e46] p-4 rounded-lg">
           <p className="text-sm text-[#e63e46]">
-            <strong>Lưu ý:</strong> Task này không ở trạng thái ACTIVE nên không thể review submissions.
+            <strong>Lưu ý:</strong> Task này không ở trạng thái có thể review submissions.
           </p>
         </div>
       )}

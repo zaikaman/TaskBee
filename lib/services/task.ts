@@ -173,6 +173,38 @@ function isUniqueConstraintError(error: unknown) {
   );
 }
 
+type TaskWorkBlockerClient = Prisma.TransactionClient | ReturnType<typeof getPrisma>;
+
+async function countTaskWorkBlockers(db: TaskWorkBlockerClient, taskId: string) {
+  const [heldClaims, pendingSubmissions] = await Promise.all([
+    db.taskClaim.count({
+      where: {
+        taskId,
+        status: TaskClaimStatus.CLAIMED,
+      },
+    }),
+    db.submission.count({
+      where: {
+        taskId,
+        status: SubmissionStatus.PENDING,
+      },
+    }),
+  ]);
+
+  return {
+    heldClaims,
+    pendingSubmissions,
+    hasBlockingWork: heldClaims > 0 || pendingSubmissions > 0,
+  };
+}
+
+function getBlockingWorkMessage(action: "pause" | "close" | "cancel", blockers: Awaited<ReturnType<typeof countTaskWorkBlockers>>) {
+  const actionLabel =
+    action === "pause" ? "tạm dừng" : action === "close" ? "đóng" : "hủy";
+
+  return `Không thể ${actionLabel} việc khi còn ${blockers.heldClaims} lượt giữ slot chưa nộp và ${blockers.pendingSubmissions} submission đang chờ duyệt. Vui lòng xử lý các lượt này trước.`;
+}
+
 function getDuplicateClaimMessage(existingClaimStatus?: string, submissionStatus?: string) {
   if (existingClaimStatus === "CLAIMED") {
     return "Bạn đã nhận việc này rồi. Hãy hoàn thành hoặc gửi bằng chứng với claim hiện tại trước khi nhận lại.";
@@ -270,7 +302,7 @@ async function lockEmployerTaskCharge(
   const employerSpendable = fromMinorUnits(
     employerSpendableMinor > BigInt(0) ? employerSpendableMinor : BigInt(0),
   );
-  const isWhitelisted = TEST_WHITELIST_EMAILS.includes(currentUser.email as any);
+  const isWhitelisted = TEST_WHITELIST_EMAILS.some((email) => email === currentUser.email);
 
   if (!isWhitelisted && employerSpendableMinor < toMinorUnits(charge.totalCharge)) {
     throw new Error(
@@ -590,6 +622,15 @@ export async function pauseTask(taskId: string): Promise<{
       };
     }
 
+    const blockers = await countTaskWorkBlockers(prisma, taskId);
+
+    if (blockers.hasBlockingWork) {
+      return {
+        ok: false,
+        error: getBlockingWorkMessage("pause", blockers),
+      };
+    }
+
     // Cập nhật trạng thái việc
     await prisma.task.update({
       where: {
@@ -771,6 +812,15 @@ export async function closeTask(taskId: string): Promise<{
         };
       }
 
+      const blockers = await countTaskWorkBlockers(tx, taskId);
+
+      if (blockers.hasBlockingWork) {
+        return {
+          ok: false,
+          error: getBlockingWorkMessage("close", blockers),
+        };
+      }
+
       // Tính toán số tiền ký quỹ còn lại cần giải phóng
       const escrowAmountMinor = toMinorUnits(task.escrowAmount.toString());
       const rewardAmountMinor = toMinorUnits(task.rewardAmount.toString());
@@ -784,12 +834,10 @@ export async function closeTask(taskId: string): Promise<{
         },
         select: {
           availableBalance: true,
-          escrowBalance: true,
         },
       });
 
       const currentAvailable = currentUser.availableBalance.toString();
-      const currentEscrow = currentUser.escrowBalance.toString();
 
       // Cập nhật trạng thái việc
       await tx.task.update({
@@ -821,8 +869,6 @@ export async function closeTask(taskId: string): Promise<{
           },
         });
 
-        // Tính số dư sau khi giải phóng
-        const newEscrowBalance = subtractMoney(currentEscrow, remainingEscrow);
         const newAvailableBalance = addMoney(currentAvailable, remainingEscrow);
 
         // Ghi bút toán cho việc giải phóng tiền ký quỹ
@@ -932,6 +978,15 @@ export async function cancelTask(taskId: string, reason?: string): Promise<{
         };
       }
 
+      const blockers = await countTaskWorkBlockers(tx, taskId);
+
+      if (blockers.hasBlockingWork) {
+        return {
+          ok: false,
+          error: getBlockingWorkMessage("cancel", blockers),
+        };
+      }
+
       // Tính toán số tiền ký quỹ cần hoàn lại
       const escrowAmountMinor = toMinorUnits(task.escrowAmount.toString());
       const rewardAmountMinor = toMinorUnits(task.rewardAmount.toString());
@@ -952,12 +1007,10 @@ export async function cancelTask(taskId: string, reason?: string): Promise<{
         },
         select: {
           availableBalance: true,
-          escrowBalance: true,
         },
       });
 
       const currentAvailable = currentUser.availableBalance.toString();
-      const currentEscrow = currentUser.escrowBalance.toString();
       const refundEscrow = fromMinorUnits(refundEscrowMinor);
 
       // Cập nhật trạng thái việc
@@ -987,8 +1040,6 @@ export async function cancelTask(taskId: string, reason?: string): Promise<{
           },
         });
 
-        // Tính số dư sau khi hoàn tiền
-        const newEscrowBalance = subtractMoney(currentEscrow, refundEscrow);
         const newAvailableBalance = addMoney(currentAvailable, refundEscrow);
 
         // Ghi bút toán cho việc hoàn tiền ký quỹ

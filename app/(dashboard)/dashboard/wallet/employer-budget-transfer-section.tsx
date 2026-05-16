@@ -27,7 +27,7 @@ export function EmployerBudgetTransferSection({
 
   useEffect(() => {
     if (state.ok) {
-      setAmount("");
+      window.setTimeout(() => setAmount(""), 0);
       router.refresh();
     }
   }, [router, state.ok]);

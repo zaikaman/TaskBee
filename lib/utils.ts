@@ -5,7 +5,9 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatCurrency(amount: any): string {
+type CurrencyLike = string | number | null | undefined | { toNumber(): number };
+
+export function formatCurrency(amount: CurrencyLike): string {
   if (amount === null || amount === undefined) return "0";
   
   // Handle Decimal type from Prisma

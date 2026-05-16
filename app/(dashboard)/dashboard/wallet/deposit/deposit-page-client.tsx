@@ -353,7 +353,6 @@ function DepositIntentPanel({
       return;
     }
 
-    setRemainingTime(formatRemainingTime(intent.expiresAt));
     const timer = window.setInterval(() => {
       setRemainingTime(formatRemainingTime(intent.expiresAt));
     }, 1000);
@@ -464,22 +463,16 @@ export function DepositPageClient({
   const [state, formAction, isPending] = useActionState(createDepositAction, initialState);
   const [isRefreshing, startRefreshTransition] = useTransition();
   const router = useRouter();
-  const hasRefreshableIntent = currentIntent ? isDepositStatusRefreshable(currentIntent.status) : false;
-
-  useEffect(() => {
-    if (state.ok && state.depositIntent) {
-      setCurrentIntent(state.depositIntent);
-      setActiveMethod(state.depositIntent.provider === DepositProvider.USDT ? "USDT" : "SEPAY");
-    }
-  }, [state]);
+  const displayedIntent = state.ok && state.depositIntent ? state.depositIntent : currentIntent;
+  const hasRefreshableIntent = displayedIntent ? isDepositStatusRefreshable(displayedIntent.status) : false;
 
   const refreshCurrentIntent = useCallback(() => {
-    if (!currentIntent || !isDepositStatusRefreshable(currentIntent.status)) {
+    if (!displayedIntent || !isDepositStatusRefreshable(displayedIntent.status)) {
       return;
     }
 
     startRefreshTransition(async () => {
-      const refreshedIntent = await refreshDepositIntentAction(currentIntent.id);
+      const refreshedIntent = await refreshDepositIntentAction(displayedIntent.id);
 
       if (refreshedIntent) {
         setCurrentIntent(refreshedIntent);
@@ -489,10 +482,10 @@ export function DepositPageClient({
         }
       }
     });
-  }, [currentIntent, router]);
+  }, [displayedIntent, router]);
 
   useEffect(() => {
-    if (!hasRefreshableIntent || !currentIntent) {
+    if (!hasRefreshableIntent || !displayedIntent) {
       return;
     }
 
@@ -500,7 +493,7 @@ export function DepositPageClient({
     const timer = window.setInterval(refreshCurrentIntent, refreshIntervalSeconds * 1000);
 
     return () => window.clearInterval(timer);
-  }, [currentIntent, hasRefreshableIntent, refreshCurrentIntent, refreshIntervalSeconds]);
+  }, [displayedIntent, hasRefreshableIntent, refreshCurrentIntent, refreshIntervalSeconds]);
 
   return (
     <main className="mx-auto max-w-[1120px] pb-16 pt-6 text-[#001b49]">
@@ -563,7 +556,8 @@ export function DepositPageClient({
 
         <div className="grid gap-6">
           <DepositIntentPanel
-            intent={currentIntent}
+            key={`${displayedIntent?.id ?? "empty"}:${displayedIntent?.status ?? "none"}`}
+            intent={displayedIntent}
             isRefreshing={isRefreshing}
           />
           <RecentDeposits deposits={recentDepositIntents} />
