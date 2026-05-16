@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BadgeCheck, Landmark, UsersRound, WalletCards } from "lucide-react";
+import { BadgeCheck, Landmark, LogOut, UsersRound, WalletCards } from "lucide-react";
 import { requireRole } from "@/lib/auth/session";
 import { UserRole } from "@/lib/generated/prisma/client";
 import { logout } from "@/lib/services/auth";
@@ -62,16 +62,25 @@ export default async function AdminLayout({
         </div>
       </aside>
       <header className="border-b border-[#d3dae6] bg-white lg:hidden">
-        <div className="p-4">
-          <Link className="flex items-center gap-3" href="/admin/dashboard">
-            <span className="flex size-9 items-center justify-center rounded-full border-2 border-[#22ab59] text-[#22ab59]">
+        <div className="flex items-center justify-between gap-3 p-4">
+          <Link className="flex min-w-0 items-center gap-3" href="/admin/dashboard">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-full border-2 border-[#22ab59] text-[#22ab59]">
               <BadgeCheck className="size-5" aria-hidden="true" />
             </span>
-            <span>
-              <span className="block text-lg font-black text-[#00a650]">TaskBee</span>
+            <span className="min-w-0">
+              <span className="block truncate text-lg font-black text-[#00a650]">TaskBee</span>
               <span className="block text-xs font-bold uppercase text-[#686d77]">Admin</span>
             </span>
           </Link>
+          <form action={logout}>
+            <button
+              type="submit"
+              className="inline-flex items-center gap-1.5 rounded border border-[#f4b8bd] bg-white px-3 py-2 text-xs font-bold text-[#e63e46] hover:bg-[#fce3e5]"
+            >
+              <LogOut className="size-3.5" aria-hidden="true" />
+              Đăng xuất
+            </button>
+          </form>
         </div>
         <nav className="flex gap-2 overflow-x-auto px-4 pb-4 text-sm font-bold text-[#203259]">
           {adminLinks.map((link) => {
