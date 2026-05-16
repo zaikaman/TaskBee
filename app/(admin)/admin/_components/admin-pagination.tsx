@@ -53,7 +53,7 @@ export function AdminPagination({
         <span className="font-bold text-[#001b49]">{endItem}</span> trong{" "}
         <span className="font-bold text-[#001b49]">{totalCount}</span> mục
       </p>
-      <nav className="flex items-center gap-2" aria-label="Phân trang">
+      <nav className="flex flex-wrap items-center gap-2" aria-label="Phân trang">
         <Link
           aria-disabled={safePage === 1}
           className={

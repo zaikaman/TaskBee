@@ -102,13 +102,13 @@ export function CreateTaskStep2({ data, onNext, onBack }: CreateTaskStep2Props) 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold text-[#203259]">Cài đặt công việc</h2>
+        <h2 className="text-xl font-semibold text-[#203259] sm:text-2xl">Cài đặt công việc</h2>
         <p className="mt-2 text-sm text-[#7f8aa0]">
           Thiết lập phần thưởng, số lượng slot và yêu cầu bằng chứng
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {/* Reward Amount */}
         <label className="block">
           <span className="mb-2 block text-sm font-bold text-[#203259]">
@@ -163,7 +163,7 @@ export function CreateTaskStep2({ data, onNext, onBack }: CreateTaskStep2Props) 
         <span className="mb-2 block text-sm font-bold text-[#203259]">
           Tự động duyệt sau (ngày) <span className="text-[#e63e46]">*</span>
         </span>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4">
           {[1, 3, 5, 7].map((day) => (
             <label key={day} className="flex items-center gap-2 cursor-pointer">
               <input
@@ -230,7 +230,7 @@ export function CreateTaskStep2({ data, onNext, onBack }: CreateTaskStep2Props) 
           rows={5}
           value={formData.proofRequirements}
         />
-        <div className="mt-1 flex items-center justify-between">
+        <div className="mt-1 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
           {errors.proofRequirements ? (
             <span className="text-xs text-[#e63e46]">{errors.proofRequirements}</span>
           ) : (
@@ -243,16 +243,16 @@ export function CreateTaskStep2({ data, onNext, onBack }: CreateTaskStep2Props) 
       </label>
 
       {/* Actions */}
-      <div className="flex justify-between gap-4 pt-4">
+      <div className="flex flex-col-reverse justify-between gap-3 pt-4 sm:flex-row sm:gap-4">
         <button
-          className="h-[46px] px-8 border-2 border-[#22ab59] bg-white text-sm font-black uppercase text-[#22ab59] hover:bg-[#f0f9f4]"
+          className="h-[46px] w-full border-2 border-[#22ab59] bg-white px-8 text-sm font-black uppercase text-[#22ab59] hover:bg-[#f0f9f4] sm:w-auto"
           onClick={onBack}
           type="button"
         >
           Quay lại
         </button>
         <button
-          className="h-[46px] px-8 bg-[#22ab59] text-sm font-black uppercase text-white hover:bg-[#005924] disabled:opacity-60"
+          className="h-[46px] w-full bg-[#22ab59] px-8 text-sm font-black uppercase text-white hover:bg-[#005924] disabled:opacity-60 sm:w-auto"
           type="submit"
         >
           Tiếp theo

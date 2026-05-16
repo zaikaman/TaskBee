@@ -156,5 +156,41 @@
   }
   html {
     @apply font-sans;
+    overflow-x: hidden;
+    text-size-adjust: 100%;
+  }
+
+  img,
+  video,
+  canvas,
+  svg {
+    max-width: 100%;
+  }
+
+  main,
+  section,
+  article,
+  aside,
+  header,
+  footer,
+  nav,
+  div {
+    min-width: 0;
+  }
+
+  p,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  a,
+  span,
+  dd,
+  dt,
+  td,
+  th {
+    overflow-wrap: anywhere;
   }
 }

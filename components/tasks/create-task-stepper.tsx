@@ -14,16 +14,16 @@ const stepLabels = [
 export function CreateTaskStepper({ currentStep, totalSteps }: CreateTaskStepperProps) {
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between overflow-x-auto pb-2">
         {Array.from({ length: totalSteps }, (_, index) => {
           const stepNumber = index + 1;
           const isActive = stepNumber === currentStep;
           const isCompleted = stepNumber < currentStep;
 
           return (
-            <div key={stepNumber} className="flex flex-1 items-center">
+            <div key={stepNumber} className="flex min-w-[110px] flex-1 items-start">
               {/* Step Circle */}
-              <div className="flex flex-col items-center">
+              <div className="flex min-w-0 flex-col items-center text-center">
                 <div
                   className={`flex size-10 items-center justify-center rounded-full border-2 font-bold transition-colors ${
                     isCompleted
@@ -52,7 +52,7 @@ export function CreateTaskStepper({ currentStep, totalSteps }: CreateTaskStepper
                   )}
                 </div>
                 <span
-                  className={`mt-2 text-xs font-medium ${
+                  className={`mt-2 max-w-24 text-xs font-medium leading-snug ${
                     isActive || isCompleted ? "text-[#22ab59]" : "text-[#9ca3af]"
                   }`}
                 >
@@ -63,7 +63,7 @@ export function CreateTaskStepper({ currentStep, totalSteps }: CreateTaskStepper
               {/* Connector Line */}
               {stepNumber < totalSteps && (
                 <div
-                  className={`mx-2 h-0.5 flex-1 transition-colors ${
+                  className={`mx-2 mt-5 h-0.5 flex-1 transition-colors ${
                     isCompleted ? "bg-[#22ab59]" : "bg-[#d1d5db]"
                   }`}
                 />

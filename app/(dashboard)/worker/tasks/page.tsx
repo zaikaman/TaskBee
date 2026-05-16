@@ -65,9 +65,9 @@ const mockTasks = [
 
 export default function WorkerTasksPage() {
   return (
-    <div className="container max-w-6xl py-8">
+    <div className="mx-auto w-full max-w-6xl py-4 sm:py-8">
       {/* Security Banner */}
-      <div className="bg-[#fff3cf] border border-[#de9100] text-[#de9100] px-4 py-3 rounded-md mb-6 flex items-start text-sm">
+      <div className="mb-6 flex items-start rounded-md border border-[#de9100] bg-[#fff3cf] px-3 py-3 text-sm text-[#de9100] sm:px-4">
         <AlertCircle className="size-5 mr-3 shrink-0" />
         <div className="flex-1">
           <span className="font-medium">Cải thiện bảo mật tài khoản của bạn.</span> Thêm email khôi phục ngay để đảm bảo quyền truy cập liên tục. Bảo vệ tài khoản của bạn trong trường hợp mất email chính.{" "}
@@ -78,16 +78,16 @@ export default function WorkerTasksPage() {
         <button className="text-[#de9100] hover:text-[#b37500] ml-3 text-lg font-bold">×</button>
       </div>
 
-      <h1 className="text-2xl font-semibold text-[#203259] mb-6">Nhiệm vụ đã hoàn thành</h1>
+      <h1 className="mb-6 text-xl font-semibold text-[#203259] sm:text-2xl">Nhiệm vụ đã hoàn thành</h1>
 
       {/* Warning Banner */}
-      <div className="bg-[#fce3e5] border border-[#e63e46] text-[#e63e46] px-4 py-3 rounded-md mb-6 flex items-center text-sm font-medium">
+      <div className="mb-6 flex items-start rounded-md border border-[#e63e46] bg-[#fce3e5] px-3 py-3 text-sm font-medium text-[#e63e46] sm:items-center sm:px-4">
         <AlertCircle className="size-4 mr-2 shrink-0" />
         Nhiệm vụ cũ hơn 6 tháng không còn khả dụng.
       </div>
 
       {/* Search Input */}
-      <div className="flex justify-end mb-4">
+      <div className="mb-4 flex justify-end">
         <div className="w-full md:w-80">
           <Input 
             placeholder="Nhập và nhấn enter để tìm kiếm..." 
@@ -97,10 +97,10 @@ export default function WorkerTasksPage() {
       </div>
 
       {/* Filters & Count */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-4 text-sm font-medium text-[#203259]">
+      <div className="mb-4 flex flex-col items-stretch justify-between gap-4 text-sm font-medium text-[#203259] md:flex-row md:items-center">
         <div>{mockTasks.length} kết quả</div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center">
+        <div className="grid gap-3 sm:grid-cols-2 md:flex md:items-center md:gap-4">
+          <div className="flex items-center justify-between gap-2">
             <span className="mr-2">Lọc theo /</span>
             <Select defaultValue="all">
               <SelectTrigger className="w-[180px] h-8 border-none bg-transparent shadow-none px-2 font-bold p-0">
@@ -114,7 +114,7 @@ export default function WorkerTasksPage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="flex items-center">
+          <div className="flex items-center justify-between gap-2">
             <span className="mr-2">Sắp xếp theo /</span>
             <Select defaultValue="recent">
               <SelectTrigger className="w-[150px] h-8 border-none bg-transparent shadow-none px-2 font-bold p-0">
@@ -130,8 +130,8 @@ export default function WorkerTasksPage() {
       </div>
 
       {/* Table */}
-      <div className="border border-zinc-200 rounded-md overflow-hidden bg-white mb-6">
-        <Table>
+      <div className="mb-6 overflow-hidden rounded-md border border-zinc-200 bg-white">
+        <Table className="min-w-[680px]">
           <TableHeader className="bg-zinc-50">
             <TableRow className="hover:bg-zinc-50">
               <TableHead className="w-[80px] font-bold text-center text-[#203259]">Trạng thái</TableHead>

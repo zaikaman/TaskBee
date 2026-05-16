@@ -43,7 +43,7 @@ export function CreateTaskStep3({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold text-[#203259]">
+        <h2 className="text-xl font-semibold text-[#203259] sm:text-2xl">
           {isEdit ? "Xác nhận thao tác" : "Xác nhận và chọn hành động"}
         </h2>
         <p className="mt-2 text-sm text-[#7f8aa0]">
@@ -54,7 +54,7 @@ export function CreateTaskStep3({
       </div>
 
       {/* Summary Card */}
-      <div className="bg-[#edf4ff] p-6 space-y-4">
+      <div className="space-y-4 bg-[#edf4ff] p-4 sm:p-6">
         <h3 className="text-lg font-semibold text-[#203259]">Tóm tắt công việc</h3>
 
         <div className="space-y-3">
@@ -68,7 +68,7 @@ export function CreateTaskStep3({
             <p className="mt-1 text-sm text-[#203259]">{data.category || "Chưa chọn"}</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <span className="text-xs font-bold text-[#7f8aa0] uppercase">Phần thưởng/suất</span>
               <p className="mt-1 text-sm text-[#203259] font-medium">
@@ -95,18 +95,18 @@ export function CreateTaskStep3({
 
       {/* Cost Breakdown - Only show for new tasks */}
       {!isEdit && costs && (
-        <div className="bg-white border-2 border-[#22ab59] p-6 space-y-4">
+        <div className="space-y-4 border-2 border-[#22ab59] bg-white p-4 sm:p-6">
           <h3 className="text-lg font-semibold text-[#203259]">Chi phí khi đăng việc</h3>
 
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
               <span className="text-sm text-[#7f8aa0]">Tổng thưởng cho người làm</span>
               <span className="text-sm font-medium text-[#203259]">
                 {formatVnd(costs.escrowAmount)}
               </span>
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
               <span className="text-sm text-[#7f8aa0]">Phí nền tảng (10%)</span>
               <span className="text-sm font-medium text-[#203259]">
                 {formatVnd(costs.platformFee)}
@@ -115,7 +115,7 @@ export function CreateTaskStep3({
 
             <div className="h-px bg-[#d1d5db]" />
 
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
               <span className="text-base font-bold text-[#203259]">Tổng cộng</span>
               <span className="text-xl font-black text-[#22ab59]">
                 {formatVnd(costs.totalCharge)}
@@ -172,9 +172,9 @@ export function CreateTaskStep3({
         )}
 
         {/* Actions */}
-        <div className="flex justify-between gap-4 pt-4">
+        <div className="flex flex-col-reverse justify-between gap-3 pt-4 sm:flex-row sm:gap-4">
           <button
-            className="h-[46px] px-8 border-2 border-[#22ab59] bg-white text-sm font-black uppercase text-[#22ab59] hover:bg-[#f0f9f4] disabled:opacity-60"
+            className="h-[46px] w-full border-2 border-[#22ab59] bg-white px-8 text-sm font-black uppercase text-[#22ab59] hover:bg-[#f0f9f4] disabled:opacity-60 sm:w-auto"
             disabled={isPending}
             onClick={onBack}
             type="button"
@@ -183,7 +183,7 @@ export function CreateTaskStep3({
           </button>
           <div className="flex gap-3">
             <button
-              className="h-[46px] px-8 border-2 border-[#22ab59] bg-white text-sm font-black uppercase text-[#22ab59] hover:bg-[#f0f9f4] disabled:opacity-60"
+              className="h-[46px] w-full border-2 border-[#22ab59] bg-white px-8 text-sm font-black uppercase text-[#22ab59] hover:bg-[#f0f9f4] disabled:opacity-60 sm:w-auto"
               disabled={isPending}
               name="taskAction"
               type="submit"
@@ -192,7 +192,7 @@ export function CreateTaskStep3({
               {isPending ? "Đang lưu..." : "Lưu bản nháp"}
             </button>
             <button
-              className="h-[46px] px-8 bg-[#22ab59] text-sm font-black uppercase text-white hover:bg-[#005924] disabled:opacity-60"
+              className="h-[46px] w-full bg-[#22ab59] px-8 text-sm font-black uppercase text-white hover:bg-[#005924] disabled:opacity-60 sm:w-auto"
               disabled={isPending || !costs}
               name="taskAction"
               type="submit"

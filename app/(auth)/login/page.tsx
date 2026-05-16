@@ -41,12 +41,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
   return (
     <div className="min-h-screen bg-white text-[#1b1b1b]">
-      <header className="mx-auto flex h-[86px] max-w-[1090px] items-center justify-between px-6">
-        <Link href="/" className="flex items-center gap-2 text-[#22ab59]">
+      <header className="mx-auto flex min-h-[76px] max-w-[1090px] items-center justify-between gap-4 px-4 py-4 sm:min-h-[86px] sm:px-6">
+        <Link href="/" className="flex min-w-0 items-center gap-2 text-[#22ab59]">
           <span className="flex size-9 items-center justify-center rounded-full border-2 border-[#22ab59]">
             <Leaf className="size-5" aria-hidden="true" />
           </span>
-          <span className="text-xl font-bold text-[#22ab59]">TaskBee</span>
+          <span className="truncate text-xl font-bold text-[#22ab59]">TaskBee</span>
         </Link>
 
         <nav className="hidden items-center gap-14 text-sm font-bold text-[#203259] md:flex">
@@ -58,20 +58,20 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </Link>
         </nav>
 
-        <div className="flex items-center gap-7 text-sm font-medium">
+        <div className="flex shrink-0 items-center gap-3 text-sm font-medium sm:gap-7">
           <Link href="/login" className="text-[#22ab59] hover:text-[#005924]">
             Đăng nhập
           </Link>
           <Link
             href="/register"
-            className="rounded-[3px] bg-[#22ab59] px-6 py-3 font-bold text-white shadow-sm hover:bg-[#005924]"
+            className="rounded-[3px] bg-[#22ab59] px-4 py-3 font-bold text-white shadow-sm hover:bg-[#005924] sm:px-6"
           >
             Đăng ký
           </Link>
         </div>
       </header>
 
-      <main className="mx-auto flex max-w-[1090px] justify-center px-6 pb-24 pt-16">
+      <main className="mx-auto flex max-w-[1090px] justify-center px-4 pb-20 pt-10 sm:px-6 sm:pb-24 sm:pt-16">
         <section className="w-full max-w-[400px]">
           <LoginOtpForm redirectTo={redirectTo} />
         </section>

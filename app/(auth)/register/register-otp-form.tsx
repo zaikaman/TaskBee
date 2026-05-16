@@ -119,7 +119,7 @@ export function RegisterOtpForm() {
             <p className="max-w-[360px] text-base leading-6 text-black">
               Chọn loại hồ sơ mong muốn ngay bây giờ, bạn có thể chuyển đổi sau.
             </p>
-            <div className="mt-5 grid grid-cols-2 gap-8">
+            <div className="mt-5 grid gap-4 sm:grid-cols-2 sm:gap-8">
               <RoleOption
                 checked
                 description="Tôi muốn kiếm tiền"
@@ -137,7 +137,7 @@ export function RegisterOtpForm() {
 
           <div>
             <p className="mb-5 text-base text-black">Tên thật chỉ dùng để xác minh nội bộ.</p>
-            <div className="grid grid-cols-2 gap-x-5 gap-y-7">
+            <div className="grid gap-5 sm:grid-cols-2 sm:gap-x-5 sm:gap-y-7">
               <Field label="Tên" name="firstName" placeholder="Nhập nội dung" />
               <Field label="Họ" name="lastName" placeholder="Nhập nội dung" />
               <Field label="Biệt danh" name="nickname" placeholder="Nhập nội dung" />

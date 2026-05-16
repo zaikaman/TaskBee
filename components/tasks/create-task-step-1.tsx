@@ -82,7 +82,7 @@ export function CreateTaskStep1({ data, onNext }: CreateTaskStep1Props) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold text-[#203259]">Thông tin cơ bản</h2>
+        <h2 className="text-xl font-semibold text-[#203259] sm:text-2xl">Thông tin cơ bản</h2>
         <p className="mt-2 text-sm text-[#7f8aa0]">
           Cung cấp thông tin chi tiết về công việc bạn muốn đăng
         </p>
@@ -103,7 +103,7 @@ export function CreateTaskStep1({ data, onNext }: CreateTaskStep1Props) {
           type="text"
           value={formData.title}
         />
-        <div className="mt-1 flex items-center justify-between">
+        <div className="mt-1 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
           {errors.title ? (
             <span className="text-xs text-[#e63e46]">{errors.title}</span>
           ) : (
@@ -154,7 +154,7 @@ export function CreateTaskStep1({ data, onNext }: CreateTaskStep1Props) {
           rows={5}
           value={formData.description}
         />
-        <div className="mt-1 flex items-center justify-between">
+        <div className="mt-1 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
           {errors.description ? (
             <span className="text-xs text-[#e63e46]">{errors.description}</span>
           ) : (
@@ -181,7 +181,7 @@ export function CreateTaskStep1({ data, onNext }: CreateTaskStep1Props) {
           rows={7}
           value={formData.instructions}
         />
-        <div className="mt-1 flex items-center justify-between">
+        <div className="mt-1 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
           {errors.instructions ? (
             <span className="text-xs text-[#e63e46]">{errors.instructions}</span>
           ) : (
@@ -198,7 +198,7 @@ export function CreateTaskStep1({ data, onNext }: CreateTaskStep1Props) {
       {/* Actions */}
       <div className="flex justify-end gap-4 pt-4">
         <button
-          className="h-[46px] px-8 bg-[#22ab59] text-sm font-black uppercase text-white hover:bg-[#005924] disabled:opacity-60"
+          className="h-[46px] w-full bg-[#22ab59] px-8 text-sm font-black uppercase text-white hover:bg-[#005924] disabled:opacity-60 sm:w-auto"
           type="submit"
         >
           Tiếp theo

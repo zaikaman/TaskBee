@@ -94,8 +94,8 @@ export function MarketplacePageClient({
 
   return (
     <div className="space-y-6 bg-zinc-50">
-      <div className="flex flex-col items-center justify-between border-b border-zinc-200 bg-white p-4 text-sm md:flex-row">
-        <div className="mb-4 flex w-full items-center gap-6 md:mb-0 md:w-auto">
+      <div className="flex flex-col items-stretch justify-between gap-4 border-b border-zinc-200 bg-white p-3 text-sm sm:p-4 md:flex-row md:items-center">
+        <div className="flex w-full flex-wrap items-center justify-between gap-3 md:w-auto md:justify-start md:gap-6">
           <JobsDropdown />
           <span className="text-zinc-500 whitespace-nowrap">{totalCount} kết quả</span>
         </div>
@@ -110,12 +110,12 @@ export function MarketplacePageClient({
               search: String(formData.get("search") ?? ""),
             });
           }}
-          className="flex w-full items-center justify-between gap-4 md:w-auto md:justify-end"
+          className="flex w-full flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between md:w-auto md:justify-end md:gap-4"
         >
           <input type="hidden" name="page" value="1" />
           <input type="hidden" name="pageSize" value={String(pageSize)} />
 
-          <Button type="button" variant="outline" className="flex items-center gap-2 text-sm text-zinc-700 md:hidden">
+          <Button type="button" variant="outline" className="flex items-center gap-2 text-sm text-zinc-700 sm:w-auto md:hidden">
             <SlidersHorizontal className="size-4" />
             Lọc
           </Button>
@@ -124,7 +124,7 @@ export function MarketplacePageClient({
             defaultValue={filters.search ?? ""}
             name="search"
             placeholder="Tìm kiếm công việc..."
-            className="w-full rounded border-zinc-300 px-3 py-1.5 text-sm focus:border-sprout-green focus:ring-sprout-green md:w-64"
+            className="w-full rounded border-zinc-300 px-3 py-1.5 text-sm focus:border-sprout-green focus:ring-sprout-green sm:min-w-0 md:w-64"
           />
 
           <Button type="button" variant="outline" className="hidden items-center gap-2 text-sm text-zinc-700 md:flex">
@@ -149,19 +149,19 @@ export function MarketplacePageClient({
             return (
               <div
                 key={task.id}
-                className="group flex flex-col items-center justify-between gap-4 border-b border-zinc-200 border-l-4 border-l-transparent bg-white p-4 transition-all hover:border-l-sprout-green hover:shadow-md md:flex-row"
+                className="group flex flex-col items-stretch justify-between gap-4 border-b border-zinc-200 border-l-4 border-l-transparent bg-white p-3 transition-all hover:border-l-sprout-green hover:shadow-md sm:p-4 md:flex-row md:items-center"
               >
                 <div className="w-full flex-1">
-                  <h3 className="mb-2 flex cursor-pointer items-center gap-2 text-base font-medium text-sprout-dark group-hover:text-sprout-green">
-                    <Link href={`/marketplace/${task.id}`} className="hover:underline">
+                  <h3 className="mb-2 flex cursor-pointer flex-wrap items-center gap-2 text-base font-medium text-sprout-dark group-hover:text-sprout-green">
+                    <Link href={`/marketplace/${task.id}`} className="min-w-0 hover:underline">
                       {task.title}
                     </Link>
                     <span className="rounded bg-purple-500 px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">NỔI BẬT</span>
                   </h3>
                   <div className="flex items-center gap-4 text-xs text-zinc-500">{task.autoApproveDays} ngày xét duyệt</div>
                 </div>
-                <div className="flex w-full items-center justify-between text-sm md:w-auto md:gap-12">
-                  <div className="w-32">
+                <div className="flex w-full flex-col gap-4 text-sm sm:flex-row sm:items-center sm:justify-between md:w-auto md:gap-12">
+                  <div className="w-full sm:w-32">
                     <div className="mb-1 text-xs text-zinc-600">
                       {task.claimedSlots.toLocaleString("vi-VN")} trong {task.totalSlots.toLocaleString("vi-VN")}
                     </div>
@@ -173,8 +173,8 @@ export function MarketplacePageClient({
                       />
                     </div>
                   </div>
-                  <div className="min-w-[80px] text-right">
-                    <div className="mb-1 flex justify-end gap-2 text-zinc-400">
+                  <div className="min-w-0 text-left sm:min-w-[80px] sm:text-right">
+                    <div className="mb-1 flex justify-start gap-2 text-zinc-400 sm:justify-end">
                       <Button asChild variant="ghost" size="icon" className="size-6 text-zinc-400 hover:text-sprout-dark">
                         <Link href={`/marketplace/${task.id}`}>
                           <ExternalLink className="size-4" />

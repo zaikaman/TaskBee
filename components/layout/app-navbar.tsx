@@ -40,17 +40,17 @@ export async function AppNavbar() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-2 text-[#22ab59]">
+      <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-3 px-4 py-2 sm:px-6 lg:px-8">
+        <Link href="/" className="flex min-w-0 items-center gap-2 text-[#22ab59]">
           <span className="flex size-9 items-center justify-center rounded-full border-2 border-[#22ab59]">
             <Leaf className="size-5" aria-hidden="true" />
           </span>
-          <span className="text-xl font-bold">{APP_NAME}</span>
+          <span className="truncate text-xl font-bold">{APP_NAME}</span>
         </Link>
 
         <PrimaryNav currentRole={session?.profile?.role} />
 
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           {isAuthenticated && session?.profile?.role && (
             <div className="hidden lg:block">
               <RoleSwitcher currentRole={session.profile.role} />
@@ -103,9 +103,38 @@ export async function AppNavbar() {
         </div>
       </div>
 
+      <div className="border-b border-zinc-100 bg-white md:hidden">
+        <nav className="mx-auto flex max-w-7xl gap-2 overflow-x-auto px-4 py-2 text-sm font-semibold text-zinc-700">
+          <Link className="shrink-0 rounded border border-zinc-200 px-3 py-2 hover:border-emerald-300 hover:text-emerald-700" href="/marketplace">
+            Việc làm
+          </Link>
+          <Link className="shrink-0 rounded border border-zinc-200 px-3 py-2 hover:border-emerald-300 hover:text-emerald-700" href="/dashboard/wallet">
+            Ví tiền
+          </Link>
+          {isEmployer ? (
+            <Link className="shrink-0 rounded border border-emerald-200 bg-emerald-50 px-3 py-2 text-emerald-700" href="/dashboard/employer/tasks/create">
+              Đăng việc
+            </Link>
+          ) : (
+            <Link className="shrink-0 rounded border border-emerald-200 bg-emerald-50 px-3 py-2 text-emerald-700" href="/dashboard/worker/tasks">
+              Việc của tôi
+            </Link>
+          )}
+          {isAuthenticated ? (
+            <Link className="shrink-0 rounded border border-zinc-200 px-3 py-2 hover:border-emerald-300 hover:text-emerald-700" href="/profile">
+              Hồ sơ
+            </Link>
+          ) : (
+            <Link className="shrink-0 rounded border border-zinc-200 px-3 py-2 hover:border-emerald-300 hover:text-emerald-700" href="/login">
+              Đăng nhập
+            </Link>
+          )}
+        </nav>
+      </div>
+
       <div className="border-b border-amber-100 bg-amber-50">
-        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-2 text-sm sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3 text-amber-700">
+        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-2 text-xs sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:text-sm lg:px-8">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-amber-700">
             <Link href="/api" className="hover:text-amber-900">
               API
             </Link>
@@ -124,7 +153,7 @@ export async function AppNavbar() {
               </Link>
             )}
           </div>
-          <div className="flex items-center gap-4 font-medium text-zinc-700">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-medium text-zinc-700">
             {isEmployer ? (
               <span>
                 Số dư: <span className="text-emerald-700">{formatCurrency(session?.profile?.availableBalance)} VND</span>

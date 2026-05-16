@@ -90,12 +90,12 @@ export function CreateTaskForm({ onSuccess }: CreateTaskFormProps) {
   const totalSteps = 3;
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
+    <div className="mx-auto w-full max-w-4xl">
       {/* Stepper */}
       <CreateTaskStepper currentStep={currentStep} totalSteps={totalSteps} />
 
       {/* Step Content */}
-      <div className="mt-8">
+      <div className="mt-6 sm:mt-8">
         {currentStep === 1 && (
           <CreateTaskStep1
             data={activeFormData}

@@ -98,13 +98,13 @@ function buildMonthlyRewards(transactions: TransactionHistoryItem[]) {
 
 function WalletTabs({ tabs, activeTab }: { tabs: WalletTab[]; activeTab: string }) {
   return (
-    <nav className="flex gap-10 border-b border-[#d3dae6] text-sm font-bold uppercase text-[#001b49]">
+    <nav className="flex gap-6 overflow-x-auto border-b border-[#d3dae6] text-sm font-bold uppercase text-[#001b49] sm:gap-10">
       {tabs.map((tab) => (
         <Link
           className={
             activeTab === tab.key
-              ? "border-b-2 border-[#22ab59] pb-5 text-[#001b49]"
-              : "pb-5 text-[#001b49] hover:text-[#22ab59]"
+              ? "shrink-0 border-b-2 border-[#22ab59] pb-4 text-[#001b49] sm:pb-5"
+              : "shrink-0 pb-4 text-[#001b49] hover:text-[#22ab59] sm:pb-5"
           }
           href={tab.key === "deposit" ? "/dashboard/wallet/deposit" : `/dashboard/wallet?tab=${tab.key}`}
           key={tab.key}
@@ -118,15 +118,15 @@ function WalletTabs({ tabs, activeTab }: { tabs: WalletTab[]; activeTab: string 
 
 function SecurityNotice() {
   return (
-    <div className="flex items-start justify-between bg-[#fff3cf] px-4 py-3 text-sm font-medium text-[#996500]">
-      <div className="flex gap-3">
+    <div className="flex items-start justify-between gap-3 bg-[#fff3cf] px-3 py-3 text-sm font-medium text-[#996500] sm:px-4">
+      <div className="flex min-w-0 gap-3">
         <ShieldAlert className="mt-0.5 size-4 shrink-0 text-[#22ab59]" />
         <p>
           Hãy bảo vệ tài khoản của bạn. Thêm email khôi phục và kiểm tra bảo mật để không bị gián
           đoạn khi rút hoặc nạp tiền.
         </p>
       </div>
-      <span aria-hidden="true" className="font-bold">
+      <span aria-hidden="true" className="shrink-0 font-bold">
         ×
       </span>
     </div>
@@ -171,7 +171,7 @@ function EarningsCard({
   return (
     <section className="bg-[#f5f7fa] text-[#001b49] shadow-[0_2px_10px_rgba(0,0,0,0.08)]">
       <div className="grid gap-0 lg:grid-cols-[260px_1fr]">
-        <div className="border-b border-white/80 p-8 lg:border-b-0 lg:border-r">
+        <div className="border-b border-white/80 p-5 sm:p-8 lg:border-b-0 lg:border-r">
           <p className="text-xs font-bold uppercase text-[#686d77]">Tổng quan thu nhập</p>
           <h2 className="mt-3 text-xl font-semibold">{title}</h2>
           <dl className="mt-6">
@@ -184,16 +184,16 @@ function EarningsCard({
 
         <div className="grid gap-px bg-white/80 sm:grid-cols-2 lg:grid-cols-5">
           {months.map((month) => (
-            <div className="bg-[#f5f7fa] p-6" key={month.label}>
+            <div className="bg-[#f5f7fa] p-5 sm:p-6" key={month.label}>
               <p className="text-sm font-bold text-[#686d77]">{month.label}</p>
               <p className="mt-4 text-lg font-black text-[#00a650]">{month.amount}</p>
             </div>
           ))}
-          <div className="bg-[#f5f7fa] p-6">
+          <div className="bg-[#f5f7fa] p-5 sm:p-6">
             <p className="text-sm font-bold text-[#686d77]">Đã kiếm tháng này</p>
             <p className="mt-4 text-lg font-black text-[#00a650]">{currentEarned}</p>
           </div>
-          <div className="bg-[#f5f7fa] p-6">
+          <div className="bg-[#f5f7fa] p-5 sm:p-6">
             <p className="text-sm font-bold text-[#686d77]">Chờ duyệt</p>
             <p className="mt-4 text-lg font-black text-[#00a650]">{currentPending}</p>
           </div>
@@ -377,7 +377,7 @@ function TransactionsPanel({ transactions }: { transactions: TransactionHistoryI
     <section className="mt-8">
       <div className="mb-4 flex flex-col gap-3 text-sm text-[#001b49] sm:flex-row sm:items-center sm:justify-between">
         <p>{transactions.length} giao dịch</p>
-        <div className="flex gap-8 font-bold">
+        <div className="flex flex-wrap gap-x-8 gap-y-2 font-bold">
           <span>Kỳ / 2026</span>
           <span>Trạng thái / Tất cả</span>
         </div>
@@ -388,8 +388,8 @@ function TransactionsPanel({ transactions }: { transactions: TransactionHistoryI
           Bạn chưa có giao dịch nào.
         </div>
       ) : (
-        <div className="overflow-hidden bg-white shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
-          <table className="w-full text-left text-sm text-[#001b49]">
+        <div className="overflow-x-auto bg-white shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
+          <table className="w-full min-w-[680px] text-left text-sm text-[#001b49]">
             <thead className="bg-[#f5f7fa] font-bold">
               <tr>
                 <th className="px-4 py-3">Thời gian</th>
@@ -486,8 +486,8 @@ export default async function WalletPage({ searchParams }: WalletPageProps) {
     <div className="mx-auto max-w-[1050px] pb-1 pt-2 text-[#001b49]">
       <SecurityNotice />
 
-      <div className="mt-16">
-        <h1 className="mb-9 text-3xl font-semibold tracking-normal text-[#001b49]">Ví tiền</h1>
+      <div className="mt-8 sm:mt-16">
+        <h1 className="mb-6 text-2xl font-semibold tracking-normal text-[#001b49] sm:mb-9 sm:text-3xl">Ví tiền</h1>
         <BalanceStrip balance={balance} />
 
         {isEmployer ? (

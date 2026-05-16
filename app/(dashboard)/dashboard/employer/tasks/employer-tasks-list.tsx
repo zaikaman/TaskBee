@@ -165,7 +165,7 @@ export function EmployerTasksList({ tasks }: EmployerTasksListProps) {
       {/* Filters */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         {/* Search */}
-        <div className="flex-1 max-w-md">
+        <div className="w-full max-w-md flex-1">
           <input
             className="h-10 w-full rounded border border-[#d3dae6] bg-white px-4 text-sm text-[#1b1b1b] placeholder:text-[#a8b0bf] focus:border-[#22ab59] focus:outline-none focus:ring-1 focus:ring-[#22ab59]"
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -176,9 +176,9 @@ export function EmployerTasksList({ tasks }: EmployerTasksListProps) {
         </div>
 
         {/* Filters */}
-        <div className="flex items-center gap-3">
+        <div className="grid w-full gap-3 sm:w-auto sm:grid-cols-2">
           <select
-            className="h-10 rounded border border-[#d3dae6] bg-white px-3 text-sm text-[#1b1b1b] focus:border-[#22ab59] focus:outline-none focus:ring-1 focus:ring-[#22ab59]"
+            className="h-10 w-full rounded border border-[#d3dae6] bg-white px-3 text-sm text-[#1b1b1b] focus:border-[#22ab59] focus:outline-none focus:ring-1 focus:ring-[#22ab59]"
             onChange={(e) => setStatusFilter(e.target.value as TaskStatus | "ALL")}
             value={statusFilter}
           >
@@ -191,7 +191,7 @@ export function EmployerTasksList({ tasks }: EmployerTasksListProps) {
           </select>
 
           <select
-            className="h-10 rounded border border-[#d3dae6] bg-white px-3 text-sm text-[#1b1b1b] focus:border-[#22ab59] focus:outline-none focus:ring-1 focus:ring-[#22ab59]"
+            className="h-10 w-full rounded border border-[#d3dae6] bg-white px-3 text-sm text-[#1b1b1b] focus:border-[#22ab59] focus:outline-none focus:ring-1 focus:ring-[#22ab59]"
             onChange={(e) => setSortBy(e.target.value as "newest" | "oldest")}
             value={sortBy}
           >
@@ -266,8 +266,8 @@ export function EmployerTasksList({ tasks }: EmployerTasksListProps) {
           </Link>
         </div>
       ) : (
-        <div className="overflow-visible rounded border border-[#f0f2f5]">
-          <table className="w-full">
+        <div className="overflow-x-auto rounded border border-[#f0f2f5]">
+          <table className="w-full min-w-[780px]">
             <thead className="bg-[#f5f7fa] [&>tr>th:first-child]:rounded-tl [&>tr>th:last-child]:rounded-tr">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-[#686d77]">
