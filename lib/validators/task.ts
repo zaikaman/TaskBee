@@ -86,6 +86,13 @@ export const createTaskSchema = z.object({
     .max(TASK_LIMITS.autoApproveTimeoutDaysMax, `Thời gian tự động duyệt tối đa là ${TASK_LIMITS.autoApproveTimeoutDaysMax} ngày`)
     .default(3),
 
+  holdTimeMinutes: z
+    .number()
+    .int("Thời gian giữ slot phải là số nguyên")
+    .min(TASK_LIMITS.holdTimeMinutesMin, `Thời gian giữ slot tối thiểu là ${TASK_LIMITS.holdTimeMinutesMin} phút`)
+    .max(TASK_LIMITS.holdTimeMinutesMax, `Thời gian giữ slot tối đa là ${TASK_LIMITS.holdTimeMinutesMax} phút`)
+    .default(TASK_LIMITS.holdTimeMinutesDefault),
+
   expiresAt: z
     .date()
     .min(new Date(), "Ngày hết hạn phải là ngày trong tương lai")

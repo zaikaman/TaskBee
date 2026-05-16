@@ -48,6 +48,7 @@ export async function duplicateTask(taskId: string) {
         platformFeeAmount: originalTask.platformFeeAmount,
         escrowAmount: "0", // Bản nháp không có escrow
         autoApproveDays: originalTask.autoApproveDays,
+        holdTimeMinutes: originalTask.holdTimeMinutes,
         expiresAt: originalTask.expiresAt,
         employerId: session.profile.id,
         status: TaskStatus.DRAFT, // Luôn tạo bản sao ở trạng thái DRAFT

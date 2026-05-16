@@ -2,17 +2,22 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { PLATFORM_FEES, TEST_WHITELIST_EMAILS } from "@/config/app";
+import { PLATFORM_FEES, TASK_LIMITS, TEST_WHITELIST_EMAILS } from "@/config/app";
 import { requireRole } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/db/prisma";
 import {
   Prisma,
   SubmissionStatus,
+  TaskClaimStatus,
   TaskStatus,
   TaskType,
   TransactionType,
   UserRole,
 } from "@/lib/generated/prisma/client";
+import {
+  expireStaleTaskClaims,
+  getTaskClaimExpiresAt,
+} from "@/lib/services/task-claim-expiration";
 import {
   addMoney,
   calculateEmployerTaskCharge,
@@ -37,6 +42,7 @@ export type CreateTaskState = {
     rewardAmount: string;
     totalSlots: string;
     autoApproveDays: string;
+    holdTimeMinutes: string;
     expiresAt: string;
   }>;
 };
@@ -117,6 +123,10 @@ function mapCreateTaskFields(raw: Record<string, unknown>) {
       raw.autoApproveDays === undefined || raw.autoApproveDays === ""
         ? undefined
         : normalizeNumber(raw.autoApproveDays),
+    holdTimeMinutes:
+      raw.holdTimeMinutes === undefined || raw.holdTimeMinutes === ""
+        ? TASK_LIMITS.holdTimeMinutesDefault
+        : normalizeNumber(raw.holdTimeMinutes),
     expiresAt: normalizeOptionalDate(raw.expiresAt),
   };
 }
@@ -133,6 +143,8 @@ function snapshotFields(raw: Record<string, unknown>): CreateTaskState["fields"]
     totalSlots: typeof raw.totalSlots === "string" ? raw.totalSlots : undefined,
     autoApproveDays:
       typeof raw.autoApproveDays === "string" ? raw.autoApproveDays : undefined,
+    holdTimeMinutes:
+      typeof raw.holdTimeMinutes === "string" ? raw.holdTimeMinutes : undefined,
     expiresAt: typeof raw.expiresAt === "string" ? raw.expiresAt : undefined,
   };
 }
@@ -205,6 +217,7 @@ function buildDraftTaskCreateData(data: CreateTaskInput) {
     platformFeeAmount: "0",
     status: TaskStatus.DRAFT,
     autoApproveDays: data.autoApproveDays,
+    holdTimeMinutes: data.holdTimeMinutes,
     expiresAt: data.expiresAt ?? null,
     publishedAt: null,
   };
@@ -1084,6 +1097,7 @@ export async function updateTask(
         totalSlots: parsed.data.totalSlots,
         availableSlots: parsed.data.totalSlots,
         autoApproveDays: parsed.data.autoApproveDays,
+        holdTimeMinutes: parsed.data.holdTimeMinutes,
         expiresAt: parsed.data.expiresAt ?? null,
         updatedAt: new Date(),
       },
@@ -1143,6 +1157,9 @@ export async function claimTaskSlot(taskId: string): Promise<{
     }
 
     const prisma = getPrisma();
+    const now = new Date();
+
+    await expireStaleTaskClaims({ taskId, now });
 
     // Sử dụng transaction để đảm bảo atomicity
     return await prisma.$transaction(async (tx) => {
@@ -1157,6 +1174,7 @@ export async function claimTaskSlot(taskId: string): Promise<{
           status: true,
           availableSlots: true,
           expiresAt: true,
+          holdTimeMinutes: true,
           rewardAmount: true,
         },
       });
@@ -1195,6 +1213,7 @@ export async function claimTaskSlot(taskId: string): Promise<{
         select: {
           id: true,
           status: true,
+          expiresAt: true,
           submission: {
             select: {
               status: true,
@@ -1204,6 +1223,18 @@ export async function claimTaskSlot(taskId: string): Promise<{
       });
 
       if (existingClaim) {
+        if (
+          existingClaim.status === TaskClaimStatus.EXPIRED ||
+          (existingClaim.status === TaskClaimStatus.CLAIMED &&
+            existingClaim.expiresAt &&
+            existingClaim.expiresAt <= now)
+        ) {
+          return {
+            ok: false,
+            error: "Lượt giữ slot trước đó của bạn đã hết hạn. Vui lòng chọn việc khác.",
+          };
+        }
+
         return {
           ok: false,
           error: getDuplicateClaimMessage(
@@ -1259,7 +1290,8 @@ export async function claimTaskSlot(taskId: string): Promise<{
         data: {
           taskId: taskId,
           workerId: profile.id,
-          claimedAt: new Date(),
+          claimedAt: now,
+          expiresAt: getTaskClaimExpiresAt(task.holdTimeMinutes, now),
         },
         select: {
           id: true,
@@ -1269,7 +1301,7 @@ export async function claimTaskSlot(taskId: string): Promise<{
       return {
         ok: true,
         claimId: claim.id,
-        message: `Bạn đã nhận việc "${task.title}" thành công. Phần thưởng: ${formatVnd(task.rewardAmount.toString())}.`,
+        message: `Bạn đã nhận việc "${task.title}" thành công. Phần thưởng: ${formatVnd(task.rewardAmount.toString())}. Bạn có ${task.holdTimeMinutes} phút để gửi bằng chứng trước khi slot tự trả lại.`,
       };
     });
   } catch (error) {

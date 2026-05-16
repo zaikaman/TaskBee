@@ -2,6 +2,7 @@ import "server-only";
 
 import { Prisma, SubmissionStatus, TaskClaimStatus, TaskStatus } from "@/lib/generated/prisma/client";
 import { getPrisma } from "@/lib/db/prisma";
+import { expireStaleTaskClaims } from "@/lib/services/task-claim-expiration";
 import { serializeTaskForClient, type SerializableTask } from "@/lib/utils/task-serialization";
 import type { TaskFilterInput } from "@/lib/validators/task";
 
@@ -156,6 +157,7 @@ export async function loadMarketplaceTasks(
   filters: TaskFilterInput,
 ): Promise<MarketplaceTasksResult> {
   const prisma = getPrisma();
+  await expireStaleTaskClaims();
   const where = buildMarketplaceTaskWhere(filters);
 
   const [totalCount, categoryRows] = await Promise.all([
@@ -231,6 +233,7 @@ export async function loadMarketplaceTask(
   workerId?: string,
 ): Promise<MarketplaceTaskDetail | null> {
   const prisma = getPrisma();
+  await expireStaleTaskClaims({ taskId });
 
   const task = await prisma.task.findFirst({
     where: {

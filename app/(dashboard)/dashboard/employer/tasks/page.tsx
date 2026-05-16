@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireRole } from "@/lib/auth/session";
 import { UserRole } from "@/lib/generated/prisma/client";
 import { getPrisma } from "@/lib/db/prisma";
+import { expireStaleTaskClaims } from "@/lib/services/task-claim-expiration";
 import { EmployerTasksList } from "./employer-tasks-list";
 
 export const metadata = {
@@ -12,6 +13,8 @@ export const metadata = {
 export default async function EmployerTasksPage() {
   const session = await requireRole(UserRole.EMPLOYER);
   const prisma = getPrisma();
+
+  await expireStaleTaskClaims();
 
   // Fetch employer's tasks
   const rawTasks = await prisma.task.findMany({
@@ -35,6 +38,7 @@ export default async function EmployerTasksPage() {
       rewardAmount: true,
       escrowAmount: true,
       platformFeeAmount: true,
+      holdTimeMinutes: true,
       createdAt: true,
       publishedAt: true,
     },

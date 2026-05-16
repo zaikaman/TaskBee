@@ -32,6 +32,7 @@ export function EditTaskForm({ task, onSuccess, onCancel }: EditTaskFormProps) {
     rewardAmount: task.rewardAmount,
     totalSlots: String(task.totalSlots),
     autoApproveDays: String(task.autoApproveDays),
+    holdTimeMinutes: String(task.holdTimeMinutes),
     proofRequirements: task.proofRequirements || "",
     taskType: task.taskType,
     subcategory: task.subcategory || "",
@@ -51,6 +52,7 @@ export function EditTaskForm({ task, onSuccess, onCancel }: EditTaskFormProps) {
     rewardAmount: state.fields?.rewardAmount ?? formData.rewardAmount,
     totalSlots: state.fields?.totalSlots ?? formData.totalSlots,
     autoApproveDays: state.fields?.autoApproveDays ?? formData.autoApproveDays,
+    holdTimeMinutes: state.fields?.holdTimeMinutes ?? formData.holdTimeMinutes,
     proofRequirements: state.fields?.proofRequirements ?? formData.proofRequirements,
   };
 

@@ -16,6 +16,7 @@ type TaskDetailCardProps = {
     | "totalSlots"
     | "availableSlots"
     | "autoApproveDays"
+    | "holdTimeMinutes"
     | "status"
   >;
 };

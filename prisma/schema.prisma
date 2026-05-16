@@ -57,6 +57,7 @@ model Task {
   platformFeeAmount Decimal      @default(0) @db.Decimal(14, 2)
   status            TaskStatus   @default(DRAFT)
   autoApproveDays   Int          @default(3)
+  holdTimeMinutes   Int          @default(90)
   expiresAt         DateTime?
   publishedAt       DateTime?
   createdAt         DateTime     @default(now())

@@ -7,6 +7,7 @@ import { TaskDetailCard } from "@/components/tasks/task-detail-card";
 import { SubmissionReviewList } from "@/components/tasks/submission-review-list";
 import { TaskActionButtons } from "@/components/tasks/task-action-buttons";
 import { serializeTaskForClient } from "@/lib/utils/task-serialization";
+import { expireStaleTaskClaims } from "@/lib/services/task-claim-expiration";
 import { ArrowLeft } from "lucide-react";
 
 export const metadata = {
@@ -66,6 +67,8 @@ export default async function EmployerTaskDetailPage({ params }: PageProps) {
   }
 
   const { id } = await params;
+
+  await expireStaleTaskClaims({ taskId: id });
 
   const task = await getTaskWithSubmissions(id, profile.id);
 

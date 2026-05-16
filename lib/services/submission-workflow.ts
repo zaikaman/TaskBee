@@ -8,6 +8,7 @@ import {
   TaskStatus,
   TransactionType,
 } from "@/lib/generated/prisma/client";
+import { getTaskClaimExpiresAt } from "@/lib/services/task-claim-expiration";
 
 const submissionReviewInclude = {
   task: {
@@ -18,6 +19,7 @@ const submissionReviewInclude = {
       totalSlots: true,
       status: true,
       employerId: true,
+      holdTimeMinutes: true,
     },
   },
   worker: {
@@ -328,6 +330,7 @@ export async function rejectSubmissionTransaction(
     },
     data: {
       status: TaskClaimStatus.CLAIMED,
+      expiresAt: getTaskClaimExpiresAt(submission.task.holdTimeMinutes, now),
     },
   });
 

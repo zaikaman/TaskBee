@@ -10,6 +10,7 @@ import {
   rejectSubmissionTransaction,
   type SubmissionReviewContext,
 } from "@/lib/services/submission-workflow";
+import { expireStaleTaskClaims } from "@/lib/services/task-claim-expiration";
 import {
   Prisma,
   SubmissionStatus,
@@ -256,6 +257,12 @@ async function createSubmissionRecord(
   const prisma = getPrisma();
   const now = new Date();
 
+  await expireStaleTaskClaims({
+    taskId: input.taskId,
+    workerId,
+    now,
+  });
+
   return prisma.$transaction(async (tx) => {
     const claim = await tx.taskClaim.findFirst({
       where: {
@@ -299,6 +306,10 @@ async function createSubmissionRecord(
 
     if (claim.status !== TaskClaimStatus.CLAIMED) {
       throw new Error("Claim này không còn ở trạng thái hợp lệ để nộp bằng chứng.");
+    }
+
+    if (claim.expiresAt && claim.expiresAt <= now) {
+      throw new Error("Lượt giữ slot đã hết hạn. Slot đã được trả lại cho người khác.");
     }
 
     const claimUpdateResult = await tx.taskClaim.updateMany({

@@ -15,6 +15,7 @@ export function CreateTaskStep2({ data, onNext, onBack }: CreateTaskStep2Props) 
     rewardAmount: data.rewardAmount,
     totalSlots: data.totalSlots,
     autoApproveDays: data.autoApproveDays,
+    holdTimeMinutes: data.holdTimeMinutes,
     proofRequirements: data.proofRequirements,
   });
 
@@ -67,6 +68,17 @@ export function CreateTaskStep2({ data, onNext, onBack }: CreateTaskStep2Props) 
       newErrors.autoApproveDays = `Thời gian tự động duyệt tối thiểu là ${TASK_LIMITS.autoApproveTimeoutDaysMin} ngày`;
     } else if (days > TASK_LIMITS.autoApproveTimeoutDaysMax) {
       newErrors.autoApproveDays = `Thời gian tự động duyệt tối đa là ${TASK_LIMITS.autoApproveTimeoutDaysMax} ngày`;
+    }
+
+    const holdTimeMinutes = Number(formData.holdTimeMinutes);
+    if (!formData.holdTimeMinutes.trim()) {
+      newErrors.holdTimeMinutes = "Thời gian giữ slot không được để trống";
+    } else if (Number.isNaN(holdTimeMinutes) || !Number.isInteger(holdTimeMinutes)) {
+      newErrors.holdTimeMinutes = "Thời gian giữ slot phải là số nguyên";
+    } else if (holdTimeMinutes < TASK_LIMITS.holdTimeMinutesMin) {
+      newErrors.holdTimeMinutes = `Thời gian giữ slot tối thiểu là ${TASK_LIMITS.holdTimeMinutesMin} phút`;
+    } else if (holdTimeMinutes > TASK_LIMITS.holdTimeMinutesMax) {
+      newErrors.holdTimeMinutes = `Thời gian giữ slot tối đa là ${TASK_LIMITS.holdTimeMinutesMax} phút`;
     }
 
     // Proof requirements validation
@@ -171,6 +183,34 @@ export function CreateTaskStep2({ data, onNext, onBack }: CreateTaskStep2Props) 
         ) : (
           <span className="mt-1 block text-xs text-[#7f8aa0]">
             Submission sẽ tự động được duyệt nếu bạn không phản hồi trong thời gian này
+          </span>
+        )}
+      </label>
+
+      <label className="block">
+        <span className="mb-2 block text-sm font-bold text-[#203259]">
+          Thời gian giữ slot (phút) <span className="text-[#e63e46]">*</span>
+        </span>
+        <div className="flex flex-wrap items-center gap-4">
+          {[15, 30, 60, 90].map((minute) => (
+            <label key={minute} className="flex cursor-pointer items-center gap-2">
+              <input
+                checked={formData.holdTimeMinutes === String(minute)}
+                className="size-4 accent-[#22ab59]"
+                name="holdTimeMinutes"
+                onChange={(e) => handleChange("holdTimeMinutes", e.target.value)}
+                type="radio"
+                value={minute}
+              />
+              <span className="text-sm text-[#203259]">{minute} phút</span>
+            </label>
+          ))}
+        </div>
+        {errors.holdTimeMinutes ? (
+          <span className="mt-1 block text-xs text-[#e63e46]">{errors.holdTimeMinutes}</span>
+        ) : (
+          <span className="mt-1 block text-xs text-[#7f8aa0]">
+            Worker phải gửi bằng chứng trong thời gian này, nếu không slot sẽ tự trả lại cho người khác.
           </span>
         )}
       </label>

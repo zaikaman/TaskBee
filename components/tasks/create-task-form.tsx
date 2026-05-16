@@ -24,6 +24,7 @@ export type TaskFormData = {
   rewardAmount: string;
   totalSlots: string;
   autoApproveDays: string;
+  holdTimeMinutes: string;
   proofRequirements: string;
   
   // Hidden fields (MVP: hardcoded)
@@ -40,6 +41,7 @@ const initialFormData: TaskFormData = {
   rewardAmount: "",
   totalSlots: "",
   autoApproveDays: "3",
+  holdTimeMinutes: "90",
   proofRequirements: "",
   taskType: TaskType.EXPRESS,
   subcategory: "",
@@ -65,6 +67,7 @@ export function CreateTaskForm({ onSuccess }: CreateTaskFormProps) {
     rewardAmount: state.fields?.rewardAmount ?? formData.rewardAmount,
     totalSlots: state.fields?.totalSlots ?? formData.totalSlots,
     autoApproveDays: state.fields?.autoApproveDays ?? formData.autoApproveDays,
+    holdTimeMinutes: state.fields?.holdTimeMinutes ?? formData.holdTimeMinutes,
     proofRequirements: state.fields?.proofRequirements ?? formData.proofRequirements,
   };
 

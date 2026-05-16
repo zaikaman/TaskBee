@@ -85,6 +85,11 @@ export function CreateTaskStep3({
             <span className="text-xs font-bold text-[#7f8aa0] uppercase">Tự động duyệt</span>
             <p className="mt-1 text-sm text-[#203259]">Sau {data.autoApproveDays} ngày</p>
           </div>
+
+          <div>
+            <span className="text-xs font-bold text-[#7f8aa0] uppercase">Giữ slot</span>
+            <p className="mt-1 text-sm text-[#203259]">{data.holdTimeMinutes} phút</p>
+          </div>
         </div>
       </div>
 
@@ -161,6 +166,7 @@ export function CreateTaskStep3({
         <input name="rewardAmount" type="hidden" value={data.rewardAmount} />
         <input name="totalSlots" type="hidden" value={data.totalSlots} />
         <input name="autoApproveDays" type="hidden" value={data.autoApproveDays} />
+        <input name="holdTimeMinutes" type="hidden" value={data.holdTimeMinutes} />
         {data.proofRequirements && (
           <input name="proofRequirements" type="hidden" value={data.proofRequirements} />
         )}

@@ -26,6 +26,7 @@ export type SerializableTask = {
   platformFeeAmount: string;
   status: TaskStatus;
   autoApproveDays: number;
+  holdTimeMinutes: number;
   expiresAt: Date | null;
   publishedAt: Date | null;
   createdAt: Date;

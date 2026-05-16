@@ -5,6 +5,7 @@ import {
   approveSubmissionTransaction,
   loadExpiredPendingSubmissionContexts,
 } from "@/lib/services/submission-workflow";
+import { expireStaleTaskClaims } from "@/lib/services/task-claim-expiration";
 
 export const dynamic = "force-dynamic";
 
@@ -61,6 +62,7 @@ async function handleAutoApproveCron(request: NextRequest) {
 
   const prisma = getPrisma();
   const now = new Date();
+  const expiredClaims = await expireStaleTaskClaims({ now });
   const submissions = await loadExpiredPendingSubmissionContexts(now);
   const affectedTaskIds = new Set<string>();
   const failures: Array<{ submissionId: string; error: string }> = [];
@@ -104,9 +106,21 @@ async function handleAutoApproveCron(request: NextRequest) {
     }
   }
 
+  if (expiredClaims.expiredCount > 0) {
+    revalidatePath("/dashboard/employer/tasks");
+    revalidatePath("/dashboard/worker/tasks");
+    revalidatePath("/marketplace");
+
+    for (const taskId of expiredClaims.affectedTaskIds) {
+      revalidatePath(`/dashboard/employer/tasks/${taskId}`);
+      revalidatePath(`/marketplace/${taskId}`);
+    }
+  }
+
   const responseBody = {
     ok: failures.length === 0,
     totalFound: submissions.length,
+    expiredClaimCount: expiredClaims.expiredCount,
     approvedCount,
     skippedCount,
     failedCount: failures.length,

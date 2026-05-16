@@ -143,6 +143,9 @@ export const PAYMENT_CONFIG = {
 export const TASK_LIMITS = {
   autoApproveTimeoutDaysMin: 1,
   autoApproveTimeoutDaysMax: 7,
+  holdTimeMinutesDefault: 90,
+  holdTimeMinutesMin: 5,
+  holdTimeMinutesMax: 90,
   proofImageMaxCount: 5,
   proofImageMaxSizeMb: 5,
   titleMaxLength: 120,
