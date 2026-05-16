@@ -25,19 +25,25 @@ function StatTile({
   value: string;
 }) {
   const toneClass = {
-    neutral: "bg-white/10 text-slate-100 ring-white/10",
-    success: "bg-emerald-500/15 text-emerald-100 ring-emerald-400/25",
-    warning: "bg-amber-500/15 text-amber-100 ring-amber-400/25",
-    danger: "bg-rose-500/15 text-rose-100 ring-rose-400/25",
+    neutral: "bg-white text-[#001b49] ring-[#d3dae6]",
+    success: "bg-white text-[#001b49] ring-[#bfead0]",
+    warning: "bg-white text-[#001b49] ring-[#f4d58b]",
+    danger: "bg-white text-[#001b49] ring-[#f4b8bd]",
+  }[tone];
+  const iconClass = {
+    neutral: "bg-[#f5f7fa] text-[#203259]",
+    success: "bg-[#e7faef] text-[#00a650]",
+    warning: "bg-[#fff3cf] text-[#996500]",
+    danger: "bg-[#fce3e5] text-[#e63e46]",
   }[tone];
 
   return (
-    <Link className={`block rounded-lg p-5 ring-1 transition hover:bg-white/15 ${toneClass}`} href={href}>
+    <Link className={`block rounded-lg p-5 shadow-[0_2px_10px_rgba(0,0,0,0.06)] ring-1 transition hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] ${toneClass}`} href={href}>
       <div className="flex items-center justify-between gap-4">
-        <p className="text-sm font-medium text-slate-300">{label}</p>
-        <span className="flex size-9 items-center justify-center rounded bg-slate-950/40">{icon}</span>
+        <p className="text-sm font-bold text-[#4a5568]">{label}</p>
+        <span className={`flex size-9 items-center justify-center rounded ${iconClass}`}>{icon}</span>
       </div>
-      <p className="mt-5 text-3xl font-black tracking-normal">{value}</p>
+      <p className="mt-5 text-3xl font-black tracking-normal text-[#001b49]">{value}</p>
     </Link>
   );
 }
@@ -107,9 +113,9 @@ export default async function AdminDashboardPage() {
     <div className="space-y-8">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-bold uppercase text-emerald-300">Quản trị hệ thống</p>
-          <h1 className="mt-2 text-3xl font-black tracking-normal text-white">Bảng điều khiển</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
+          <p className="text-sm font-bold uppercase text-[#00a650]">Quản trị hệ thống</p>
+          <h1 className="mt-2 text-3xl font-black tracking-normal text-[#001b49]">Bảng điều khiển</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#4a5568]">
             Theo dõi rủi ro vận hành, xử lý tiền đang chờ và kiểm soát tài khoản có dấu hiệu bất thường.
           </p>
         </div>
@@ -159,7 +165,7 @@ export default async function AdminDashboardPage() {
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
-        <div className="rounded-lg bg-white p-5 text-[#001b49]">
+        <div className="rounded-lg bg-white p-5 text-[#001b49] shadow-[0_2px_10px_rgba(0,0,0,0.06)] ring-1 ring-[#f0f2f5]">
           <p className="text-sm font-bold uppercase text-[#686d77]">Tiền đang chờ rút</p>
           <p className="mt-4 text-3xl font-black text-[#00a650]">
             {formatVnd(pendingWithdrawalAmount._sum.amount?.toString() ?? "0")}
@@ -169,7 +175,7 @@ export default async function AdminDashboardPage() {
           </p>
         </div>
 
-        <div className="overflow-hidden rounded-lg bg-white text-[#001b49]">
+        <div className="overflow-hidden rounded-lg bg-white text-[#001b49] shadow-[0_2px_10px_rgba(0,0,0,0.06)] ring-1 ring-[#f0f2f5]">
           <div className="border-b border-[#f0f2f5] px-5 py-4">
             <h2 className="font-bold">Audit gần đây</h2>
           </div>

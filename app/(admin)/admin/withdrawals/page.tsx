@@ -84,9 +84,9 @@ export default async function AdminWithdrawalsPage({ searchParams }: WithdrawalP
     <div className="space-y-6">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-bold uppercase text-emerald-300">Dòng tiền</p>
-          <h1 className="mt-2 text-3xl font-black tracking-normal text-white">Yêu cầu rút tiền</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
+          <p className="text-sm font-bold uppercase text-[#00a650]">Dòng tiền</p>
+          <h1 className="mt-2 text-3xl font-black tracking-normal text-[#001b49]">Yêu cầu rút tiền</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#4a5568]">
             Kiểm tra số dư pending, thông tin ngân hàng và duyệt hoặc từ chối từng yêu cầu trong transaction an toàn.
           </p>
         </div>
@@ -96,7 +96,7 @@ export default async function AdminWithdrawalsPage({ searchParams }: WithdrawalP
               className={
                 item === status
                   ? "rounded bg-emerald-500 px-3 py-2 font-bold text-white"
-                  : "rounded bg-white/10 px-3 py-2 font-bold text-slate-200 hover:bg-white/15"
+                  : "rounded bg-white px-3 py-2 font-bold text-[#203259] ring-1 ring-[#d3dae6] hover:bg-[#e7faef] hover:text-[#005924]"
               }
               href={`/admin/withdrawals?status=${item}`}
               key={item}
@@ -107,7 +107,7 @@ export default async function AdminWithdrawalsPage({ searchParams }: WithdrawalP
         </nav>
       </header>
 
-      <section className="overflow-hidden rounded-lg bg-white text-[#001b49]">
+      <section className="overflow-hidden rounded-lg bg-white text-[#001b49] shadow-[0_2px_10px_rgba(0,0,0,0.06)] ring-1 ring-[#f0f2f5]">
         <div className="border-b border-[#f0f2f5] px-5 py-4">
           <h2 className="font-bold">{withdrawals.length} yêu cầu</h2>
         </div>

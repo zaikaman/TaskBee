@@ -108,14 +108,14 @@ export default async function AdminDepositsPage({ searchParams }: DepositsPagePr
     <div className="space-y-6">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-bold uppercase text-emerald-300">Đối soát</p>
-          <h1 className="mt-2 text-3xl font-black tracking-normal text-white">Ngoại lệ nạp tiền</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
+          <p className="text-sm font-bold uppercase text-[#00a650]">Đối soát</p>
+          <h1 className="mt-2 text-3xl font-black tracking-normal text-[#001b49]">Ngoại lệ nạp tiền</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#4a5568]">
             Rà soát các khoản nạp lỗi, thiếu, dư hoặc cần kiểm tra thủ công trước khi ghi có ví.
           </p>
         </div>
         <div className="flex flex-wrap gap-2 text-sm">
-          <a className="rounded bg-white/10 px-3 py-2 font-bold text-slate-200 hover:bg-white/15" href="/admin/deposits">
+          <a className="rounded bg-white px-3 py-2 font-bold text-[#203259] ring-1 ring-[#d3dae6] hover:bg-[#e7faef] hover:text-[#005924]" href="/admin/deposits">
             Cần rà soát
           </a>
           {Object.values(DepositProvider).map((item) => (
@@ -123,7 +123,7 @@ export default async function AdminDepositsPage({ searchParams }: DepositsPagePr
               className={
                 item === provider
                   ? "rounded bg-emerald-500 px-3 py-2 font-bold text-white"
-                  : "rounded bg-white/10 px-3 py-2 font-bold text-slate-200 hover:bg-white/15"
+                  : "rounded bg-white px-3 py-2 font-bold text-[#203259] ring-1 ring-[#d3dae6] hover:bg-[#e7faef] hover:text-[#005924]"
               }
               href={`/admin/deposits?provider=${item}`}
               key={item}
@@ -134,7 +134,7 @@ export default async function AdminDepositsPage({ searchParams }: DepositsPagePr
         </div>
       </header>
 
-      <section className="overflow-hidden rounded-lg bg-white text-[#001b49]">
+      <section className="overflow-hidden rounded-lg bg-white text-[#001b49] shadow-[0_2px_10px_rgba(0,0,0,0.06)] ring-1 ring-[#f0f2f5]">
         <div className="border-b border-[#f0f2f5] px-5 py-4">
           <h2 className="font-bold">{depositIntents.length} lệnh nạp tiền</h2>
         </div>

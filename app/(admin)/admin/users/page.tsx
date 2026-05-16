@@ -86,15 +86,15 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
     <div className="space-y-6">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-bold uppercase text-emerald-300">Anti-abuse</p>
-          <h1 className="mt-2 text-3xl font-black tracking-normal text-white">Người dùng</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
+          <p className="text-sm font-bold uppercase text-[#00a650]">Anti-abuse</p>
+          <h1 className="mt-2 text-3xl font-black tracking-normal text-[#001b49]">Người dùng</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#4a5568]">
             Tìm tài khoản, đổi vai trò, khóa tạm thời hoặc cấm tài khoản có dấu hiệu vi phạm.
           </p>
         </div>
       </header>
 
-      <form className="grid gap-3 rounded-lg bg-white p-4 text-[#001b49] lg:grid-cols-[1fr_180px_180px_120px]" method="get">
+      <form className="grid gap-3 rounded-lg bg-white p-4 text-[#001b49] shadow-[0_2px_10px_rgba(0,0,0,0.06)] ring-1 ring-[#f0f2f5] lg:grid-cols-[1fr_180px_180px_120px]" method="get">
         <input
           className="h-10 bg-[#f5f7fa] px-3 text-sm outline-none ring-1 ring-transparent focus:ring-[#22ab59]"
           defaultValue={query}
@@ -130,7 +130,7 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
         </button>
       </form>
 
-      <section className="overflow-hidden rounded-lg bg-white text-[#001b49]">
+      <section className="overflow-hidden rounded-lg bg-white text-[#001b49] shadow-[0_2px_10px_rgba(0,0,0,0.06)] ring-1 ring-[#f0f2f5]">
         <div className="border-b border-[#f0f2f5] px-5 py-4">
           <h2 className="font-bold">{users.length} tài khoản</h2>
         </div>
