@@ -7,15 +7,19 @@ import {
 } from "@/lib/generated/prisma/client";
 import { processDepositException } from "@/lib/services/admin";
 import { formatVnd } from "@/lib/utils/money";
+import { AdminPagination, normalizeAdminPage } from "../_components/admin-pagination";
 
 export const dynamic = "force-dynamic";
 
 type DepositsPageProps = {
   searchParams?: Promise<{
+    page?: string;
     status?: string;
     provider?: string;
   }>;
 };
+
+const pageSize = 10;
 
 const exceptionStatuses: DepositIntentStatus[] = [
   DepositIntentStatus.FAILED,
@@ -63,46 +67,53 @@ export default async function AdminDepositsPage({ searchParams }: DepositsPagePr
     : {};
   const status = normalizeStatus(params.status);
   const provider = normalizeProvider(params.provider);
+  const page = normalizeAdminPage(params.page);
+  const skip = (page - 1) * pageSize;
   const prisma = getPrisma();
-  const depositIntents = await prisma.depositIntent.findMany({
-    where: {
-      status: status ? status : { in: exceptionStatuses },
-      ...(provider ? { provider } : {}),
-    },
-    orderBy: { updatedAt: "desc" },
-    take: 100,
-    select: {
-      id: true,
-      userId: true,
-      amount: true,
-      currency: true,
-      status: true,
-      provider: true,
-      providerReference: true,
-      providerTransactionId: true,
-      providerEventId: true,
-      paymentCode: true,
-      paymentMethod: true,
-      network: true,
-      destinationAddress: true,
-      confirmationStatus: true,
-      confirmations: true,
-      requiredConfirmations: true,
-      rawProviderMetadata: true,
-      confirmedAmount: true,
-      confirmedAt: true,
-      expiresAt: true,
-      createdAt: true,
-      updatedAt: true,
-      user: {
-        select: {
-          email: true,
-          status: true,
-          availableBalance: true,
+  const where = {
+    status: status ? status : { in: exceptionStatuses },
+    ...(provider ? { provider } : {}),
+  };
+  const [depositIntents, totalCount] = await Promise.all([
+    prisma.depositIntent.findMany({
+      where,
+      orderBy: { updatedAt: "desc" },
+      skip,
+      take: pageSize,
+      select: {
+        id: true,
+        userId: true,
+        amount: true,
+        currency: true,
+        status: true,
+        provider: true,
+        providerReference: true,
+        providerTransactionId: true,
+        providerEventId: true,
+        paymentCode: true,
+        paymentMethod: true,
+        network: true,
+        destinationAddress: true,
+        confirmationStatus: true,
+        confirmations: true,
+        requiredConfirmations: true,
+        rawProviderMetadata: true,
+        confirmedAmount: true,
+        confirmedAt: true,
+        expiresAt: true,
+        createdAt: true,
+        updatedAt: true,
+        user: {
+          select: {
+            email: true,
+            status: true,
+            availableBalance: true,
+          },
         },
       },
-    },
-  });
+    }),
+    prisma.depositIntent.count({ where }),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -115,7 +126,7 @@ export default async function AdminDepositsPage({ searchParams }: DepositsPagePr
           </p>
         </div>
         <div className="flex flex-wrap gap-2 text-sm">
-          <a className="rounded bg-white px-3 py-2 font-bold text-[#203259] ring-1 ring-[#d3dae6] hover:bg-[#e7faef] hover:text-[#005924]" href="/admin/deposits">
+          <a className="rounded bg-white px-3 py-2 font-bold text-[#203259] ring-1 ring-[#d3dae6] hover:bg-[#e7faef] hover:text-[#005924]" href="/admin/deposits?page=1">
             Cần rà soát
           </a>
           {Object.values(DepositProvider).map((item) => (
@@ -125,7 +136,7 @@ export default async function AdminDepositsPage({ searchParams }: DepositsPagePr
                   ? "rounded bg-emerald-500 px-3 py-2 font-bold text-white"
                   : "rounded bg-white px-3 py-2 font-bold text-[#203259] ring-1 ring-[#d3dae6] hover:bg-[#e7faef] hover:text-[#005924]"
               }
-              href={`/admin/deposits?provider=${item}`}
+              href={`/admin/deposits?provider=${item}&page=1`}
               key={item}
             >
               {item}
@@ -136,7 +147,7 @@ export default async function AdminDepositsPage({ searchParams }: DepositsPagePr
 
       <section className="overflow-hidden rounded-lg bg-white text-[#001b49] shadow-[0_2px_10px_rgba(0,0,0,0.06)] ring-1 ring-[#f0f2f5]">
         <div className="border-b border-[#f0f2f5] px-5 py-4">
-          <h2 className="font-bold">{depositIntents.length} lệnh nạp tiền</h2>
+          <h2 className="font-bold">{totalCount} lệnh nạp tiền</h2>
         </div>
 
         {depositIntents.length === 0 ? (
@@ -261,6 +272,13 @@ export default async function AdminDepositsPage({ searchParams }: DepositsPagePr
             })}
           </div>
         )}
+        <AdminPagination
+          basePath="/admin/deposits"
+          page={page}
+          pageSize={pageSize}
+          params={{ provider, status }}
+          totalCount={totalCount}
+        />
       </section>
     </div>
   );

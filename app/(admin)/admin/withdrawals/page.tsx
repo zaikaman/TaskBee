@@ -3,14 +3,18 @@ import { processWithdrawal } from "@/lib/services/admin";
 import { getPrisma } from "@/lib/db/prisma";
 import { WithdrawalStatus } from "@/lib/generated/prisma/client";
 import { formatVnd } from "@/lib/utils/money";
+import { AdminPagination, normalizeAdminPage } from "../_components/admin-pagination";
 
 export const dynamic = "force-dynamic";
 
 type WithdrawalPageProps = {
   searchParams?: Promise<{
+    page?: string;
     status?: string;
   }>;
 };
+
+const pageSize = 10;
 
 function formatDate(value: Date) {
   return new Intl.DateTimeFormat("vi-VN", {
@@ -54,31 +58,38 @@ export default async function AdminWithdrawalsPage({ searchParams }: WithdrawalP
     ? await searchParams
     : {};
   const status = normalizeStatus(params.status);
+  const page = normalizeAdminPage(params.page);
+  const skip = (page - 1) * pageSize;
   const prisma = getPrisma();
-  const withdrawals = await prisma.withdrawal.findMany({
-    where: { status },
-    orderBy: { createdAt: "asc" },
-    take: 100,
-    select: {
-      id: true,
-      amount: true,
-      fee: true,
-      netAmount: true,
-      status: true,
-      bankDetails: true,
-      adminFeedback: true,
-      processedAt: true,
-      createdAt: true,
-      user: {
-        select: {
-          email: true,
-          status: true,
-          availableBalance: true,
-          pendingBalance: true,
+  const where = { status };
+  const [withdrawals, totalCount] = await Promise.all([
+    prisma.withdrawal.findMany({
+      where,
+      orderBy: { createdAt: "asc" },
+      skip,
+      take: pageSize,
+      select: {
+        id: true,
+        amount: true,
+        fee: true,
+        netAmount: true,
+        status: true,
+        bankDetails: true,
+        adminFeedback: true,
+        processedAt: true,
+        createdAt: true,
+        user: {
+          select: {
+            email: true,
+            status: true,
+            availableBalance: true,
+            pendingBalance: true,
+          },
         },
       },
-    },
-  });
+    }),
+    prisma.withdrawal.count({ where }),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -98,7 +109,7 @@ export default async function AdminWithdrawalsPage({ searchParams }: WithdrawalP
                   ? "rounded bg-emerald-500 px-3 py-2 font-bold text-white"
                   : "rounded bg-white px-3 py-2 font-bold text-[#203259] ring-1 ring-[#d3dae6] hover:bg-[#e7faef] hover:text-[#005924]"
               }
-              href={`/admin/withdrawals?status=${item}`}
+              href={`/admin/withdrawals?status=${item}&page=1`}
               key={item}
             >
               {item}
@@ -109,7 +120,7 @@ export default async function AdminWithdrawalsPage({ searchParams }: WithdrawalP
 
       <section className="overflow-hidden rounded-lg bg-white text-[#001b49] shadow-[0_2px_10px_rgba(0,0,0,0.06)] ring-1 ring-[#f0f2f5]">
         <div className="border-b border-[#f0f2f5] px-5 py-4">
-          <h2 className="font-bold">{withdrawals.length} yêu cầu</h2>
+          <h2 className="font-bold">{totalCount} yêu cầu</h2>
         </div>
 
         {withdrawals.length === 0 ? (
@@ -201,6 +212,13 @@ export default async function AdminWithdrawalsPage({ searchParams }: WithdrawalP
             })}
           </div>
         )}
+        <AdminPagination
+          basePath="/admin/withdrawals"
+          page={page}
+          pageSize={pageSize}
+          params={{ status }}
+          totalCount={totalCount}
+        />
       </section>
     </div>
   );
