@@ -95,7 +95,26 @@ export const PAYMENT_CONFIG = {
     webhook: {
       secretEnvVar: "USDT_WEBHOOK_SECRET",
       providerApiKeyEnvVar: "USDT_PROVIDER_API_KEY",
+      signatureHeader: "x-nowpayments-sig",
       replayToleranceSeconds: 300,
+      successResponse: { success: true },
+    },
+    nowPayments: {
+      apiBaseUrl: "https://api.nowpayments.io/v1",
+      providerName: "NOWPAYMENTS",
+      priceCurrency: "vnd",
+      fallbackPriceCurrency: "usd",
+      estimateEndpoint: "/estimate",
+      fallbackMarketPriceUrl:
+        "https://api.coingecko.com/api/v3/simple/price?ids=tether&vs_currencies=vnd,usd",
+      quoteToleranceBps: 25,
+      paymentStatus: {
+        pending: ["waiting", "sending", "partially_paid"],
+        confirming: ["confirming", "confirmed"],
+        paid: ["finished"],
+        failed: ["failed", "refunded"],
+        expired: ["expired"],
+      },
     },
     networks: [
       {

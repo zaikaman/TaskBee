@@ -10,6 +10,7 @@ import {
   buildSePayBankTransferInstructions,
   type SePayBankTransferInstructions,
 } from "@/lib/services/payments/sepay";
+import { createNowPaymentsUsdtExchangeRateSnapshot } from "@/lib/services/payments/nowpayments";
 import {
   DepositConfirmationStatus,
   DepositIntentStatus,
@@ -155,6 +156,7 @@ type DepositIntentRecord = {
   paymentMethod: DepositPaymentMethod;
   network: DepositNetwork | null;
   destinationAddress: string | null;
+  exchangeRateSnapshot: Prisma.JsonValue | null;
   confirmationStatus: DepositConfirmationStatus;
   confirmations: number;
   requiredConfirmations: number;
@@ -178,6 +180,7 @@ const depositIntentSelect = {
   paymentMethod: true,
   network: true,
   destinationAddress: true,
+  exchangeRateSnapshot: true,
   confirmationStatus: true,
   confirmations: true,
   requiredConfirmations: true,
@@ -533,6 +536,14 @@ export async function createDepositIntent(
     const network = normalizedInput.usdtNetwork as DepositNetwork | null;
     const destinationAddress =
       normalizedInput.provider === DepositProvider.USDT ? resolveUsdtDestinationAddress(network) : null;
+    const exchangeRateSnapshot =
+      normalizedInput.provider === DepositProvider.USDT && network
+        ? await createNowPaymentsUsdtExchangeRateSnapshot({
+            amountVnd: normalizedInput.amount,
+            network,
+            now,
+          })
+        : null;
 
     if (normalizedInput.provider === DepositProvider.SEPAY) {
       buildSePayBankTransferInstructions({
@@ -573,6 +584,9 @@ export async function createDepositIntent(
           paymentMethod: normalizedInput.paymentMethod as DepositPaymentMethod,
           network,
           destinationAddress,
+          ...(exchangeRateSnapshot
+            ? { exchangeRateSnapshot: exchangeRateSnapshot as Prisma.InputJsonValue }
+            : {}),
           confirmationStatus: DepositConfirmationStatus.UNCONFIRMED,
           requiredConfirmations: normalizedInput.requiredConfirmations,
           expiresAt: getDepositExpiresAt(now),
