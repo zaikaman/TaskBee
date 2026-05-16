@@ -90,8 +90,8 @@ Phase 1 (Setup)
 - [x] T065 [US3] Add Cron configuration and cron secret validation for auto-approve route
 
 ## Phase 6: User Story 4 - Wallet and Escrow Management
-*Goal: Track user balances and handle manual withdrawal requests.*
-*Test Criteria: Can view balances, deposit records, and request withdrawal to bank transfer.*
+*Goal: Theo dõi số dư, nạp tiền tự động qua SePay/USDT, giữ tiền trong escrow và xử lý yêu cầu rút tiền.*
+*Test Criteria: Người dùng xem được số dư, tạo lệnh nạp, hệ thống tự cộng tiền sau khi bên thanh toán xác nhận, xem lịch sử giao dịch và gửi yêu cầu rút tiền về ngân hàng.*
 
 - [x] T025 [P] [US4] Implement `wallet.ts` actions to fetch balances and calculate transaction history in `lib/services/wallet.ts`
 - [ ] T026 [US4] Implement `requestWithdrawal` Server Action including 10% fee calculation in `lib/services/wallet.ts`
@@ -99,10 +99,18 @@ Phase 1 (Setup)
 - [ ] T028 [US4] Create the Transaction History Table UI component in `components/wallet/transaction-history.tsx`
 - [ ] T066 [US4] Create bank detail Zod validators and reusable bank transfer form components in `lib/validators/wallet.ts` and `components/wallet/`
 - [ ] T067 [US4] Enforce minimum withdrawal threshold and insufficient-balance errors in `requestWithdrawal`
-- [ ] T068 [US4] Implement manual Employer deposit request action in `lib/services/wallet.ts`
-- [ ] T069 [US4] Create Employer deposit request UI and instructions in `app/(dashboard)/wallet/deposit/page.tsx`
-- [ ] T070 [US4] Record immutable ledger entries for deposits, escrow locks, escrow releases, rewards, withdrawals, and fees
+- [ ] T068 [US4] Extend wallet data model for production deposit intents, provider references, idempotency keys, payment method, network, exchange rate snapshot, confirmation status, expiry, and raw provider metadata in `prisma/schema.prisma`
+- [ ] T069 [US4] Add payment configuration for SePay bank transfer and USDT deposit networks, minimum/maximum deposit limits, confirmation thresholds, webhook secrets, and supported currency metadata in `config/app.ts` and `.env.example`
+- [ ] T070 [US4] Create deposit validators for amount, provider, currency, USDT network, and destination wallet constraints in `lib/validators/wallet.ts`
 - [ ] T071 [P] [US4] Create ledger reconciliation utility to verify wallet totals and transaction consistency in `lib/services/ledger.ts`
+- [ ] T089 [US4] Implement provider-neutral deposit intent service with stable payment codes, pending/expired/cancelled/confirmed states, and no user-controlled balance crediting in `lib/services/wallet.ts`
+- [ ] T090 [US4] Implement SePay deposit flow: create bank transfer instructions, bind unique transfer content/payment code, verify signed webhook payloads, and confirm deposits automatically in `app/api/payments/sepay/webhook/route.ts`
+- [ ] T091 [US4] Implement USDT deposit flow: generate or assign deposit address, store expected network/amount, verify on-chain confirmations through a production provider webhook or reconciliation adapter, and confirm deposits automatically in `app/api/payments/crypto/usdt/webhook/route.ts`
+- [ ] T092 [US4] Add idempotent deposit confirmation logic that locks wallet rows, rejects duplicate provider transaction IDs, handles overpay/underpay policy, credits available balance exactly once, and records immutable ledger entries in one database transaction
+- [ ] T093 [US4] Create Employer deposit UI with tabs for SePay bank transfer and USDT, Vietnamese payment instructions, QR/payment code display, expiry countdown, and real-time status refresh in `app/(dashboard)/wallet/deposit/page.tsx`
+- [ ] T094 [US4] Add deposit status components for pending, confirming, paid, expired, failed, underpaid, overpaid, and manual-review-required states in `components/wallet/`
+- [ ] T095 [US4] Implement scheduled reconciliation job for SePay and USDT deposits to recover missed webhooks without resetting or manually editing balances in `app/api/cron/reconcile-deposits/route.ts`
+- [ ] T096 [US4] Record immutable ledger entries for confirmed deposits, escrow locks, escrow releases, rewards, withdrawals, provider fees, task fees, withdrawal fees, and adjustment entries
 
 ## Phase 7: User Story 5 - System Moderation and Anti-Abuse
 *Goal: Admins manage users, manual transactions, and limit abuse.*
@@ -112,8 +120,8 @@ Phase 1 (Setup)
 - [ ] T030 [US5] Create the unified Admin Dashboard in `app/(admin)/dashboard/page.tsx`
 - [ ] T031 [US5] Create interface for Admins to view pending withdrawals in `app/(admin)/withdrawals/page.tsx`
 - [ ] T032 [US5] Add rate-limiting utility wrapper for critical Server Actions in `lib/utils/rate-limit.ts`
-- [ ] T072 [US5] Implement Admin manual deposit approval/rejection flow in `lib/services/admin.ts`
-- [ ] T073 [US5] Create Admin deposit review UI in `app/(admin)/deposits/page.tsx`
+- [ ] T072 [US5] Implement Admin exception review flow for failed, underpaid, overpaid, duplicated, or suspicious SePay/USDT deposits in `lib/services/admin.ts`
+- [ ] T073 [US5] Create Admin deposit exception review UI with provider evidence, raw payload metadata, and audit-safe adjustment actions in `app/(admin)/deposits/page.tsx`
 - [ ] T074 [US5] Implement Admin user search, role/status management, suspension, and ban actions in `lib/services/admin.ts`
 - [ ] T075 [US5] Cancel pending withdrawals and freeze funds automatically when Admin suspends a user
 - [ ] T076 [US5] Create Admin user management UI in `app/(admin)/users/page.tsx`
