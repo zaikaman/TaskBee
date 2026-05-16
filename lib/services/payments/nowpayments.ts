@@ -88,6 +88,16 @@ export type NowPaymentsWebhookProcessResult = {
   message: string;
 };
 
+export type NowPaymentsReconciliationResult =
+  | {
+      ok: true;
+      status: "SKIPPED";
+      depositIntentId?: string;
+      paymentCode: string;
+      message: string;
+    }
+  | NowPaymentsWebhookProcessResult;
+
 type NormalizedNowPaymentsPayload = {
   providerTransactionId: string;
   providerReference: string | null;
@@ -399,6 +409,12 @@ function buildNowPaymentsUrl(path: string, searchParams: URLSearchParams) {
   return url;
 }
 
+function buildNowPaymentsPaymentStatusUrl(paymentId: string) {
+  return new URL(
+    `${PAYMENT_CONFIG.usdt.nowPayments.apiBaseUrl.replace(/\/$/, "")}/payment/${encodeURIComponent(paymentId)}`,
+  );
+}
+
 function parseNowPaymentsEstimatePayload(payload: unknown) {
   if (!payload || typeof payload !== "object") {
     throw new Error("NOWPayments trả về dữ liệu estimate không hợp lệ.");
@@ -562,6 +578,43 @@ export async function createNowPaymentsUsdtExchangeRateSnapshot(params: {
     ).toISOString(),
     rawEstimate: estimate.rawPayload,
   };
+}
+
+export async function reconcileNowPaymentsUsdtPayment(params: {
+  paymentId: string | null;
+  paymentCode: string;
+}): Promise<NowPaymentsReconciliationResult> {
+  const paymentId = normalizeText(params.paymentId);
+
+  if (!paymentId) {
+    return {
+      ok: true,
+      status: "SKIPPED",
+      paymentCode: params.paymentCode,
+      message:
+        "Lệnh nạp USDT chưa có payment_id NOWPayments nên cron chưa thể truy vấn trạng thái provider.",
+    };
+  }
+
+  const response = await fetch(buildNowPaymentsPaymentStatusUrl(paymentId), {
+    method: "GET",
+    headers: {
+      "x-api-key": readNowPaymentsApiKey(),
+      Accept: "application/json",
+    },
+    cache: "no-store",
+  });
+  const responsePayload = (await response.json().catch(() => null)) as NowPaymentsIpnPayload | null;
+
+  if (!response.ok || !responsePayload || typeof responsePayload !== "object") {
+    throw new Error(`NOWPayments trả về lỗi ${response.status} khi đối soát payment_id ${paymentId}.`);
+  }
+
+  return processNowPaymentsUsdtWebhookPayload({
+    ...responsePayload,
+    payment_id: responsePayload.payment_id ?? paymentId,
+    order_id: responsePayload.order_id ?? params.paymentCode,
+  });
 }
 
 function parseExchangeRateSnapshot(

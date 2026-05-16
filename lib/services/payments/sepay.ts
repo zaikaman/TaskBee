@@ -1,14 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { PAYMENT_CONFIG } from "@/config/app";
 import { getPrisma } from "@/lib/db/prisma";
-import {
-  DepositConfirmationStatus,
-  DepositIntentStatus,
-  DepositProvider,
-  Prisma,
-  TransactionType,
-  UserStatus,
-} from "@/lib/generated/prisma/client";
+import { DepositProvider, Prisma } from "@/lib/generated/prisma/client";
 import { settleConfirmedDepositIntent } from "@/lib/services/payments/deposit-confirmation";
 import { formatVnd, fromMinorUnits, toMinorUnits } from "@/lib/utils/money";
 
@@ -64,6 +57,18 @@ type NormalizedSePayWebhookPayload = {
   rawPayload: SePayWebhookPayload;
 };
 
+type SePayApiTransactionRecord = Record<string, unknown>;
+
+export type SePayReconciliationResult =
+  | {
+      ok: true;
+      status: "SKIPPED";
+      depositIntentId?: string;
+      paymentCode: string;
+      message: string;
+    }
+  | SePayWebhookProcessResult;
+
 function normalizeText(value: unknown) {
   if (typeof value === "string") {
     return value.trim();
@@ -74,6 +79,17 @@ function normalizeText(value: unknown) {
   }
 
   return "";
+}
+
+function normalizeDateForSePay(value: Date) {
+  const year = value.getFullYear();
+  const month = `${value.getMonth() + 1}`.padStart(2, "0");
+  const day = `${value.getDate()}`.padStart(2, "0");
+  const hour = `${value.getHours()}`.padStart(2, "0");
+  const minute = `${value.getMinutes()}`.padStart(2, "0");
+  const second = `${value.getSeconds()}`.padStart(2, "0");
+
+  return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
 }
 
 function readRequiredPaymentEnv(name: string) {
@@ -165,6 +181,18 @@ function normalizeTransferAmount(value: unknown) {
   };
 }
 
+function normalizeOptionalPositiveAmount(value: unknown) {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+
+  try {
+    return normalizeTransferAmount(value);
+  } catch {
+    return null;
+  }
+}
+
 function normalizeSePayPayload(payload: SePayWebhookPayload): NormalizedSePayWebhookPayload {
   const providerTransactionId = normalizeText(payload.id);
 
@@ -232,6 +260,213 @@ function createWebhookMetadata(payload: NormalizedSePayWebhookPayload) {
     },
     rawPayload: payload.rawPayload,
   } satisfies Prisma.InputJsonValue;
+}
+
+function readSePayApiToken() {
+  const apiToken = process.env.SEPAY_API_TOKEN?.trim();
+
+  if (!apiToken) {
+    throw new Error("SEPAY_API_TOKEN chưa được cấu hình để đối soát giao dịch SePay.");
+  }
+
+  return apiToken;
+}
+
+function readSePayTransactionsApiUrl() {
+  return process.env.SEPAY_TRANSACTIONS_API_URL?.trim() || "https://userapi.sepay.vn/v2/transactions";
+}
+
+function extractSePayTransactionRows(payload: unknown): SePayApiTransactionRecord[] {
+  if (Array.isArray(payload)) {
+    return payload.filter((item): item is SePayApiTransactionRecord =>
+      Boolean(item && typeof item === "object"),
+    );
+  }
+
+  if (!payload || typeof payload !== "object") {
+    return [];
+  }
+
+  const record = payload as Record<string, unknown>;
+  const candidates = [record.data, record.transactions, record.items, record.records];
+
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) {
+      return candidate.filter((item): item is SePayApiTransactionRecord =>
+        Boolean(item && typeof item === "object"),
+      );
+    }
+
+    if (candidate && typeof candidate === "object") {
+      const nested = candidate as Record<string, unknown>;
+
+      for (const nestedCandidate of [nested.data, nested.transactions, nested.items, nested.records]) {
+        if (Array.isArray(nestedCandidate)) {
+          return nestedCandidate.filter((item): item is SePayApiTransactionRecord =>
+            Boolean(item && typeof item === "object"),
+          );
+        }
+      }
+    }
+  }
+
+  return [];
+}
+
+function getRecordValue(record: SePayApiTransactionRecord, keys: string[]) {
+  for (const key of keys) {
+    if (record[key] !== undefined && record[key] !== null && record[key] !== "") {
+      return record[key];
+    }
+  }
+
+  return null;
+}
+
+function normalizeSePayApiTransaction(record: SePayApiTransactionRecord): SePayWebhookPayload | null {
+  const id = getRecordValue(record, [
+    "id",
+    "transaction_id",
+    "transactionId",
+    "reference_id",
+    "referenceId",
+  ]);
+  const content = getRecordValue(record, [
+    "transaction_content",
+    "transactionContent",
+    "content",
+    "description",
+  ]);
+  const amount =
+    normalizeOptionalPositiveAmount(
+      getRecordValue(record, [
+        "amount_in",
+        "amountIn",
+        "transfer_amount",
+        "transferAmount",
+        "credit_amount",
+        "creditAmount",
+        "amount",
+      ]),
+    ) ??
+    normalizeOptionalPositiveAmount(
+      getRecordValue(record, ["money_in", "moneyIn", "in_amount", "inAmount"]),
+    );
+
+  if (!id || !amount) {
+    return null;
+  }
+
+  return {
+    id: normalizeText(id),
+    gateway: normalizeText(getRecordValue(record, ["gateway", "bank_brand_name", "bankBrandName"])) || null,
+    transactionDate:
+      normalizeText(getRecordValue(record, ["transaction_date", "transactionDate", "created_at", "createdAt"])) ||
+      null,
+    accountNumber:
+      normalizeText(getRecordValue(record, ["account_number", "accountNumber", "bank_account_number"])) || null,
+    code: normalizePaymentCode(getRecordValue(record, ["code", "payment_code", "paymentCode"])),
+    content: normalizeText(content) || null,
+    transferType: normalizeText(getRecordValue(record, ["transfer_type", "transferType"])) || "in",
+    description: normalizeText(getRecordValue(record, ["description", "transaction_content", "content"])) || null,
+    transferAmount: amount.amount,
+    accumulated: getRecordValue(record, ["accumulated", "balance"]) as string | number | null,
+    referenceCode:
+      normalizeText(getRecordValue(record, ["reference_code", "referenceCode", "reference", "bank_reference"])) ||
+      null,
+  };
+}
+
+function isMatchingReconciliationTransaction(params: {
+  payload: SePayWebhookPayload;
+  paymentCode: string;
+  expectedAmount: string;
+}) {
+  const normalizedPayload = normalizeSePayPayload(params.payload);
+
+  return (
+    normalizedPayload.paymentCode === params.paymentCode &&
+    isIncomingTransfer(normalizedPayload.transferType) &&
+    isExpectedAccount(normalizedPayload.accountNumber) &&
+    normalizedPayload.amountMinor === toMinorUnits(params.expectedAmount)
+  );
+}
+
+async function fetchSePayTransactionsForReconciliation(params: {
+  paymentCode: string;
+  createdAt: Date;
+}) {
+  const url = new URL(readSePayTransactionsApiUrl());
+  const accountNumber = process.env.SEPAY_BANK_ACCOUNT_NUMBER?.trim();
+  const fromDate = new Date(params.createdAt.getTime() - 10 * 60 * 1000);
+
+  url.searchParams.set("limit", "100");
+  url.searchParams.set("per_page", "100");
+  url.searchParams.set("transaction_content", params.paymentCode);
+  url.searchParams.set("content", params.paymentCode);
+  url.searchParams.set("transaction_date_min", normalizeDateForSePay(fromDate));
+
+  if (accountNumber) {
+    url.searchParams.set("account_number", accountNumber);
+  }
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${readSePayApiToken()}`,
+      Accept: "application/json",
+    },
+    cache: "no-store",
+  });
+  const responsePayload = (await response.json().catch(() => null)) as unknown;
+
+  if (!response.ok) {
+    throw new Error(`SePay trả về lỗi ${response.status} khi đối soát giao dịch.`);
+  }
+
+  return extractSePayTransactionRows(responsePayload)
+    .map(normalizeSePayApiTransaction)
+    .filter((payload): payload is SePayWebhookPayload => payload !== null);
+}
+
+export async function reconcileSePayDepositIntent(params: {
+  paymentCode: string;
+  expectedAmount: string;
+  createdAt: Date;
+}): Promise<SePayReconciliationResult> {
+  const paymentCode = normalizePaymentCode(params.paymentCode);
+
+  if (!paymentCode) {
+    return {
+      ok: true,
+      status: "SKIPPED",
+      paymentCode: params.paymentCode,
+      message: "Mã thanh toán SePay không hợp lệ nên không thể đối soát tự động.",
+    };
+  }
+
+  const transactions = await fetchSePayTransactionsForReconciliation({
+    paymentCode,
+    createdAt: params.createdAt,
+  });
+  const matchedTransaction = transactions.find((transaction) =>
+    isMatchingReconciliationTransaction({
+      payload: transaction,
+      paymentCode,
+      expectedAmount: params.expectedAmount,
+    }),
+  );
+
+  if (!matchedTransaction) {
+    return {
+      ok: true,
+      status: "SKIPPED",
+      paymentCode,
+      message: "Chưa tìm thấy giao dịch SePay khớp mã thanh toán và số tiền.",
+    };
+  }
+
+  return processSePayWebhookPayload(matchedTransaction);
 }
 
 function createIgnoredResult(
@@ -308,182 +543,4 @@ export async function processSePayWebhookPayload(
     ok: true as const,
     ...settledResult,
   };
-
-  const prisma = getPrisma();
-  const result = await prisma.$transaction(async (tx) => {
-    await tx.$queryRaw(
-      Prisma.sql`SELECT id FROM "DepositIntent" WHERE "paymentCode" = ${paymentCode} FOR UPDATE`,
-    );
-
-    const depositIntent = await tx.depositIntent.findUnique({
-      where: {
-        paymentCode,
-      },
-      select: {
-        id: true,
-        userId: true,
-        amount: true,
-        status: true,
-        provider: true,
-        providerTransactionId: true,
-        paymentCode: true,
-        rawProviderMetadata: true,
-        user: {
-          select: {
-            availableBalance: true,
-            status: true,
-          },
-        },
-      },
-    });
-
-    if (!depositIntent || depositIntent.provider !== DepositProvider.SEPAY) {
-      return createIgnoredResult("Không tìm thấy lệnh nạp SePay khớp mã thanh toán.", payload);
-    }
-
-    if (depositIntent.providerTransactionId) {
-      return {
-        ok: true as const,
-        status: "DUPLICATED" as const,
-        depositIntentId: depositIntent.id,
-        paymentCode: depositIntent.paymentCode,
-        message: "Lệnh nạp đã có giao dịch provider, không cộng ví lần hai.",
-      };
-    }
-
-    if (depositIntent.status === DepositIntentStatus.PAID) {
-      return {
-        ok: true as const,
-        status: "DUPLICATED" as const,
-        depositIntentId: depositIntent.id,
-        paymentCode: depositIntent.paymentCode,
-        message: "Lệnh nạp đã được xác nhận trước đó.",
-      };
-    }
-
-    if (depositIntent.user.status !== UserStatus.ACTIVE) {
-      await tx.depositIntent.update({
-        where: {
-          id: depositIntent.id,
-        },
-        data: {
-          status: DepositIntentStatus.MANUAL_REVIEW_REQUIRED,
-          confirmationStatus: DepositConfirmationStatus.REJECTED,
-          providerTransactionId: payload.providerTransactionId,
-          providerReference: payload.providerReference,
-          providerEventId: payload.providerTransactionId,
-          rawProviderMetadata: createWebhookMetadata(payload),
-        },
-      });
-
-      return {
-        ok: true as const,
-        status: "MANUAL_REVIEW_REQUIRED" as const,
-        depositIntentId: depositIntent.id,
-        paymentCode: depositIntent.paymentCode,
-        message: "Tài khoản nhận tiền không ở trạng thái hoạt động, cần admin kiểm tra.",
-      };
-    }
-
-    const expectedAmountMinor = toMinorUnits(depositIntent.amount.toString());
-
-    if (payload.amountMinor !== expectedAmountMinor) {
-      const status =
-        payload.amountMinor < expectedAmountMinor
-          ? DepositIntentStatus.UNDERPAID
-          : DepositIntentStatus.OVERPAID;
-
-      await tx.depositIntent.update({
-        where: {
-          id: depositIntent.id,
-        },
-        data: {
-          status,
-          confirmationStatus: DepositConfirmationStatus.REJECTED,
-          confirmations: 1,
-          providerTransactionId: payload.providerTransactionId,
-          providerReference: payload.providerReference,
-          providerEventId: payload.providerTransactionId,
-          confirmedAmount: payload.amount,
-          rawProviderMetadata: createWebhookMetadata(payload),
-        },
-      });
-
-      return {
-        ok: true as const,
-        status:
-          status === DepositIntentStatus.UNDERPAID
-            ? ("UNDERPAID" as const)
-            : ("OVERPAID" as const),
-        depositIntentId: depositIntent.id,
-        paymentCode: depositIntent.paymentCode,
-        message: "Số tiền SePay không khớp lệnh nạp, không tự động cộng ví.",
-      };
-    }
-
-    const updatedUser = await tx.user.update({
-      where: {
-        id: depositIntent.userId,
-      },
-      data: {
-        availableBalance: {
-          increment: payload.amount,
-        },
-      },
-      select: {
-        availableBalance: true,
-      },
-    });
-
-    await tx.depositIntent.update({
-      where: {
-        id: depositIntent.id,
-      },
-      data: {
-        status: DepositIntentStatus.PAID,
-        confirmationStatus: DepositConfirmationStatus.CONFIRMED,
-        confirmations: 1,
-        providerTransactionId: payload.providerTransactionId,
-        providerReference: payload.providerReference,
-        providerEventId: payload.providerTransactionId,
-        confirmedAmount: payload.amount,
-        confirmedAt: new Date(),
-        rawProviderMetadata: createWebhookMetadata(payload),
-      },
-    });
-
-    await tx.transaction.create({
-      data: {
-        userId: depositIntent.userId,
-        type: TransactionType.DEPOSIT,
-        amount: payload.amount,
-        balanceAfter: updatedUser.availableBalance.toString(),
-        referenceId: depositIntent.id,
-        description: `Nạp tiền SePay ${formatVnd(payload.amount)} với mã thanh toán ${depositIntent.paymentCode}.`,
-        metadata: {
-          depositIntentId: depositIntent.id,
-          paymentCode: depositIntent.paymentCode,
-          provider: "SEPAY",
-          providerTransactionId: payload.providerTransactionId,
-          providerReference: payload.providerReference,
-          rawPayload: payload.rawPayload,
-        } as Prisma.InputJsonValue,
-      },
-    });
-
-    return {
-      ok: true as const,
-      status: "PROCESSED" as const,
-      depositIntentId: depositIntent.id,
-      paymentCode: depositIntent.paymentCode,
-      message: "Đã xác nhận giao dịch SePay và cộng số dư ví.",
-    };
-  });
-
-  if (result.status === "PROCESSED") {
-    revalidatePath("/dashboard/wallet");
-    revalidatePath("/dashboard/wallet/deposit");
-  }
-
-  return result;
 }
