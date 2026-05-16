@@ -92,6 +92,14 @@ function normalizeDateForSePay(value: Date) {
   return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
 }
 
+function normalizeDateToEndOfDayForSePay(value: Date) {
+  const endOfDay = new Date(value);
+
+  endOfDay.setHours(23, 59, 59, 999);
+
+  return normalizeDateForSePay(endOfDay);
+}
+
 function readRequiredPaymentEnv(name: string) {
   const value = process.env[name]?.trim();
 
@@ -395,20 +403,22 @@ function isMatchingReconciliationTransaction(params: {
 async function fetchSePayTransactionsForReconciliation(params: {
   paymentCode: string;
   createdAt: Date;
+  expectedAmount: string;
 }) {
   const url = new URL(readSePayTransactionsApiUrl());
-  const accountNumber = process.env.SEPAY_BANK_ACCOUNT_NUMBER?.trim();
   const fromDate = new Date(params.createdAt.getTime() - 10 * 60 * 1000);
+  const toDate = new Date();
 
-  url.searchParams.set("limit", "100");
-  url.searchParams.set("per_page", "100");
+  url.searchParams.set("q", params.paymentCode);
   url.searchParams.set("transaction_content", params.paymentCode);
-  url.searchParams.set("content", params.paymentCode);
-  url.searchParams.set("transaction_date_min", normalizeDateForSePay(fromDate));
-
-  if (accountNumber) {
-    url.searchParams.set("account_number", accountNumber);
-  }
+  url.searchParams.set("transaction_date_from", normalizeDateForSePay(fromDate));
+  url.searchParams.set("transaction_date_to", normalizeDateToEndOfDayForSePay(toDate));
+  url.searchParams.set("amount_in_min", params.expectedAmount);
+  url.searchParams.set("amount_in_max", params.expectedAmount);
+  url.searchParams.set("transfer_type", "in");
+  url.searchParams.set("page", "1");
+  url.searchParams.set("per_page", "100");
+  url.searchParams.set("timestamp_format", "iso8601");
 
   const response = await fetch(url, {
     method: "GET",
@@ -448,6 +458,7 @@ export async function reconcileSePayDepositIntent(params: {
   const transactions = await fetchSePayTransactionsForReconciliation({
     paymentCode,
     createdAt: params.createdAt,
+    expectedAmount: params.expectedAmount,
   });
   const matchedTransaction = transactions.find((transaction) =>
     isMatchingReconciliationTransaction({

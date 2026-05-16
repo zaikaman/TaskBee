@@ -100,7 +100,7 @@ function CopyButton({ value, label }: { value: string; label: string }) {
   }
 
   return (
-    <Button className="h-8 rounded-none" onClick={copyValue} size="sm" type="button" variant="outline">
+    <Button className="h-8 rounded-none text-foreground" onClick={copyValue} size="sm" type="button" variant="outline">
       <Copy className="size-3.5" aria-hidden="true" />
       {copied ? "Đã sao chép" : label}
     </Button>

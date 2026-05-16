@@ -17,3 +17,5 @@
  GET /login?redirectTo=%2Fadmin%2Fdashboard 200 in 91ms (next.js: 4ms, application-code: 87ms)
  GET /login?redirectTo=%2Fadmin%2Fdashboard 200 in 91ms (next.js: 40ms, application-code: 50ms)
  GET /login?redirectTo=%2Fdashboard%2Fwallet 200 in 113ms (next.js: 3ms, application-code: 110ms)
+ GET /login?redirectTo=%2Fadmin%2Fdashboard 200 in 131ms (next.js: 53ms, application-code: 78ms)
+ GET /login?redirectTo=%2Fdashboard%2Fwallet 200 in 25ms (next.js: 3ms, application-code: 22ms)

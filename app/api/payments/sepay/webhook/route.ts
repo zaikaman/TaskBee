@@ -24,10 +24,14 @@ function readWebhookSecret() {
   const secret = process.env.SEPAY_WEBHOOK_SECRET?.trim();
 
   if (!secret) {
-    throw new Error("SEPAY_WEBHOOK_SECRET chưa được cấu hình.");
+    return null;
   }
 
   return secret;
+}
+
+function readWebhookApiKey() {
+  return process.env.SEPAY_WEBHOOK_API_KEY?.trim() ?? null;
 }
 
 function normalizeSignature(signature: string | null) {
@@ -82,6 +86,33 @@ function parseJsonPayload(rawBody: string): SePayWebhookPayload {
   return payload;
 }
 
+function verifyApiKey(authorizationHeader: string | null, expectedApiKey: string | null) {
+  if (!expectedApiKey || !authorizationHeader) {
+    return false;
+  }
+
+  const providedApiKey = authorizationHeader.replace(/^apikey\s+/i, "").trim();
+
+  return providedApiKey === expectedApiKey;
+}
+
+function verifyWebhookAuthentication(request: Request, rawBody: string) {
+  const timestampHeader = request.headers.get(PAYMENT_CONFIG.sepay.webhook.timestampHeader);
+  const signatureHeader = request.headers.get(PAYMENT_CONFIG.sepay.webhook.signatureHeader);
+  const webhookSecret = readWebhookSecret();
+
+  if (timestampHeader || signatureHeader) {
+    return Boolean(
+      webhookSecret &&
+        timestampHeader &&
+        verifyTimestamp(timestampHeader) &&
+        verifySignature(rawBody, timestampHeader, signatureHeader, webhookSecret),
+    );
+  }
+
+  return verifyApiKey(request.headers.get("authorization"), readWebhookApiKey());
+}
+
 export async function POST(request: Request) {
   let rawBody = "";
 
@@ -89,6 +120,10 @@ export async function POST(request: Request) {
     const contentType = request.headers.get("content-type") ?? "";
 
     if (!contentType.toLowerCase().includes(JSON_CONTENT_TYPE)) {
+      console.warn("Webhook SePay bị từ chối vì content-type không hợp lệ.", {
+        contentType,
+      });
+
       return jsonResponse(
         {
           success: false,
@@ -101,27 +136,18 @@ export async function POST(request: Request) {
     }
 
     rawBody = await request.text();
-    const webhookSecret = readWebhookSecret();
-    const timestampHeader = request.headers.get(PAYMENT_CONFIG.sepay.webhook.timestampHeader);
-    const signatureHeader = request.headers.get(PAYMENT_CONFIG.sepay.webhook.signatureHeader);
 
-    if (!verifyTimestamp(timestampHeader)) {
+    if (!verifyWebhookAuthentication(request, rawBody)) {
+      console.warn("Webhook SePay bị từ chối vì xác thực không hợp lệ.", {
+        hasSignature: Boolean(request.headers.get(PAYMENT_CONFIG.sepay.webhook.signatureHeader)),
+        hasTimestamp: Boolean(request.headers.get(PAYMENT_CONFIG.sepay.webhook.timestampHeader)),
+        hasAuthorization: Boolean(request.headers.get("authorization")),
+      });
+
       return jsonResponse(
         {
           success: false,
-          error: "Timestamp webhook SePay không hợp lệ hoặc đã quá hạn.",
-        },
-        {
-          status: 401,
-        },
-      );
-    }
-
-    if (!timestampHeader || !verifySignature(rawBody, timestampHeader, signatureHeader, webhookSecret)) {
-      return jsonResponse(
-        {
-          success: false,
-          error: "Chữ ký webhook SePay không hợp lệ.",
+          error: "Xác thực webhook SePay không hợp lệ.",
         },
         {
           status: 401,
