@@ -33,6 +33,7 @@ import {
 import { enforceRateLimit, getRateLimitErrorMessage } from "@/lib/utils/rate-limit";
 import { notifyUser } from "@/lib/services/notifications";
 import { captureTaskFlowEvent } from "@/lib/services/analytics";
+import { getWithdrawalIntervalRequirementMessage } from "@/lib/services/worker-task-interval";
 import {
   bankDetailsSchema,
   depositRequestSchema,
@@ -53,6 +54,9 @@ export type WalletBalance = {
   pendingBalance: string;
   escrowBalance: string;
   totalBalance: string;
+  submitTaskIntervalSeconds: number;
+  lastTaskCompletedAt: Date | null;
+  canWithdrawByTaskInterval: boolean;
 };
 
 /**
@@ -152,6 +156,7 @@ export type WithdrawalRequestErrorCode =
   | "MINIMUM_WITHDRAWAL_NOT_MET"
   | "INSUFFICIENT_AVAILABLE_BALANCE"
   | "ACCOUNT_NOT_ACTIVE"
+  | "TASK_INTERVAL_REQUIRED"
   | "PROFILE_REQUIRED";
 
 type NormalizedWithdrawalInput = {
@@ -775,6 +780,7 @@ export async function transferWorkerFundsToEmployer(
         },
         select: {
           availableBalance: true,
+          submitTaskIntervalSeconds: true,
           status: true,
         },
       });
@@ -1143,6 +1149,8 @@ export async function getWalletBalance(): Promise<WalletBalance | null> {
         availableBalance: true,
         pendingBalance: true,
         escrowBalance: true,
+        submitTaskIntervalSeconds: true,
+        lastTaskCompletedAt: true,
       },
     });
 
@@ -1171,6 +1179,9 @@ export async function getWalletBalance(): Promise<WalletBalance | null> {
       pendingBalance,
       escrowBalance,
       totalBalance: fromMinorUnits(totalBalanceMinor),
+      submitTaskIntervalSeconds: user.submitTaskIntervalSeconds,
+      lastTaskCompletedAt: user.lastTaskCompletedAt,
+      canWithdrawByTaskInterval: user.submitTaskIntervalSeconds <= 0,
     };
   } catch (error) {
     console.error("Lỗi khi lấy thông tin số dư ví:", error);
@@ -1344,6 +1355,7 @@ export async function requestWithdrawal(
         },
         select: {
           availableBalance: true,
+          submitTaskIntervalSeconds: true,
           status: true,
         },
       });
@@ -1352,6 +1364,13 @@ export async function requestWithdrawal(
         throw new WithdrawalRequestError(
           "Tài khoản không ở trạng thái hoạt động nên không thể rút tiền.",
           "ACCOUNT_NOT_ACTIVE",
+        );
+      }
+
+      if (currentUser.submitTaskIntervalSeconds > 0) {
+        throw new WithdrawalRequestError(
+          getWithdrawalIntervalRequirementMessage(currentUser.submitTaskIntervalSeconds),
+          "TASK_INTERVAL_REQUIRED",
         );
       }
 

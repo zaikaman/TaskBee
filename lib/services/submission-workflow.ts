@@ -9,6 +9,11 @@ import {
   TransactionType,
 } from "@/lib/generated/prisma/client";
 import { getTaskClaimExpiresAt } from "@/lib/services/task-claim-expiration";
+import {
+  applyWorkerTaskIntervalAdjustment,
+  WORKER_TASK_INTERVAL_NOT_SATISFIED_DELTA_SECONDS,
+  WORKER_TASK_INTERVAL_SATISFIED_DELTA_SECONDS,
+} from "@/lib/services/worker-task-interval";
 
 const submissionReviewInclude = {
   task: {
@@ -201,6 +206,13 @@ export async function approveSubmissionTransaction(
       availableBalance: true,
     },
   });
+  const interval = await applyWorkerTaskIntervalAdjustment(
+    tx,
+    submission.workerId,
+    WORKER_TASK_INTERVAL_SATISFIED_DELTA_SECONDS,
+    "SATISFIED_TASK",
+    now,
+  );
 
   await tx.transaction.create({
     data: {
@@ -214,6 +226,7 @@ export async function approveSubmissionTransaction(
         taskId: submission.taskId,
         submissionId: submission.id,
         rewardAmount,
+        submitTaskIntervalSeconds: interval.submitTaskIntervalSeconds,
       },
     },
   });
@@ -291,6 +304,14 @@ export async function rejectSubmissionTransaction(
   }
 
   if (previousRejections >= 1) {
+    await applyWorkerTaskIntervalAdjustment(
+      tx,
+      submission.workerId,
+      WORKER_TASK_INTERVAL_NOT_SATISFIED_DELTA_SECONDS,
+      "NOT_SATISFIED_TASK",
+      now,
+    );
+
     await tx.taskClaim.update({
       where: {
         id: submission.claimId,
@@ -323,6 +344,14 @@ export async function rejectSubmissionTransaction(
       message: `Submission đã bị từ chối lần thứ 2. Worker này đã bị hủy job và slot đã được trả lại.`,
     };
   }
+
+  await applyWorkerTaskIntervalAdjustment(
+    tx,
+    submission.workerId,
+    WORKER_TASK_INTERVAL_NOT_SATISFIED_DELTA_SECONDS,
+    "NOT_SATISFIED_TASK",
+    now,
+  );
 
   await tx.taskClaim.update({
     where: {

@@ -210,6 +210,9 @@ function WorkerEarningsOverview({
   months: MonthlyReward[];
   balance: Awaited<ReturnType<typeof getWalletBalance>>;
 }) {
+  const intervalSeconds = balance?.submitTaskIntervalSeconds ?? 180;
+  const intervalStatus = intervalSeconds <= 0 ? "Sẵn sàng rút tiền" : `Còn ${intervalSeconds} giây`;
+
   return (
     <div className="grid gap-4">
       <EarningsCard
@@ -219,7 +222,7 @@ function WorkerEarningsOverview({
         title="Thu nhập việc nhỏ"
       />
 
-      <dl className="grid gap-3 text-sm sm:grid-cols-3">
+      <dl className="grid gap-3 text-sm sm:grid-cols-4">
         <div className="bg-[#f5f7fa] px-4 py-3">
           <dt className="font-medium text-[#686d77]">Có thể rút</dt>
           <dd className="mt-1 font-bold text-[#00a650]">{formatWalletAmount(balance?.availableBalance)}</dd>
@@ -231,6 +234,10 @@ function WorkerEarningsOverview({
         <div className="bg-[#f5f7fa] px-4 py-3">
           <dt className="font-medium text-[#686d77]">Trạng thái rút tiền</dt>
           <dd className="mt-1 font-bold text-[#001b49]">Cần xác minh hồ sơ</dd>
+        </div>
+        <div className="bg-[#f5f7fa] px-4 py-3">
+          <dt className="font-medium text-[#686d77]">Interval task</dt>
+          <dd className="mt-1 font-bold text-[#001b49]">{intervalStatus}</dd>
         </div>
       </dl>
     </div>
@@ -269,6 +276,11 @@ function WorkerWallet({
 
       {activeTab === "withdrawals" ? (
         <section className="mt-6 space-y-4">
+          {balance && !balance.canWithdrawByTaskInterval ? (
+            <AlertBar>
+              Bạn cần đưa interval submit task về 0 giây trước khi rút tiền. Mỗi task được duyệt giảm 10 giây, task không hài lòng cộng 20 giây.
+            </AlertBar>
+          ) : null}
           <AlertBar>Người dùng mới cần đủ 7 ngày trước khi gửi yêu cầu rút tiền đầu tiên.</AlertBar>
           <AlertBar>
             Trước khi rút tiền, bạn cần hoàn tất thông tin danh tính và tài khoản ngân hàng trong

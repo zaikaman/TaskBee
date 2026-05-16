@@ -20,9 +20,14 @@ import {
   UserRole,
 } from "@/lib/generated/prisma/client";
 import { formatVnd } from "@/lib/utils/money";
-import { enforceRateLimit, getRateLimitErrorMessage } from "@/lib/utils/rate-limit";
+import { enforceRateLimit, getRateLimitErrorMessage, RateLimitError } from "@/lib/utils/rate-limit";
 import { notifyUser } from "@/lib/services/notifications";
 import { captureTaskFlowEvent } from "@/lib/services/analytics";
+import {
+  applyWorkerTaskIntervalAdjustment,
+  assertWorkerCanSubmitTask,
+  WORKER_TASK_INTERVAL_SPAM_PROOF_DELTA_SECONDS,
+} from "@/lib/services/worker-task-interval";
 
 const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
 const SUBMISSION_PROOF_TEXT_MAX_LENGTH = 2000;
@@ -239,21 +244,6 @@ async function validateSubmissionOwnership(
   return submission;
 }
 
-async function countRejectedSubmissions(
-  taskId: string,
-  workerId: string,
-): Promise<number> {
-  const prisma = getPrisma();
-
-  return prisma.submission.count({
-    where: {
-      taskId,
-      workerId,
-      status: SubmissionStatus.REJECTED,
-    },
-  });
-}
-
 async function createSubmissionRecord(
   workerId: string,
   input: CreateSubmissionInput,
@@ -316,6 +306,8 @@ async function createSubmissionRecord(
     if (claim.expiresAt && claim.expiresAt <= now) {
       throw new Error("Lượt giữ slot đã hết hạn. Slot đã được trả lại cho người khác.");
     }
+
+    await assertWorkerCanSubmitTask(tx, workerId, now);
 
     const claimUpdateResult = await tx.taskClaim.updateMany({
       where: {
@@ -392,6 +384,19 @@ async function createSubmissionRecord(
   });
 }
 
+async function applySpamProofIntervalPenalty(workerId: string) {
+  const prisma = getPrisma();
+
+  await prisma.$transaction(async (tx) => {
+    await applyWorkerTaskIntervalAdjustment(
+      tx,
+      workerId,
+      WORKER_TASK_INTERVAL_SPAM_PROOF_DELTA_SECONDS,
+      "SYSTEM_BLOCKED_SPAM_PROOF",
+    );
+  });
+}
+
 export async function createSubmission(
   _prevState: CreateSubmissionState = initialCreateSubmissionState,
   formData: FormData,
@@ -446,6 +451,10 @@ export async function createSubmission(
         : `Bạn đã gửi bằng chứng cho task "${result.taskTitle}". Hệ thống sẽ tự động duyệt sau ${result.autoApproveDays} ngày nếu chưa được review.`,
     };
   } catch (error) {
+    if (error instanceof RateLimitError) {
+      await applySpamProofIntervalPenalty(profile.id);
+    }
+
     return {
       ok: false,
       error:

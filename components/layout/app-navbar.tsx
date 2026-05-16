@@ -31,6 +31,7 @@ export async function AppNavbar() {
     "người dùng";
   const isEmployer = session?.profile?.role === UserRole.EMPLOYER;
   const isWorker = session?.profile?.role === UserRole.WORKER;
+  const submitTaskIntervalSeconds = session?.profile?.submitTaskIntervalSeconds ?? 180;
   const [notifications, unreadCount] = session?.profile
     ? await Promise.all([
         getRecentNotifications(session.profile.id),
@@ -167,7 +168,7 @@ export async function AppNavbar() {
                   Chờ duyệt: <span className="text-amber-600">{formatCurrency(session?.profile?.pendingBalance)} VND</span>
                 </span>
                 <span className="flex items-center gap-1 text-zinc-600">
-                  <Clock3 className="size-4" /> 180s
+                  <Clock3 className="size-4" /> {submitTaskIntervalSeconds}s
                 </span>
               </>
             )}
