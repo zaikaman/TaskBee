@@ -93,7 +93,7 @@ Phase 1 (Setup)
 *Goal: Track user balances and handle manual withdrawal requests.*
 *Test Criteria: Can view balances, deposit records, and request withdrawal to bank transfer.*
 
-- [ ] T025 [P] [US4] Implement `wallet.ts` actions to fetch balances and calculate transaction history in `lib/services/wallet.ts`
+- [x] T025 [P] [US4] Implement `wallet.ts` actions to fetch balances and calculate transaction history in `lib/services/wallet.ts`
 - [ ] T026 [US4] Implement `requestWithdrawal` Server Action including 10% fee calculation in `lib/services/wallet.ts`
 - [ ] T027 [US4] Create Wallet Dashboard UI (Available/Pending/Escrow) in `app/(dashboard)/wallet/page.tsx`
 - [ ] T028 [US4] Create the Transaction History Table UI component in `components/wallet/transaction-history.tsx`
