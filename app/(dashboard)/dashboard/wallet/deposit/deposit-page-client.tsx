@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState, useTransition } from "react";
+import { useActionState, useCallback, useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   AlertCircle,
   Banknote,
@@ -10,7 +11,6 @@ import {
   Landmark,
   Loader2,
   QrCode,
-  RefreshCw,
   ShieldCheck,
   TimerReset,
   WalletCards,
@@ -341,11 +341,9 @@ function UsdtInstruction({ intent }: { intent: DepositIntentDetails }) {
 function DepositIntentPanel({
   intent,
   isRefreshing,
-  onRefresh,
 }: {
   intent: DepositIntentDetails | null;
   isRefreshing: boolean;
-  onRefresh: () => void;
 }) {
   const [remainingTime, setRemainingTime] = useState(intent ? formatRemainingTime(intent.expiresAt) : "");
 
@@ -393,14 +391,15 @@ function DepositIntentPanel({
               ? remainingTime
               : getDepositStatusLabel(intent.status)}
           </div>
-          <Button className="h-9 rounded-none" onClick={onRefresh} type="button" variant="outline">
-            {isRefreshing ? (
-              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <RefreshCw className="size-4" aria-hidden="true" />
-            )}
-            Cập nhật
-          </Button>
+          {isDepositStatusRefreshable(intent.status) ? (
+            <div className="flex h-9 items-center gap-2 bg-white px-3 text-sm font-black text-[#001b49]">
+              <Loader2
+                className={isRefreshing ? "size-4 animate-spin text-[#22ab59]" : "size-4 text-[#22ab59]"}
+                aria-hidden="true"
+              />
+              Đang tự động theo dõi
+            </div>
+          ) : null}
         </div>
       </header>
       <div className="p-5">
@@ -462,6 +461,7 @@ export function DepositPageClient({
   const [currentIntent, setCurrentIntent] = useState<DepositIntentDetails | null>(initialDepositIntent);
   const [state, formAction, isPending] = useActionState(createDepositAction, initialState);
   const [isRefreshing, startRefreshTransition] = useTransition();
+  const router = useRouter();
   const hasRefreshableIntent = currentIntent ? isDepositStatusRefreshable(currentIntent.status) : false;
 
   useEffect(() => {
@@ -471,28 +471,30 @@ export function DepositPageClient({
     }
   }, [state]);
 
-  const refreshCurrentIntent = useMemo(
-    () => () => {
-      if (!currentIntent) {
-        return;
-      }
+  const refreshCurrentIntent = useCallback(() => {
+    if (!currentIntent || !isDepositStatusRefreshable(currentIntent.status)) {
+      return;
+    }
 
-      startRefreshTransition(async () => {
-        const refreshedIntent = await refreshDepositIntentAction(currentIntent.id);
+    startRefreshTransition(async () => {
+      const refreshedIntent = await refreshDepositIntentAction(currentIntent.id);
 
-        if (refreshedIntent) {
-          setCurrentIntent(refreshedIntent);
+      if (refreshedIntent) {
+        setCurrentIntent(refreshedIntent);
+
+        if (!isDepositStatusRefreshable(refreshedIntent.status)) {
+          router.refresh();
         }
-      });
-    },
-    [currentIntent],
-  );
+      }
+    });
+  }, [currentIntent, router]);
 
   useEffect(() => {
     if (!hasRefreshableIntent || !currentIntent) {
       return;
     }
 
+    refreshCurrentIntent();
     const timer = window.setInterval(refreshCurrentIntent, refreshIntervalSeconds * 1000);
 
     return () => window.clearInterval(timer);
@@ -561,7 +563,6 @@ export function DepositPageClient({
           <DepositIntentPanel
             intent={currentIntent}
             isRefreshing={isRefreshing}
-            onRefresh={refreshCurrentIntent}
           />
           <RecentDeposits deposits={recentDepositIntents} />
         </div>
