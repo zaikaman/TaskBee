@@ -365,7 +365,7 @@ function DepositIntentPanel({
     return (
       <section className="border border-dashed border-[#d3dae6] bg-[#f5f7fa] p-8 text-center text-[#001b49]">
         <QrCode className="mx-auto size-10 text-[#22ab59]" aria-hidden="true" />
-        <h2 className="mt-4 text-lg font-black">Chưa có lệnh nạp đang hiển thị</h2>
+        <h2 className="mt-4 text-lg font-semibold">Chưa có lệnh nạp đang hiển thị</h2>
         <p className="mt-2 text-sm text-[#686d77]">
           Chọn phương thức, nhập số tiền và tạo lệnh nạp để nhận QR cùng mã thanh toán riêng.
         </p>
@@ -378,7 +378,7 @@ function DepositIntentPanel({
       <header className="flex flex-col gap-4 border-b border-[#e5eaf1] bg-[#f5f7fa] p-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-lg font-black text-[#001b49]">Lệnh nạp {intent.paymentCode}</h2>
+            <h2 className="text-lg font-semibold text-[#001b49]">Lệnh nạp {intent.paymentCode}</h2>
             <DepositStatusBadge status={intent.status} />
           </div>
           <p className="mt-1 text-sm text-[#686d77]">
@@ -425,7 +425,7 @@ function DepositIntentPanel({
 function RecentDeposits({ deposits }: { deposits: DepositIntentDetails[] }) {
   return (
     <section className="bg-white p-5 shadow-[0_2px_10px_rgba(0,0,0,0.08)]">
-      <h2 className="text-base font-black text-[#001b49]">Lệnh nạp gần đây</h2>
+      <h2 className="text-base font-semibold text-[#001b49]">Lệnh nạp gần đây</h2>
       <div className="mt-4 grid gap-3">
         {deposits.length === 0 ? (
           <p className="bg-[#f5f7fa] p-4 text-sm text-[#686d77]">Chưa có lệnh nạp nào.</p>
@@ -507,7 +507,7 @@ export function DepositPageClient({
       <section className="grid gap-4 border-b border-[#d3dae6] pb-7 lg:grid-cols-[1fr_340px] lg:items-end">
         <div>
           <p className="text-xs font-black uppercase text-[#22ab59]">Ví nhà tuyển dụng</p>
-          <h1 className="mt-2 text-3xl font-black tracking-normal text-[#001b49]">Nạp tiền</h1>
+          <h1 className="mt-2 text-3xl font-semibold tracking-normal text-[#001b49]">Nạp tiền</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-[#686d77]">
             Tạo lệnh nạp riêng cho từng giao dịch. Hệ thống chỉ cộng số dư sau khi provider xác nhận và ledger được ghi
             trong một giao dịch an toàn.

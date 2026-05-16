@@ -30,7 +30,7 @@ export function TaskDetailCard({ task }: TaskDetailCardProps) {
           <div className="flex size-4 items-center justify-center bg-[#e7faef] text-xs font-bold text-[#005924]">
             ?
           </div>
-          <h2 className="text-sm font-bold text-[#203259]">Những gì được mong đợi ở người làm Freelancer?</h2>
+          <h2 className="text-sm font-semibold text-[#203259]">Những gì được mong đợi ở người làm Freelancer?</h2>
         </div>
         <div className="pl-6">
           <p className="text-sm text-[#203259] whitespace-pre-wrap">{task.instructions}</p>
@@ -44,7 +44,7 @@ export function TaskDetailCard({ task }: TaskDetailCardProps) {
             <div className="flex size-4 items-center justify-center bg-[#e7faef] text-xs font-bold text-[#005924]">
               ?
             </div>
-            <h2 className="text-sm font-bold text-[#203259]">Yêu cầu bằng chứng sau khi hoàn thành công việc?</h2>
+            <h2 className="text-sm font-semibold text-[#203259]">Yêu cầu bằng chứng sau khi hoàn thành công việc?</h2>
           </div>
           <div className="pl-6">
             <p className="text-sm text-[#203259] whitespace-pre-wrap">{task.proofRequirements}</p>

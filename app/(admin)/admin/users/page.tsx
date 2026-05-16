@@ -98,7 +98,7 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm font-bold uppercase text-[#00a650]">Anti-abuse</p>
-          <h1 className="mt-2 text-3xl font-black tracking-normal text-[#001b49]">Người dùng</h1>
+          <h1 className="mt-2 text-3xl font-semibold tracking-normal text-[#001b49]">Người dùng</h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[#4a5568]">
             Tìm tài khoản, đổi vai trò, khóa tạm thời hoặc cấm tài khoản có dấu hiệu vi phạm.
           </p>
@@ -143,7 +143,7 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
 
       <section className="overflow-hidden rounded-lg bg-white text-[#001b49] shadow-[0_2px_10px_rgba(0,0,0,0.06)] ring-1 ring-[#f0f2f5]">
         <div className="border-b border-[#f0f2f5] px-5 py-4">
-          <h2 className="font-bold">{totalCount} tài khoản</h2>
+          <h2 className="font-semibold">{totalCount} tài khoản</h2>
         </div>
 
         {users.length === 0 ? (

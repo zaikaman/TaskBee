@@ -55,7 +55,7 @@ const statusLabels: Record<TaskStatus, string> = {
 };
 
 const statusColors: Record<TaskStatus, string> = {
-  DRAFT: "bg-gray-100 text-gray-700",
+  DRAFT: "bg-zinc-100 text-zinc-700",
   ACTIVE: "bg-green-100 text-green-700",
   PAUSED: "bg-yellow-100 text-yellow-700",
   COMPLETED: "bg-blue-100 text-blue-700",
@@ -209,7 +209,7 @@ export function EmployerTasksList({ tasks }: EmployerTasksListProps) {
       {filteredTasks.length === 0 && (searchQuery || statusFilter !== "ALL") ? (
         <div className="rounded border border-[#f0f2f5] bg-[#f5f7fa] p-12 text-center">
           <svg
-            className="mx-auto h-12 w-12 text-[#a8b0bf]"
+            className="mx-auto size-12 text-[#a8b0bf]"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -234,7 +234,7 @@ export function EmployerTasksList({ tasks }: EmployerTasksListProps) {
       {filteredTasks.length === 0 && !(searchQuery || statusFilter !== "ALL") ? (
         <div className="rounded border border-[#f0f2f5] bg-[#f5f7fa] p-12 text-center">
           <svg
-            className="mx-auto h-12 w-12 text-[#a8b0bf]"
+            className="mx-auto size-12 text-[#a8b0bf]"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -254,7 +254,7 @@ export function EmployerTasksList({ tasks }: EmployerTasksListProps) {
             className="mt-6 inline-flex items-center gap-2 rounded bg-[#22ab59] px-6 py-2.5 text-sm font-bold uppercase text-white hover:bg-[#005924]"
             href="/dashboard/employer/tasks/create"
           >
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 d="M12 4v16m8-8H4"
                 strokeLinecap="round"
@@ -343,22 +343,22 @@ export function EmployerTasksList({ tasks }: EmployerTasksListProps) {
                     <DropdownMenu>
                       <DropdownMenuTrigger
                         aria-label="Thêm hành động"
-                        className="inline-flex items-center justify-center rounded p-1 text-[#686d77] hover:bg-gray-100 hover:text-[#1b1b1b] focus:outline-none disabled:opacity-50"
+                        className="inline-flex items-center justify-center rounded p-1 text-[#686d77] hover:bg-zinc-100 hover:text-[#1b1b1b] focus:outline-none disabled:opacity-50"
                         disabled={isDuplicating === task.id}
                       >
                         {isDuplicating === task.id ? (
-                          <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <svg className="size-5 animate-spin" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                           </svg>
                         ) : (
-                          <MoreVertical className="h-5 w-5" />
+                          <MoreVertical className="size-5" />
                         )}
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48">
                         {task.status === "DRAFT" && (
                           <DropdownMenuItem onClick={() => handleEdit(task.id)}>
-                            <Edit className="h-4 w-4" />
+                            <Edit className="size-4" />
                             <span>Chỉnh sửa</span>
                           </DropdownMenuItem>
                         )}
@@ -366,14 +366,14 @@ export function EmployerTasksList({ tasks }: EmployerTasksListProps) {
                           onClick={() => handleDuplicate(task.id)}
                           disabled={isDuplicating === task.id}
                         >
-                          <Copy className="h-4 w-4" />
+                          <Copy className="size-4" />
                           <span>Nhân bản</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => confirmDelete(task.id)}
                           className="text-red-500 hover:bg-red-50 hover:text-red-600 focus:bg-red-50 focus:text-red-600"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="size-4" />
                           <span>Xóa</span>
                         </DropdownMenuItem>
                       </DropdownMenuContent>

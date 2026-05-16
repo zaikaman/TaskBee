@@ -94,14 +94,14 @@ export default async function EmployerTaskDetailPage({ params }: PageProps) {
           href="/dashboard/employer/tasks"
           className="inline-flex items-center gap-2 text-sm font-medium text-[#203259] hover:text-[#22ab59] transition-colors"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="size-4" />
           Quay về danh sách task
         </Link>
       </div>
 
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-black text-[#203259]">Chi tiết Task</h1>
+        <h1 className="text-3xl font-semibold text-[#203259]">Chi tiết Task</h1>
         <p className="text-sm text-[#7f8aa0] mt-1">
           Quản lý công việc và xem xét các bài nộp từ worker
         </p>
@@ -119,7 +119,7 @@ export default async function EmployerTaskDetailPage({ params }: PageProps) {
 
       {/* Submission Statistics */}
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-[#203259] mb-4">Submissions</h2>
+        <h2 className="text-2xl font-semibold text-[#203259] mb-4">Submissions</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-[#edf4ff] p-4 rounded">
             <span className="text-xs font-bold text-[#7f8aa0] uppercase">Tổng số</span>

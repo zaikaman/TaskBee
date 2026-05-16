@@ -90,7 +90,7 @@ function SubmissionCard({
             className="rounded-full"
           />
         ) : (
-          <div className="w-10 h-10 rounded-full bg-[#203259] flex items-center justify-center text-white font-bold">
+          <div className="size-10 rounded-full bg-[#203259] flex items-center justify-center text-white font-bold">
             {(submission.worker.username || submission.worker.email)[0].toUpperCase()}
           </div>
         )}
@@ -120,7 +120,7 @@ function SubmissionCard({
       {/* Proof Text */}
       {submission.proofText && (
         <div className="mb-4">
-          <h4 className="text-sm font-bold text-[#203259] mb-2">Mô tả bằng chứng:</h4>
+          <h4 className="text-sm font-semibold text-[#203259] mb-2">Mô tả bằng chứng:</h4>
           <div className="bg-white p-3 rounded border border-[#203259]/10">
             <p className="text-sm text-[#203259] whitespace-pre-wrap">{submission.proofText}</p>
           </div>
@@ -130,7 +130,7 @@ function SubmissionCard({
       {/* Proof Images */}
       {proofImages.length > 0 && (
         <div className="mb-4">
-          <h4 className="text-sm font-bold text-[#203259] mb-2">Hình ảnh bằng chứng:</h4>
+          <h4 className="text-sm font-semibold text-[#203259] mb-2">Hình ảnh bằng chứng:</h4>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
             {proofImages.map((url: string, index: number) => (
               <a
@@ -155,7 +155,7 @@ function SubmissionCard({
       {/* Employer Feedback */}
       {submission.employerFeedback && (
         <div className="mb-4">
-          <h4 className="text-sm font-bold text-[#203259] mb-2">Phản hồi của bạn:</h4>
+          <h4 className="text-sm font-semibold text-[#203259] mb-2">Phản hồi của bạn:</h4>
           <div className="bg-white p-3 rounded border border-[#203259]/10">
             <p className="text-sm text-[#203259] whitespace-pre-wrap">
               {submission.employerFeedback}

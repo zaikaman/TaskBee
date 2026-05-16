@@ -96,7 +96,7 @@ export default async function AdminWithdrawalsPage({ searchParams }: WithdrawalP
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm font-bold uppercase text-[#00a650]">Dòng tiền</p>
-          <h1 className="mt-2 text-3xl font-black tracking-normal text-[#001b49]">Yêu cầu rút tiền</h1>
+          <h1 className="mt-2 text-3xl font-semibold tracking-normal text-[#001b49]">Yêu cầu rút tiền</h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[#4a5568]">
             Kiểm tra số dư pending, thông tin ngân hàng và duyệt hoặc từ chối từng yêu cầu trong transaction an toàn.
           </p>
@@ -120,7 +120,7 @@ export default async function AdminWithdrawalsPage({ searchParams }: WithdrawalP
 
       <section className="overflow-hidden rounded-lg bg-white text-[#001b49] shadow-[0_2px_10px_rgba(0,0,0,0.06)] ring-1 ring-[#f0f2f5]">
         <div className="border-b border-[#f0f2f5] px-5 py-4">
-          <h2 className="font-bold">{totalCount} yêu cầu</h2>
+          <h2 className="font-semibold">{totalCount} yêu cầu</h2>
         </div>
 
         {withdrawals.length === 0 ? (
@@ -131,7 +131,7 @@ export default async function AdminWithdrawalsPage({ searchParams }: WithdrawalP
               const bankDetails = readBankDetails(withdrawal.bankDetails);
 
               return (
-                <article className="grid gap-5 px-5 py-5 xl:grid-cols-[1fr_380px]" key={withdrawal.id}>
+                <article className="grid gap-5 p-5 xl:grid-cols-[1fr_380px]" key={withdrawal.id}>
                   <div className="grid gap-4 md:grid-cols-3">
                     <div>
                       <p className="text-xs font-bold uppercase text-[#686d77]">Người dùng</p>

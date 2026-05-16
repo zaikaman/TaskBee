@@ -120,7 +120,7 @@ export default async function AdminDepositsPage({ searchParams }: DepositsPagePr
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm font-bold uppercase text-[#00a650]">Đối soát</p>
-          <h1 className="mt-2 text-3xl font-black tracking-normal text-[#001b49]">Ngoại lệ nạp tiền</h1>
+          <h1 className="mt-2 text-3xl font-semibold tracking-normal text-[#001b49]">Ngoại lệ nạp tiền</h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[#4a5568]">
             Rà soát các khoản nạp lỗi, thiếu, dư hoặc cần kiểm tra thủ công trước khi ghi có ví.
           </p>
@@ -147,7 +147,7 @@ export default async function AdminDepositsPage({ searchParams }: DepositsPagePr
 
       <section className="overflow-hidden rounded-lg bg-white text-[#001b49] shadow-[0_2px_10px_rgba(0,0,0,0.06)] ring-1 ring-[#f0f2f5]">
         <div className="border-b border-[#f0f2f5] px-5 py-4">
-          <h2 className="font-bold">{totalCount} lệnh nạp tiền</h2>
+          <h2 className="font-semibold">{totalCount} lệnh nạp tiền</h2>
         </div>
 
         {depositIntents.length === 0 ? (
@@ -160,7 +160,7 @@ export default async function AdminDepositsPage({ searchParams }: DepositsPagePr
                 intent.confirmationStatus !== DepositConfirmationStatus.CONFIRMED;
 
               return (
-                <article className="grid gap-5 px-5 py-5 xl:grid-cols-[1fr_420px]" key={intent.id}>
+                <article className="grid gap-5 p-5 xl:grid-cols-[1fr_420px]" key={intent.id}>
                   <div className="space-y-5">
                     <div className="grid gap-4 md:grid-cols-4">
                       <div>
@@ -214,7 +214,7 @@ export default async function AdminDepositsPage({ searchParams }: DepositsPagePr
                       </p>
                     </div>
 
-                    <details className="rounded bg-slate-950 text-slate-100">
+                    <details className="rounded bg-zinc-950 text-zinc-100">
                       <summary className="cursor-pointer px-4 py-3 text-sm font-bold">
                         Metadata provider
                       </summary>

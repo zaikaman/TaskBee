@@ -4,7 +4,7 @@ import { createHash, randomInt } from "crypto";
 import { revalidatePath } from "next/cache";
 import { PLATFORM_FEES, WALLET_LIMITS } from "@/config/app";
 import { PAYMENT_CONFIG } from "@/config/app";
-import { requireAuth, requireVerifiedUser } from "@/lib/auth/session";
+import { auth, requireAuth } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/db/prisma";
 import {
   buildSePayBankTransferInstructions,
@@ -584,8 +584,9 @@ function normalizeWithdrawalInput(
 export async function createDepositIntent(
   input: DepositRequestInput,
 ): Promise<CreateDepositIntentResult> {
+  const session = await auth();
+
   try {
-    const session = await requireVerifiedUser();
 
     if (!session.profile) {
       return {
@@ -741,8 +742,9 @@ export async function createDepositIntent(
 export async function transferWorkerFundsToEmployer(
   amount: string | number,
 ): Promise<TransferWorkerFundsToEmployerResult> {
+  const session = await auth();
+
   try {
-    const session = await requireVerifiedUser();
 
     if (!session.profile) {
       return {
@@ -1304,8 +1306,9 @@ export async function requestWithdrawal(
   amount: string | number,
   bankDetails: BankDetails,
 ): Promise<RequestWithdrawalResult> {
+  const session = await auth();
+
   try {
-    const session = await requireVerifiedUser();
 
     if (!session.profile) {
       return {

@@ -57,12 +57,12 @@ export function RoleSwitcher({ currentRole }: RoleSwitcherProps) {
   return (
     <div className="flex flex-col items-end gap-1">
       <div className="flex items-center gap-2 text-sm">
-        <span className={`transition-colors ${!isEmployer ? "text-slate-500" : "font-medium text-emerald-700"}`}>
+        <span className={`transition-colors ${!isEmployer ? "text-zinc-500" : "font-medium text-emerald-700"}`}>
           người thuê
         </span>
         <button
           aria-label={`Chuyển sang ${isEmployer ? "người làm thuê" : "người thuê"}`}
-          className="relative inline-flex h-5 w-10 rounded-full bg-slate-200 p-0.5 transition-colors hover:bg-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          className="relative inline-flex h-5 w-10 rounded-full bg-zinc-200 p-0.5 transition-colors hover:bg-zinc-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           disabled={isSwitching}
           onClick={handleSwitch}
           type="button"
@@ -73,7 +73,7 @@ export function RoleSwitcher({ currentRole }: RoleSwitcherProps) {
             }`}
           />
         </button>
-        <span className={`transition-colors ${isEmployer ? "text-slate-500" : "font-medium text-emerald-700"}`}>
+        <span className={`transition-colors ${isEmployer ? "text-zinc-500" : "font-medium text-emerald-700"}`}>
           người làm thuê
         </span>
       </div>

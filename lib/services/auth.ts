@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { auth } from "@/lib/auth/session";
 import { createClient } from "@/lib/auth/server";
 import { getPrisma } from "@/lib/db/prisma";
 import { NotificationType, UserRole, UserStatus } from "@/lib/generated/prisma/client";
@@ -305,6 +306,9 @@ export async function requestRegistrationOtp(
   _prevState: RegisterState = initialState,
   formData: FormData,
 ): Promise<RegisterState> {
+  const session = await auth(undefined, { required: false, verified: false });
+  void session;
+
   const raw = parseFormData(formData);
   const parsed = registrationSchema.safeParse(raw);
 
@@ -425,6 +429,9 @@ export async function confirmRegistrationOtp(
   _prevState: RegisterState = initialState,
   formData: FormData,
 ): Promise<RegisterState> {
+  const session = await auth(undefined, { required: false, verified: false });
+  void session;
+
   void _prevState;
 
   const raw = parseFormData(formData);
@@ -517,6 +524,9 @@ export async function requestLoginOtp(
   _prevState: LoginState = initialLoginState,
   formData: FormData,
 ): Promise<LoginState> {
+  const session = await auth(undefined, { required: false, verified: false });
+  void session;
+
   const raw = parseFormData(formData);
   const parsed = loginEmailSchema.safeParse(raw);
 
@@ -619,6 +629,9 @@ export async function confirmLoginOtp(
   _prevState: LoginState = initialLoginState,
   formData: FormData,
 ): Promise<LoginState> {
+  const session = await auth(undefined, { required: false, verified: false });
+  void session;
+
   void _prevState;
 
   const raw = parseFormData(formData);
@@ -718,6 +731,9 @@ export async function confirmLoginOtp(
 }
 
 export async function logout() {
+  const session = await auth();
+  void session;
+
   const supabase = await createClient();
   const { error } = await supabase.auth.signOut();
 

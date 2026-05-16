@@ -2,15 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 import { getPrisma } from "@/lib/db/prisma";
-import { requireRole } from "@/lib/auth/session";
+import { auth } from "@/lib/auth/session";
 import { UserRole, TaskStatus } from "@/lib/generated/prisma/client";
 
 /**
  * Nhân bản một công việc
  */
 export async function duplicateTask(taskId: string) {
+  const session = await auth(UserRole.EMPLOYER);
+
   try {
-    const session = await requireRole(UserRole.EMPLOYER);
     const prisma = getPrisma();
 
     if (!session.profile) {
@@ -67,8 +68,9 @@ export async function duplicateTask(taskId: string) {
  * Xóa một công việc
  */
 export async function deleteTask(taskId: string) {
+  const session = await auth(UserRole.EMPLOYER);
+
   try {
-    const session = await requireRole(UserRole.EMPLOYER);
     const prisma = getPrisma();
 
     if (!session.profile) {

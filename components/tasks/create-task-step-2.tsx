@@ -102,7 +102,7 @@ export function CreateTaskStep2({ data, onNext, onBack }: CreateTaskStep2Props) 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-[#203259]">Cài đặt công việc</h2>
+        <h2 className="text-2xl font-semibold text-[#203259]">Cài đặt công việc</h2>
         <p className="mt-2 text-sm text-[#7f8aa0]">
           Thiết lập phần thưởng, số lượng slot và yêu cầu bằng chứng
         </p>

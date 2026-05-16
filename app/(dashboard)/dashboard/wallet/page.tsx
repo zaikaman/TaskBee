@@ -173,7 +173,7 @@ function EarningsCard({
       <div className="grid gap-0 lg:grid-cols-[260px_1fr]">
         <div className="border-b border-white/80 p-8 lg:border-b-0 lg:border-r">
           <p className="text-xs font-bold uppercase text-[#686d77]">Tổng quan thu nhập</p>
-          <h2 className="mt-3 text-xl font-black">{title}</h2>
+          <h2 className="mt-3 text-xl font-semibold">{title}</h2>
           <dl className="mt-6">
             <dt className="text-sm font-medium text-[#686d77]">Tổng 3 tháng gần nhất</dt>
             <dd className="mt-1 text-2xl font-black text-[#00a650]">
@@ -318,7 +318,7 @@ function PaymentBox({
           {icon}
         </div>
         <div>
-          <h2 className="text-base font-bold">{title}</h2>
+          <h2 className="text-base font-semibold">{title}</h2>
           {subtitle ? <p className="mt-2 font-bold text-[#00a650]">{subtitle}</p> : null}
         </div>
       </header>
@@ -487,7 +487,7 @@ export default async function WalletPage({ searchParams }: WalletPageProps) {
       <SecurityNotice />
 
       <div className="mt-16">
-        <h1 className="mb-9 text-3xl font-black tracking-normal text-[#001b49]">Ví tiền</h1>
+        <h1 className="mb-9 text-3xl font-semibold tracking-normal text-[#001b49]">Ví tiền</h1>
         <BalanceStrip balance={balance} />
 
         {isEmployer ? (

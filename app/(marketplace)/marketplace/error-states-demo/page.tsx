@@ -13,8 +13,8 @@ export default function ErrorStatesDemoPage() {
   return (
     <div className="container mx-auto max-w-4xl py-8 px-4 space-y-8">
       <div className="space-y-4">
-        <h1 className="text-3xl font-bold">Error States Demo</h1>
-        <p className="text-slate-600">
+        <h1 className="text-3xl font-semibold">Error States Demo</h1>
+        <p className="text-zinc-600">
           Trang này demo tất cả các error states đã implement cho task T064.
         </p>
       </div>

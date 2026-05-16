@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireRole } from "@/lib/auth/session";
+import { auth } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/db/prisma";
 import { uploadProofImage } from "@/lib/services/storage";
 import {
@@ -396,9 +396,9 @@ export async function createSubmission(
   _prevState: CreateSubmissionState = initialCreateSubmissionState,
   formData: FormData,
 ): Promise<CreateSubmissionState> {
-  void _prevState;
+  const session = await auth(UserRole.WORKER);
 
-  const session = await requireRole(UserRole.WORKER);
+  void _prevState;
   const profile = session.profile;
 
   if (!profile) {
@@ -483,9 +483,9 @@ export async function reviewSubmission(
   _prevState: ReviewSubmissionState = initialReviewSubmissionState,
   formData: FormData,
 ): Promise<ReviewSubmissionState> {
-  void _prevState;
+  const session = await auth(UserRole.EMPLOYER);
 
-  const session = await requireRole(UserRole.EMPLOYER);
+  void _prevState;
   const profile = session.profile;
 
   if (!profile) {
@@ -606,8 +606,9 @@ export async function uploadProofFileAction(
   _prevState: UploadProofState,
   formData: FormData,
 ): Promise<UploadProofState> {
+  const session = await auth(UserRole.WORKER);
+
   try {
-    const session = await requireRole(UserRole.WORKER);
     const profile = session.profile;
 
     if (!profile) {

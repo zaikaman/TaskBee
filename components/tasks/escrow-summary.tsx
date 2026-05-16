@@ -18,7 +18,7 @@ export function EscrowSummary({
   return (
     <div className="space-y-4">
       <Alert className="bg-primary/5 border-primary/20">
-        <ShieldCheck className="h-4 w-4 text-primary" />
+        <ShieldCheck className="size-4 text-primary" />
         <AlertTitle className="text-primary font-medium">Ký quỹ an toàn</AlertTitle>
         <AlertDescription className="text-muted-foreground">
           Số tiền này được TaskBee giữ an toàn và chỉ thanh toán cho người làm khi bạn duyệt kết quả thành công.

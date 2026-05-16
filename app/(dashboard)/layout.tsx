@@ -11,7 +11,7 @@ export default async function DashboardLayout({
   return (
     <>
       <AppNavbar />
-      <main className="flex-1 bg-slate-50">
+      <main className="flex-1 bg-zinc-50">
         <section className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">{children}</section>
       </main>
     </>

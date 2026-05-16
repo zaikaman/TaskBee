@@ -115,7 +115,7 @@ export function TaskClaimButton({ taskId, taskStatus, availableSlots }: TaskClai
           });
         }}
         disabled={!canClaim || isPending}
-        className="bg-emerald-600 px-5 py-3 font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+        className="bg-emerald-600 px-5 py-3 font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-zinc-300"
       >
         {isPending
           ? "Đang giữ chỗ..."
@@ -124,7 +124,7 @@ export function TaskClaimButton({ taskId, taskStatus, availableSlots }: TaskClai
             : "Không thể giữ chỗ"}
       </Button>
 
-      <p className="max-w-2xl text-sm leading-6 text-slate-600">{helperMessage}</p>
+      <p className="max-w-2xl text-sm leading-6 text-zinc-600">{helperMessage}</p>
     </div>
   );
 }

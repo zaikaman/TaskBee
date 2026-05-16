@@ -27,9 +27,9 @@ export default async function VerifyPage() {
       </header>
 
       <main className="mx-auto flex max-w-[1090px] justify-center px-6 py-20">
-        <section className="w-full max-w-xl space-y-4 bg-white p-8 shadow-sm ring-1 ring-slate-100">
-          <h1 className="text-2xl font-bold text-slate-950">Xác minh email</h1>
-          <p className="text-sm leading-6 text-slate-600">
+        <section className="w-full max-w-xl space-y-4 bg-white p-8 shadow-sm ring-1 ring-zinc-100">
+          <h1 className="text-2xl font-semibold text-zinc-950">Xác minh email</h1>
+          <p className="text-sm leading-6 text-zinc-600">
             Tài khoản của bạn chưa được xác minh đầy đủ. Vui lòng kiểm tra email và hoàn tất bước
             xác minh để tiếp tục vào Marketplace, Dashboard và các tính năng theo vai trò.
           </p>

@@ -53,11 +53,11 @@ function getVariantStyles(variant: ErrorStateVariant) {
       };
     default:
       return {
-        container: "border-slate-200 bg-slate-50",
-        icon: "text-slate-600",
-        title: "text-slate-900",
-        description: "text-slate-700",
-        iconBg: "bg-slate-100",
+        container: "border-zinc-200 bg-zinc-50",
+        icon: "text-zinc-600",
+        title: "text-zinc-900",
+        description: "text-zinc-700",
+        iconBg: "bg-zinc-100",
       };
   }
 }

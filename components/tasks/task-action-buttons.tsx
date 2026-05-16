@@ -89,7 +89,7 @@ export function TaskActionButtons({ taskId, status }: TaskActionButtonsProps) {
   return (
     <div className="space-y-4">
       <div className="bg-[#edf4ff] border border-[#203259]/10 rounded-lg p-6">
-        <h3 className="text-lg font-bold text-[#203259] mb-4">Quản lý công việc</h3>
+        <h3 className="text-lg font-semibold text-[#203259] mb-4">Quản lý công việc</h3>
 
         {isDraft ? (
           <div className="space-y-4">
@@ -161,7 +161,7 @@ export function TaskActionButtons({ taskId, status }: TaskActionButtonsProps) {
         {/* Cancel Dialog */}
         {showCancelDialog && (
           <div className="mt-4 p-4 bg-white border border-[#e63e46] rounded-lg">
-            <h4 className="text-sm font-bold text-[#203259] mb-2">Xác nhận hủy công việc</h4>
+            <h4 className="text-sm font-semibold text-[#203259] mb-2">Xác nhận hủy công việc</h4>
             <p className="text-sm text-[#7f8aa0] mb-3">
               Phần escrow sẽ được hoàn trả, nhưng phí tạo việc (10%) sẽ không được hoàn lại.
             </p>

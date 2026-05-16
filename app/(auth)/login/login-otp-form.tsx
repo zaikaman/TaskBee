@@ -54,7 +54,7 @@ export function LoginOtpForm({ redirectTo = "/marketplace" }: LoginOtpFormProps)
 
   return (
     <div className="w-full">
-      <h1 className="text-[30px] font-bold leading-none text-[#203259]">Đăng nhập</h1>
+      <h1 className="text-[30px] font-semibold leading-none text-[#203259]">Đăng nhập</h1>
 
       {!isOtpStep ? (
         <form action={sendAction} className="mt-9 space-y-7">

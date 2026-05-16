@@ -1,0 +1,45 @@
+{
+  "ignore": {
+    "rules": [
+      "knip/exports",
+      "knip/types",
+      "knip/files",
+      "react-doctor/react-compiler-destructure-method",
+      "react-doctor/js-hoist-intl",
+      "react-doctor/js-combine-iterations",
+      "react-doctor/server-sequential-independent-await",
+      "react-doctor/async-await-in-loop",
+      "react-doctor/async-parallel",
+      "react-doctor/rendering-hydration-mismatch-time",
+      "jsx-a11y/label-has-associated-control",
+      "jsx-a11y/click-events-have-key-events",
+      "jsx-a11y/no-static-element-interactions",
+      "react-doctor/no-react19-deprecated-apis",
+      "react-doctor/no-generic-handler-names",
+      "react-doctor/nextjs-no-a-element",
+      "react-doctor/nextjs-no-img-element",
+      "react-doctor/prefer-useReducer",
+      "react-doctor/no-giant-component",
+      "react-doctor/async-defer-await",
+      "react-doctor/nextjs-no-client-side-redirect",
+      "react-doctor/no-array-index-as-key",
+      "react-doctor/rerender-memo-with-default-value",
+      "react-doctor/design-no-space-on-flex-children",
+      "react-doctor/js-length-check-first",
+      "react-doctor/nextjs-image-missing-sizes",
+      "react-doctor/js-tosorted-immutable",
+      "react-doctor/no-cascading-set-state",
+      "react-doctor/js-index-maps",
+      "react-doctor/design-no-redundant-size-axes",
+      "react-doctor/no-gray-on-colored-background",
+      "react-doctor/no-derived-useState",
+      "react-doctor/design-no-three-period-ellipsis",
+      "react-doctor/server-auth-actions",
+      "react-doctor/server-no-mutable-module-state"
+    ],
+    "files": [
+      ".venv/**",
+      "lib/generated/**"
+    ]
+  }
+}

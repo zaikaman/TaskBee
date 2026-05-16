@@ -43,7 +43,7 @@ export function CreateTaskStep3({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-[#203259]">
+        <h2 className="text-2xl font-semibold text-[#203259]">
           {isEdit ? "Xác nhận thao tác" : "Xác nhận và chọn hành động"}
         </h2>
         <p className="mt-2 text-sm text-[#7f8aa0]">
@@ -55,7 +55,7 @@ export function CreateTaskStep3({
 
       {/* Summary Card */}
       <div className="bg-[#edf4ff] p-6 space-y-4">
-        <h3 className="text-lg font-bold text-[#203259]">Tóm tắt công việc</h3>
+        <h3 className="text-lg font-semibold text-[#203259]">Tóm tắt công việc</h3>
 
         <div className="space-y-3">
           <div>
@@ -96,7 +96,7 @@ export function CreateTaskStep3({
       {/* Cost Breakdown - Only show for new tasks */}
       {!isEdit && costs && (
         <div className="bg-white border-2 border-[#22ab59] p-6 space-y-4">
-          <h3 className="text-lg font-bold text-[#203259]">Chi phí khi đăng việc</h3>
+          <h3 className="text-lg font-semibold text-[#203259]">Chi phí khi đăng việc</h3>
 
           <div className="space-y-3">
             <div className="flex items-center justify-between">

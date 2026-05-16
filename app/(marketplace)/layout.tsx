@@ -9,7 +9,7 @@ export default function MarketplaceLayout({
   return (
     <>
       <AppNavbar />
-      <main className="flex-1 bg-slate-50">
+      <main className="flex-1 bg-zinc-50">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           <div className="mb-6 flex items-start gap-3 rounded border border-amber-200 bg-amber-100 px-4 py-3 text-sm text-amber-900">
             <ShieldCheck className="mt-0.5 size-4 shrink-0 text-amber-700" aria-hidden="true" />
@@ -19,7 +19,7 @@ export default function MarketplaceLayout({
             </p>
           </div>
 
-          <section className="overflow-hidden rounded border border-slate-200 bg-white">
+          <section className="overflow-hidden rounded border border-zinc-200 bg-white">
             {children}
           </section>
         </div>

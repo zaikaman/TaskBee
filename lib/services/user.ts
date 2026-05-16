@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireVerifiedUser } from "@/lib/auth/session";
+import { auth } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/db/prisma";
 import { UserStatus } from "@/lib/generated/prisma/client";
 import { uploadAvatarImage } from "@/lib/services/storage";
@@ -80,9 +80,9 @@ export async function updateProfile(
   _prevState: UpdateProfileState = initialUpdateProfileState,
   formData: FormData,
 ): Promise<UpdateProfileState> {
-  void _prevState;
+  const session = await auth();
 
-  const session = await requireVerifiedUser();
+  void _prevState;
   const profile = session.profile;
   const raw = parseFormData(formData);
   const fields = mapFields(raw);
@@ -181,7 +181,7 @@ export async function updateProfile(
  * Quản trị viên không thể tự chuyển vai trò
  */
 export async function switchRole(): Promise<{ ok: boolean; error?: string; newRole?: string }> {
-  const session = await requireVerifiedUser();
+  const session = await auth();
   const profile = session.profile;
 
   if (!profile) {

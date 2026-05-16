@@ -59,7 +59,7 @@ export default function LandingPage() {
 
         <div className="mx-auto grid max-w-[1090px] gap-12 px-6 pb-28 pt-20 lg:grid-cols-[460px_1fr] lg:items-center">
           <div>
-            <h1 className="max-w-[440px] text-5xl font-black uppercase leading-[1.18] tracking-[0.01em] text-[#30394d] sm:text-[56px]">
+            <h1 className="max-w-[440px] text-5xl font-semibold uppercase leading-[1.18] tracking-[0.01em] text-[#30394d] sm:text-[56px]">
               Thuê người thật cho mọi nhiệm vụ
             </h1>
             <p className="mt-7 max-w-[360px] text-xl leading-[1.45] text-black">
@@ -128,7 +128,7 @@ export default function LandingPage() {
                   </div>
                   <div className="border-t border-[#f0f2f5] pt-4">
                     <div className="h-2 w-full rounded bg-[#f2f4f7]" />
-                    <div className="mt-2 h-2 w-2/3 rounded bg-[#f2f4f7]" />
+                    <div className="mt-2 size-2/3 rounded bg-[#f2f4f7]" />
                   </div>
                 </div>
               </div>
@@ -158,7 +158,7 @@ export default function LandingPage() {
       </section>
 
       <section className="mx-auto max-w-[1090px] px-6 py-24">
-        <h2 className="text-[44px] font-black leading-tight text-[#30394d]">
+        <h2 className="text-[44px] font-semibold leading-tight text-[#30394d]">
           Duyệt danh mục việc phổ biến
         </h2>
         <div className="mt-9 grid gap-4 md:grid-cols-4">
@@ -190,7 +190,7 @@ export default function LandingPage() {
 
       <section className="mx-auto flex max-w-[1090px] flex-col gap-6 px-6 py-20 md:flex-row md:items-center md:justify-between">
         <div>
-          <h2 className="text-4xl font-black text-[#30394d]">Sẵn sàng chạy thử TaskBee?</h2>
+          <h2 className="text-4xl font-semibold text-[#30394d]">Sẵn sàng chạy thử TaskBee?</h2>
           <p className="mt-3 max-w-xl text-lg text-[#686d77]">
             Trang này là bản tạm để khóa phong cách. Các luồng đăng ký, đăng việc và ví tiền sẽ
             được nối ở các giai đoạn tiếp theo.

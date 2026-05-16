@@ -15,7 +15,7 @@ export default async function CreateTaskPage() {
     <div className="min-h-screen bg-white py-8 px-4">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-[#203259]">Đăng công việc mới</h1>
+          <h1 className="text-3xl font-semibold text-[#203259]">Đăng công việc mới</h1>
           <p className="mt-2 text-[#7f8aa0]">
             Tạo công việc mới, lưu bản nháp hoặc đăng ngay khi sẵn sàng
           </p>

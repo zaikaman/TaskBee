@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { PLATFORM_FEES, TASK_LIMITS, TEST_WHITELIST_EMAILS } from "@/config/app";
-import { requireRole } from "@/lib/auth/session";
+import { auth } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/db/prisma";
 import {
   Prisma,
@@ -402,9 +402,9 @@ export async function createTask(
   _prevState: CreateTaskState = initialCreateTaskState,
   formData: FormData,
 ): Promise<CreateTaskState> {
-  void _prevState;
+  const session = await auth(UserRole.EMPLOYER);
 
-  const session = await requireRole(UserRole.EMPLOYER);
+  void _prevState;
   const profile = session.profile;
 
   if (!profile) {
@@ -547,8 +547,9 @@ export async function pauseTask(taskId: string): Promise<{
   message?: string;
   error?: string;
 }> {
+  const session = await auth(UserRole.EMPLOYER);
+
   try {
-    const session = await requireRole(UserRole.EMPLOYER);
     const profile = session.profile;
 
     if (!profile) {
@@ -629,8 +630,9 @@ export async function resumeTask(taskId: string): Promise<{
   message?: string;
   error?: string;
 }> {
+  const session = await auth(UserRole.EMPLOYER);
+
   try {
-    const session = await requireRole(UserRole.EMPLOYER);
     const profile = session.profile;
 
     if (!profile) {
@@ -721,8 +723,9 @@ export async function closeTask(taskId: string): Promise<{
   message?: string;
   error?: string;
 }> {
+  const session = await auth(UserRole.EMPLOYER);
+
   try {
-    const session = await requireRole(UserRole.EMPLOYER);
     const profile = session.profile;
 
     if (!profile) {
@@ -880,8 +883,9 @@ export async function cancelTask(taskId: string, reason?: string): Promise<{
   message?: string;
   error?: string;
 }> {
+  const session = await auth(UserRole.EMPLOYER);
+
   try {
-    const session = await requireRole(UserRole.EMPLOYER);
     const profile = session.profile;
 
     if (!profile) {
@@ -1044,9 +1048,9 @@ export async function updateTask(
   _prevState: UpdateTaskState = initialCreateTaskState,
   formData: FormData,
 ): Promise<UpdateTaskState> {
-  void _prevState;
+  const session = await auth(UserRole.EMPLOYER);
 
-  const session = await requireRole(UserRole.EMPLOYER);
+  void _prevState;
   const profile = session.profile;
 
   if (!profile) {
@@ -1213,9 +1217,10 @@ export async function claimTaskSlot(taskId: string): Promise<{
   error?: string;
   claimId?: string;
 }> {
+  const session = await auth(UserRole.WORKER);
+
   try {
     // Yêu cầu user phải là WORKER
-    const session = await requireRole(UserRole.WORKER);
     const profile = session.profile;
 
     if (!profile) {

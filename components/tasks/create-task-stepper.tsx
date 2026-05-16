@@ -25,7 +25,7 @@ export function CreateTaskStepper({ currentStep, totalSteps }: CreateTaskStepper
               {/* Step Circle */}
               <div className="flex flex-col items-center">
                 <div
-                  className={`flex h-10 w-10 items-center justify-center rounded-full border-2 font-bold transition-colors ${
+                  className={`flex size-10 items-center justify-center rounded-full border-2 font-bold transition-colors ${
                     isCompleted
                       ? "border-[#22ab59] bg-[#22ab59] text-white"
                       : isActive
@@ -35,7 +35,7 @@ export function CreateTaskStepper({ currentStep, totalSteps }: CreateTaskStepper
                 >
                   {isCompleted ? (
                     <svg
-                      className="h-5 w-5"
+                      className="size-5"
                       fill="none"
                       stroke="currentColor"
                       strokeWidth={3}

@@ -114,7 +114,7 @@ export default async function AdminDashboardPage() {
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm font-bold uppercase text-[#00a650]">Quản trị hệ thống</p>
-          <h1 className="mt-2 text-3xl font-black tracking-normal text-[#001b49]">Bảng điều khiển</h1>
+          <h1 className="mt-2 text-3xl font-semibold tracking-normal text-[#001b49]">Bảng điều khiển</h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[#4a5568]">
             Theo dõi rủi ro vận hành, xử lý tiền đang chờ và kiểm soát tài khoản có dấu hiệu bất thường.
           </p>
@@ -177,7 +177,7 @@ export default async function AdminDashboardPage() {
 
         <div className="overflow-hidden rounded-lg bg-white text-[#001b49] shadow-[0_2px_10px_rgba(0,0,0,0.06)] ring-1 ring-[#f0f2f5]">
           <div className="border-b border-[#f0f2f5] px-5 py-4">
-            <h2 className="font-bold">Audit gần đây</h2>
+            <h2 className="font-semibold">Audit gần đây</h2>
           </div>
           {recentAudits.length === 0 ? (
             <p className="px-5 py-6 text-sm text-[#686d77]">Chưa có audit log nào.</p>

@@ -22,8 +22,8 @@ export function RouteState({
       <div className="mb-5 flex size-12 items-center justify-center rounded-full bg-amber-50 text-amber-600">
         <AlertTriangle className="size-6" aria-hidden="true" />
       </div>
-      <h1 className="text-3xl font-black text-slate-950">{title}</h1>
-      <p className="mt-3 max-w-xl text-sm leading-6 text-slate-600">{description}</p>
+      <h1 className="text-3xl font-semibold text-zinc-950">{title}</h1>
+      <p className="mt-3 max-w-xl text-sm leading-6 text-zinc-600">{description}</p>
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
         {onRetry ? (
           <Button onClick={onRetry} className="rounded bg-emerald-600 text-white hover:bg-emerald-700">

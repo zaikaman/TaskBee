@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireRole } from "@/lib/auth/session";
+import { auth } from "@/lib/auth/session";
 import { getPrisma } from "@/lib/db/prisma";
 import {
   AdminAuditAction,
@@ -203,8 +203,9 @@ function normalizeAdminFeedback(action: "APPROVE" | "REJECT", adminFeedback?: st
 export async function processWithdrawal(
   input: ProcessWithdrawalInput | FormData,
 ): Promise<ProcessWithdrawalResult> {
+  const session = await auth(UserRole.ADMIN);
+
   try {
-    const session = await requireRole(UserRole.ADMIN);
 
     if (!session.profile) {
       throw new ProcessWithdrawalError("Không tìm thấy hồ sơ admin để xử lý yêu cầu rút tiền.");
@@ -506,8 +507,9 @@ function normalizeCreditAmount(value: string | undefined, fallbackAmount: string
 export async function processDepositException(
   input: ProcessDepositExceptionInput | FormData,
 ): Promise<ProcessDepositExceptionResult> {
+  const session = await auth(UserRole.ADMIN);
+
   try {
-    const session = await requireRole(UserRole.ADMIN);
 
     if (!session.profile) {
       throw new AdminActionError("Không tìm thấy hồ sơ admin để xử lý lệnh nạp tiền.");
@@ -798,8 +800,9 @@ export async function processDepositException(
 export async function updateUserManagement(
   input: UpdateUserManagementInput | FormData,
 ): Promise<UpdateUserManagementResult> {
+  const session = await auth(UserRole.ADMIN);
+
   try {
-    const session = await requireRole(UserRole.ADMIN);
 
     if (!session.profile) {
       throw new AdminActionError("Không tìm thấy hồ sơ admin để quản lý người dùng.");

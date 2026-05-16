@@ -44,6 +44,44 @@ export async function requireAuth(redirectTo = "/login") {
   return session;
 }
 
+export function auth(
+  roles?: UserRole | UserRole[],
+  options?: { required?: true; verified?: boolean; redirectTo?: string },
+): Promise<SessionUser>;
+export function auth(
+  roles: UserRole | UserRole[] | undefined,
+  options: { required: false; verified?: boolean; redirectTo?: string },
+): Promise<SessionUser | null>;
+export async function auth(
+  roles?: UserRole | UserRole[],
+  options: { required?: boolean; verified?: boolean; redirectTo?: string } = {},
+) {
+  const { required = true, verified = true, redirectTo = "/login" } = options;
+  const session = required ? await requireAuth(redirectTo) : await getCurrentUser();
+
+  if (!session) {
+    return null;
+  }
+
+  if (verified && (!session.emailVerified || !session.profile?.emailVerified)) {
+    redirect("/verify");
+  }
+
+  if (roles) {
+    const allowedRoles = Array.isArray(roles) ? roles : [roles];
+
+    if (!session.profile || !allowedRoles.includes(session.profile.role)) {
+      redirect("/forbidden");
+    }
+  }
+
+  if (session.profile?.status !== UserStatus.ACTIVE) {
+    redirect("/account-suspended");
+  }
+
+  return session;
+}
+
 export async function requireVerifiedUser() {
   const session = await requireAuth();
 

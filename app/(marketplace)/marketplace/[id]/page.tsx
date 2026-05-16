@@ -100,13 +100,13 @@ export default async function TaskDetailPage({ params }: TaskDetailPageProps) {
     currentSubmissionStatus !== SubmissionStatus.APPROVED;
 
   return (
-    <div className="bg-slate-50 min-h-screen py-8">
+    <div className="bg-zinc-50 min-h-screen py-8">
       <div className="container mx-auto max-w-4xl px-4">
         {/* Breadcrumb */}
         <div className="mb-6 flex items-center justify-between">
           <Link
             href="/marketplace"
-            className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
+            className="inline-flex items-center text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors"
           >
             <ArrowLeft className="mr-2 size-4" />
             Trở lại
@@ -116,7 +116,7 @@ export default async function TaskDetailPage({ params }: TaskDetailPageProps) {
         {/* Title and Reward */}
         <div className="mb-6 flex flex-col md:flex-row md:items-start justify-between gap-4">
           <div className="space-y-2">
-            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 leading-tight">
+            <h1 className="text-2xl md:text-3xl font-semibold text-zinc-900 leading-tight">
               {task.title}
             </h1>
             <div className="flex flex-wrap items-center gap-2">
@@ -124,7 +124,7 @@ export default async function TaskDetailPage({ params }: TaskDetailPageProps) {
                 Phần thưởng: {formatVnd(task.rewardAmount)}
               </span>
               {task.category && (
-                <span className="text-slate-600 bg-white border border-slate-200 shadow-sm px-3 py-1 rounded-full text-sm font-medium">
+                <span className="text-zinc-600 bg-white border border-zinc-200 shadow-sm px-3 py-1 rounded-full text-sm font-medium">
                   {task.category}
                 </span>
               )}
@@ -150,24 +150,24 @@ export default async function TaskDetailPage({ params }: TaskDetailPageProps) {
         </div>
 
         {/* Task Details Card */}
-        <div className="bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden mb-8">
+        <div className="bg-white border border-zinc-200 shadow-sm rounded-xl overflow-hidden mb-8">
           <div className="p-6 md:p-8">
             <TaskDetailCard task={task} />
           </div>
         </div>
 
         {/* Submit Proof Section */}
-        <Card className="mb-8 border-slate-200 shadow-sm overflow-hidden">
-          <div className="bg-slate-50 border-b border-slate-200 px-6 py-4">
-            <h3 className="text-lg font-bold text-slate-900">
+        <Card className="mb-8 border-zinc-200 shadow-sm overflow-hidden">
+          <div className="bg-zinc-50 border-b border-zinc-200 px-6 py-4">
+            <h3 className="text-lg font-semibold text-zinc-900">
               Gửi bằng chứng hoàn thành
             </h3>
           </div>
           <CardContent className="p-6 space-y-6">
             {!currentClaim ? (
               taskAvailableForClaim ? (
-                <div className="flex flex-col items-center justify-center p-6 bg-slate-50 border border-slate-200 border-dashed rounded-lg text-center space-y-4">
-                  <p className="text-slate-600 mb-2">
+                <div className="flex flex-col items-center justify-center p-6 bg-zinc-50 border border-zinc-200 border-dashed rounded-lg text-center space-y-4">
+                  <p className="text-zinc-600 mb-2">
                     Bạn cần giữ chỗ công việc (HOLD THIS JOB) trước khi có thể
                     nộp bằng chứng.
                   </p>
@@ -214,7 +214,7 @@ export default async function TaskDetailPage({ params }: TaskDetailPageProps) {
                 </div>
               </div>
             ) : (
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-5 py-4 text-sm text-slate-600 font-medium">
+              <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-5 py-4 text-sm text-zinc-600 font-medium">
                 Việc này không còn ở trạng thái có thể nộp bằng chứng.
               </div>
             )}

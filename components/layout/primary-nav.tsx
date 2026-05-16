@@ -58,7 +58,7 @@ export function PrimaryNav({ currentRole }: { currentRole?: string }) {
                 className={
                   isActive
                     ? "flex h-16 items-center gap-1 border-b-2 border-emerald-600 px-3 text-sm font-semibold text-emerald-700"
-                    : "flex h-16 items-center gap-1 px-3 text-sm font-medium text-slate-600 hover:text-emerald-700"
+                    : "flex h-16 items-center gap-1 px-3 text-sm font-medium text-zinc-600 hover:text-emerald-700"
                 }
                 aria-current={isActive ? "page" : undefined}
               >
@@ -70,50 +70,50 @@ export function PrimaryNav({ currentRole }: { currentRole?: string }) {
               </button>
 
               {isJobsMenuOpen && (
-                <div className="absolute left-0 top-full z-50 mt-0 w-64 rounded-b border border-slate-200 bg-white shadow-lg">
+                <div className="absolute left-0 top-full z-50 mt-0 w-64 rounded-b border border-zinc-200 bg-white shadow-lg">
                   <div className="py-2">
                     {currentRole === "EMPLOYER" ? (
                       <>
                         <Link
                           href="/dashboard/employer/tasks/create"
-                          className="block w-full px-4 py-3 text-left text-sm hover:bg-slate-50"
+                          className="block w-full px-4 py-3 text-left text-sm hover:bg-zinc-50"
                           onClick={() => setIsJobsMenuOpen(false)}
                         >
-                          <div className="font-medium text-slate-900">Đăng việc</div>
+                          <div className="font-medium text-zinc-900">Đăng việc</div>
                         </Link>
                         
-                        <div className="my-1 h-px bg-slate-100" />
+                        <div className="my-1 h-px bg-zinc-100" />
                         
                         <Link
                           href="/dashboard/employer/tasks"
-                          className="block w-full px-4 py-3 text-left text-sm hover:bg-slate-50"
+                          className="block w-full px-4 py-3 text-left text-sm hover:bg-zinc-50"
                           onClick={() => setIsJobsMenuOpen(false)}
                         >
                           <div className="flex items-center justify-between">
-                            <span className="font-medium text-slate-900">Công việc của tôi</span>
-                            <span className="text-slate-500">0</span>
+                            <span className="font-medium text-zinc-900">Công việc của tôi</span>
+                            <span className="text-zinc-500">0</span>
                           </div>
                         </Link>
 
                         <Link
                           href="/dashboard/employer/tasks/review"
-                          className="block w-full px-4 py-3 text-left text-sm hover:bg-slate-50"
+                          className="block w-full px-4 py-3 text-left text-sm hover:bg-zinc-50"
                           onClick={() => setIsJobsMenuOpen(false)}
                         >
                           <div className="flex items-center justify-between">
-                            <span className="font-medium text-slate-500">Cần đánh giá</span>
-                            <span className="text-slate-500">0</span>
+                            <span className="font-medium text-zinc-500">Cần đánh giá</span>
+                            <span className="text-zinc-500">0</span>
                           </div>
                         </Link>
 
                         <Link
                           href="/dashboard/employer/tasks/pending"
-                          className="block w-full px-4 py-3 text-left text-sm hover:bg-slate-50"
+                          className="block w-full px-4 py-3 text-left text-sm hover:bg-zinc-50"
                           onClick={() => setIsJobsMenuOpen(false)}
                         >
                           <div className="flex items-center justify-between">
-                            <span className="font-medium text-slate-500">Đang chờ admin duyệt</span>
-                            <span className="text-slate-500">0</span>
+                            <span className="font-medium text-zinc-500">Đang chờ admin duyệt</span>
+                            <span className="text-zinc-500">0</span>
                           </div>
                         </Link>
                       </>
@@ -121,44 +121,44 @@ export function PrimaryNav({ currentRole }: { currentRole?: string }) {
                       <>
                         <Link
                           href="/marketplace"
-                          className="block w-full px-4 py-3 text-left text-sm hover:bg-slate-50"
+                          className="block w-full px-4 py-3 text-left text-sm hover:bg-zinc-50"
                           onClick={() => setIsJobsMenuOpen(false)}
                         >
-                          <div className="font-medium text-slate-900">Tìm việc làm</div>
+                          <div className="font-medium text-zinc-900">Tìm việc làm</div>
                         </Link>
                         
-                        <div className="my-1 h-px bg-slate-100" />
+                        <div className="my-1 h-px bg-zinc-100" />
 
                         <Link
                           href="/dashboard/worker/tasks"
-                          className="block w-full px-4 py-3 text-left text-sm hover:bg-slate-50"
+                          className="block w-full px-4 py-3 text-left text-sm hover:bg-zinc-50"
                           onClick={() => setIsJobsMenuOpen(false)}
                         >
                           <div className="flex items-center justify-between">
-                            <span className="font-medium text-slate-900">Nhiệm vụ đã hoàn thành</span>
-                            <span className="text-slate-500">0</span>
+                            <span className="font-medium text-zinc-900">Nhiệm vụ đã hoàn thành</span>
+                            <span className="text-zinc-500">0</span>
                           </div>
                         </Link>
 
                         <Link
                           href="/dashboard/worker/tasks?status=paid"
-                          className="block w-full px-4 py-3 text-left text-sm hover:bg-slate-50"
+                          className="block w-full px-4 py-3 text-left text-sm hover:bg-zinc-50"
                           onClick={() => setIsJobsMenuOpen(false)}
                         >
                           <div className="flex items-center justify-between">
-                            <span className="font-medium text-slate-500">Đã xác nhận + thanh toán</span>
-                            <span className="text-slate-500">0</span>
+                            <span className="font-medium text-zinc-500">Đã xác nhận + thanh toán</span>
+                            <span className="text-zinc-500">0</span>
                           </div>
                         </Link>
 
                         <Link
                           href="/dashboard/worker/tasks?status=pending"
-                          className="block w-full px-4 py-3 text-left text-sm hover:bg-slate-50"
+                          className="block w-full px-4 py-3 text-left text-sm hover:bg-zinc-50"
                           onClick={() => setIsJobsMenuOpen(false)}
                         >
                           <div className="flex items-center justify-between">
-                            <span className="font-medium text-slate-500">Đang chờ xét duyệt</span>
-                            <span className="text-slate-500">0</span>
+                            <span className="font-medium text-zinc-500">Đang chờ xét duyệt</span>
+                            <span className="text-zinc-500">0</span>
                           </div>
                         </Link>
                       </>
@@ -178,7 +178,7 @@ export function PrimaryNav({ currentRole }: { currentRole?: string }) {
             className={
               isActive
                 ? "flex h-16 items-center gap-1 border-b-2 border-emerald-600 px-3 text-sm font-semibold text-emerald-700"
-                : "flex h-16 items-center gap-1 px-3 text-sm font-medium text-slate-600 hover:text-emerald-700"
+                : "flex h-16 items-center gap-1 px-3 text-sm font-medium text-zinc-600 hover:text-emerald-700"
             }
             aria-current={isActive ? "page" : undefined}
           >

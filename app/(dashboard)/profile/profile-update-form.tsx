@@ -139,8 +139,8 @@ export function ProfileUpdateForm({
   return (
     <section className="space-y-6">
       {/* Avatar Section */}
-      <div className="bg-white p-6 shadow-sm ring-1 ring-slate-100">
-        <div className="flex items-center gap-2 text-slate-500 mb-6">
+      <div className="bg-white p-6 shadow-sm ring-1 ring-zinc-100">
+        <div className="flex items-center gap-2 text-zinc-500 mb-6">
           <Camera className="size-4" aria-hidden="true" />
           <span className="text-sm font-semibold">Ảnh đại diện</span>
         </div>
@@ -149,7 +149,7 @@ export function ProfileUpdateForm({
           {/* Avatar Preview - Left Side */}
           <div className="flex-shrink-0">
             <div
-              className="group relative flex h-[140px] w-[140px] items-center justify-center overflow-hidden border border-slate-300 bg-slate-50"
+              className="group relative flex h-[140px] w-[140px] items-center justify-center overflow-hidden border border-zinc-300 bg-zinc-50"
               style={{ borderRadius: 0 }}
             >
               {displayAvatarUrl ? (
@@ -165,7 +165,7 @@ export function ProfileUpdateForm({
                       <button
                         type="button"
                         onClick={handleBrowseClick}
-                        className="flex h-9 w-9 items-center justify-center bg-white/90 text-slate-700 transition-colors hover:bg-white"
+                        className="flex size-9 items-center justify-center bg-white/90 text-zinc-700 transition-colors hover:bg-white"
                         title="Đổi ảnh đại diện"
                       >
                         <Camera className="size-4" />
@@ -173,7 +173,7 @@ export function ProfileUpdateForm({
                       <button
                         type="button"
                         onClick={handleRemoveAvatar}
-                        className="flex h-9 w-9 items-center justify-center bg-red-500/90 text-white transition-colors hover:bg-red-600"
+                        className="flex size-9 items-center justify-center bg-red-500/90 text-white transition-colors hover:bg-red-600"
                         title="Xóa ảnh đại diện"
                       >
                         <Trash2 className="size-4" />
@@ -182,7 +182,7 @@ export function ProfileUpdateForm({
                   )}
                 </>
               ) : (
-                <span className="text-6xl font-semibold text-slate-300 select-none">
+                <span className="text-6xl font-semibold text-zinc-300 select-none">
                   {avatarInitial}
                 </span>
               )}
@@ -201,20 +201,20 @@ export function ProfileUpdateForm({
                   className={`
                     relative flex min-h-[140px] cursor-pointer flex-col items-center justify-center gap-3 border-2 border-dashed px-6 py-8 transition-all
                     ${dragActive
-                      ? "border-slate-400 bg-slate-50"
-                      : "border-slate-300 bg-white hover:border-slate-400 hover:bg-slate-50"
+                      ? "border-zinc-400 bg-zinc-50"
+                      : "border-zinc-300 bg-white hover:border-zinc-400 hover:bg-zinc-50"
                     }
                   `}
                 >
-                  <div className="flex h-12 w-12 items-center justify-center bg-slate-100 text-slate-400">
+                  <div className="flex size-12 items-center justify-center bg-zinc-100 text-zinc-400">
                     <ImagePlus className="size-6" />
                   </div>
                   
                   <div className="text-center">
-                    <p className="text-sm text-slate-500">
+                    <p className="text-sm text-zinc-500">
                       Kéo và thả ảnh vào đây hoặc
                     </p>
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="mt-1 text-xs text-zinc-400">
                       hoặc
                     </p>
                   </div>
@@ -222,13 +222,13 @@ export function ProfileUpdateForm({
                   <Button
                     type="button"
                     onClick={handleBrowseClick}
-                    className="mt-2 h-10 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                    className="mt-2 h-10 bg-white border border-zinc-300 text-zinc-700 hover:bg-zinc-50 flex items-center gap-2"
                   >
                     <Camera className="size-4" />
                     Chọn tệp
                   </Button>
 
-                  <p className="mt-2 text-xs text-slate-400">
+                  <p className="mt-2 text-xs text-zinc-400">
                     JPG, PNG hoặc WebP · Tối đa 2 MB
                   </p>
                 </div>
@@ -245,17 +245,17 @@ export function ProfileUpdateForm({
                 {/* Selected File Preview Bar */}
                 {selectedFile && (
                   <div className="mt-4 flex items-center gap-3 border border-emerald-100 bg-emerald-50 px-4 py-3">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center bg-emerald-100 text-emerald-600">
+                    <div className="flex size-8 shrink-0 items-center justify-center bg-emerald-100 text-emerald-600">
                       <ImagePlus className="size-4" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-slate-700">{selectedFile.name}</p>
-                      <p className="text-xs text-slate-500">{formatFileSize(selectedFile.size)} · Sẵn sàng tải lên</p>
+                      <p className="truncate text-sm font-medium text-zinc-700">{selectedFile.name}</p>
+                      <p className="text-xs text-zinc-500">{formatFileSize(selectedFile.size)} · Sẵn sàng tải lên</p>
                     </div>
                     <button
                       type="button"
                       onClick={handleRemoveFile}
-                      className="flex h-7 w-7 shrink-0 items-center justify-center text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500"
+                      className="flex size-7 shrink-0 items-center justify-center text-zinc-400 transition-colors hover:bg-red-50 hover:text-red-500"
                       title="Xóa ảnh đã chọn"
                     >
                       <X className="size-4" />
@@ -270,8 +270,8 @@ export function ProfileUpdateForm({
                 )}
               </>
             ) : (
-              <div className="flex min-h-[140px] items-center justify-center border-2 border-dashed border-slate-200 bg-slate-50 px-6 py-8">
-                <p className="text-sm leading-6 text-slate-500">
+              <div className="flex min-h-[140px] items-center justify-center border-2 border-dashed border-zinc-200 bg-zinc-50 px-6 py-8">
+                <p className="text-sm leading-6 text-zinc-500">
                   Tài khoản đang bị hạn chế nên không thể thay đổi ảnh đại diện.
                 </p>
               </div>
@@ -281,10 +281,10 @@ export function ProfileUpdateForm({
       </div>
 
       {/* Personal Info Form */}
-      <section className="bg-white p-6 shadow-sm ring-1 ring-slate-100">
+      <section className="bg-white p-6 shadow-sm ring-1 ring-zinc-100">
         <div className="flex items-center gap-3">
-          <h2 className="text-base font-semibold text-slate-950">Thông tin cá nhân</h2>
-          <span className="text-sm font-semibold text-slate-400">- #{profileId.slice(0, 8)}</span>
+          <h2 className="text-base font-semibold text-zinc-950">Thông tin cá nhân</h2>
+          <span className="text-sm font-semibold text-zinc-400">- #{profileId.slice(0, 8)}</span>
         </div>
 
         <form action={formAction} className="mt-6 space-y-6">
@@ -329,7 +329,7 @@ export function ProfileUpdateForm({
               * Tài khoản đang bị hạn chế nên không thể chỉnh sửa hồ sơ.
             </p>
           ) : (
-            <p className="text-sm leading-6 text-slate-500">
+            <p className="text-sm leading-6 text-zinc-500">
               Ảnh đại diện sẽ được tải lên Cloudflare R2 khi bạn lưu hồ sơ. Hỗ trợ JPG, PNG và WebP, tối đa 2 MB.
             </p>
           )}
@@ -419,7 +419,7 @@ function EditableField({
 }) {
   return (
     <label className="space-y-2">
-      <span className="block text-sm font-semibold text-slate-400">
+      <span className="block text-sm font-semibold text-zinc-400">
         {label}
         {required ? <span className="text-red-500"> *</span> : null}
       </span>
@@ -431,7 +431,7 @@ function EditableField({
         disabled={disabled}
         placeholder={placeholder}
         autoComplete={autoComplete}
-        className="block min-h-11 w-full border-0 bg-slate-100 px-4 py-3 text-sm text-slate-700 outline-none ring-1 ring-transparent transition focus:bg-white focus:ring-emerald-600 disabled:cursor-not-allowed disabled:text-slate-400"
+        className="block min-h-11 w-full border-0 bg-zinc-100 px-4 py-3 text-sm text-zinc-700 outline-none ring-1 ring-transparent transition focus:bg-white focus:ring-emerald-600 disabled:cursor-not-allowed disabled:text-zinc-400"
       />
     </label>
   );
@@ -440,8 +440,8 @@ function EditableField({
 function ReadonlyField({ label, value }: { label: string; value: string }) {
   return (
     <label className="space-y-2">
-      <span className="block text-sm font-semibold text-slate-400">{label}</span>
-      <span className="block min-h-11 bg-slate-100 px-4 py-3 text-sm text-slate-700">{value}</span>
+      <span className="block text-sm font-semibold text-zinc-400">{label}</span>
+      <span className="block min-h-11 bg-zinc-100 px-4 py-3 text-sm text-zinc-700">{value}</span>
     </label>
   );
 }

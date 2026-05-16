@@ -39,7 +39,7 @@ export async function AppNavbar() {
     : [[], 0];
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white">
+    <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-2 text-[#22ab59]">
           <span className="flex size-9 items-center justify-center rounded-full border-2 border-[#22ab59]">
@@ -58,7 +58,7 @@ export async function AppNavbar() {
           )}
 
           {isAuthenticated ? (
-            <div className="hidden items-center gap-1 text-slate-500 sm:flex">
+            <div className="hidden items-center gap-1 text-zinc-500 sm:flex">
               <Button variant="ghost" size="icon" aria-label="Trợ giúp">
                 <CircleHelp className="size-4" />
               </Button>
@@ -124,7 +124,7 @@ export async function AppNavbar() {
               </Link>
             )}
           </div>
-          <div className="flex items-center gap-4 font-medium text-slate-700">
+          <div className="flex items-center gap-4 font-medium text-zinc-700">
             {isEmployer ? (
               <span>
                 Số dư: <span className="text-emerald-700">{formatCurrency(session?.profile?.availableBalance)} VND</span>
@@ -137,7 +137,7 @@ export async function AppNavbar() {
                 <span>
                   Chờ duyệt: <span className="text-amber-600">{formatCurrency(session?.profile?.pendingBalance)} VND</span>
                 </span>
-                <span className="flex items-center gap-1 text-slate-600">
+                <span className="flex items-center gap-1 text-zinc-600">
                   <Clock3 className="size-4" /> 180s
                 </span>
               </>

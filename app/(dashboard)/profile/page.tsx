@@ -60,14 +60,14 @@ export default async function ProfilePage() {
 
   if (!profile) {
     return (
-      <section className="mx-auto max-w-[1090px] bg-white p-8 shadow-sm ring-1 ring-slate-100">
+      <section className="mx-auto max-w-[1090px] bg-white p-8 shadow-sm ring-1 ring-zinc-100">
         <div className="flex items-start gap-4">
           <span className="flex size-12 items-center justify-center rounded bg-amber-50 text-amber-700">
             <AlertCircle className="size-6" aria-hidden="true" />
           </span>
           <div className="space-y-2">
-            <h1 className="text-xl font-semibold text-slate-950">Hồ sơ chưa sẵn sàng</h1>
-            <p className="max-w-2xl text-sm leading-6 text-slate-600">
+            <h1 className="text-xl font-semibold text-zinc-950">Hồ sơ chưa sẵn sàng</h1>
+            <p className="max-w-2xl text-sm leading-6 text-zinc-600">
               Tài khoản xác thực đã tồn tại nhưng hồ sơ TaskBee chưa được tạo. Vui lòng hoàn tất
               bước khởi tạo hồ sơ trước khi sử dụng marketplace.
             </p>
@@ -91,15 +91,15 @@ export default async function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-[1090px] space-y-6">
-      <section className="border-b border-slate-200 bg-white">
+      <section className="border-b border-zinc-200 bg-white">
         <div className="flex flex-wrap gap-8 overflow-x-auto px-1">
           {tabs.map((tab, index) => (
             <span
               key={tab}
               className={
                 index === 0
-                  ? "border-b-2 border-emerald-600 py-4 text-sm font-semibold uppercase text-slate-950"
-                  : "py-4 text-sm font-semibold uppercase text-slate-950 hover:text-emerald-700"
+                  ? "border-b-2 border-emerald-600 py-4 text-sm font-semibold uppercase text-zinc-950"
+                  : "py-4 text-sm font-semibold uppercase text-zinc-950 hover:text-emerald-700"
               }
             >
               {tab}
@@ -128,11 +128,11 @@ export default async function ProfilePage() {
         canEdit={profile.status === UserStatus.ACTIVE}
       />
 
-      <section className="bg-white p-6 shadow-sm ring-1 ring-slate-100">
+      <section className="bg-white p-6 shadow-sm ring-1 ring-zinc-100">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h2 className="text-base font-semibold text-slate-950">Thống kê theo vai trò</h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <h2 className="text-base font-semibold text-zinc-950">Thống kê theo vai trò</h2>
+            <p className="mt-1 text-sm text-zinc-500">
               Dữ liệu được tính từ task, lượt nhận việc và bài nộp hiện có.
             </p>
           </div>
@@ -144,13 +144,13 @@ export default async function ProfilePage() {
             const Icon = metric.icon;
 
             return (
-              <div key={metric.label} className="border border-slate-100 bg-slate-50 p-5">
+              <div key={metric.label} className="border border-zinc-100 bg-zinc-50 p-5">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm font-medium text-slate-500">{metric.label}</span>
+                  <span className="text-sm font-medium text-zinc-500">{metric.label}</span>
                   <Icon className="size-5 text-emerald-600" aria-hidden="true" />
                 </div>
-                <p className="mt-4 text-3xl font-semibold text-slate-950">{metric.value}</p>
-                <p className="mt-1 text-sm text-slate-500">{metric.description}</p>
+                <p className="mt-4 text-3xl font-semibold text-zinc-950">{metric.value}</p>
+                <p className="mt-1 text-sm text-zinc-500">{metric.description}</p>
               </div>
             );
           })}

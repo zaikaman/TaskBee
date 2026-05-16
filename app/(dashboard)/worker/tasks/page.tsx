@@ -68,7 +68,7 @@ export default function WorkerTasksPage() {
     <div className="container max-w-6xl py-8">
       {/* Security Banner */}
       <div className="bg-[#fff3cf] border border-[#de9100] text-[#de9100] px-4 py-3 rounded-md mb-6 flex items-start text-sm">
-        <AlertCircle className="w-5 h-5 mr-3 shrink-0" />
+        <AlertCircle className="size-5 mr-3 shrink-0" />
         <div className="flex-1">
           <span className="font-medium">Cải thiện bảo mật tài khoản của bạn.</span> Thêm email khôi phục ngay để đảm bảo quyền truy cập liên tục. Bảo vệ tài khoản của bạn trong trường hợp mất email chính.{" "}
           <Link href="/dashboard/profile" className="font-semibold text-[#de9100] hover:underline">
@@ -78,11 +78,11 @@ export default function WorkerTasksPage() {
         <button className="text-[#de9100] hover:text-[#b37500] ml-3 text-lg font-bold">×</button>
       </div>
 
-      <h1 className="text-2xl font-bold text-[#203259] mb-6">Nhiệm vụ đã hoàn thành</h1>
+      <h1 className="text-2xl font-semibold text-[#203259] mb-6">Nhiệm vụ đã hoàn thành</h1>
 
       {/* Warning Banner */}
       <div className="bg-[#fce3e5] border border-[#e63e46] text-[#e63e46] px-4 py-3 rounded-md mb-6 flex items-center text-sm font-medium">
-        <AlertCircle className="w-4 h-4 mr-2 shrink-0" />
+        <AlertCircle className="size-4 mr-2 shrink-0" />
         Nhiệm vụ cũ hơn 6 tháng không còn khả dụng.
       </div>
 
@@ -91,7 +91,7 @@ export default function WorkerTasksPage() {
         <div className="w-full md:w-80">
           <Input 
             placeholder="Nhập và nhấn enter để tìm kiếm..." 
-            className="bg-slate-50 border-slate-200"
+            className="bg-zinc-50 border-zinc-200"
           />
         </div>
       </div>
@@ -130,10 +130,10 @@ export default function WorkerTasksPage() {
       </div>
 
       {/* Table */}
-      <div className="border border-slate-200 rounded-md overflow-hidden bg-white mb-6">
+      <div className="border border-zinc-200 rounded-md overflow-hidden bg-white mb-6">
         <Table>
-          <TableHeader className="bg-slate-50">
-            <TableRow className="hover:bg-slate-50">
+          <TableHeader className="bg-zinc-50">
+            <TableRow className="hover:bg-zinc-50">
               <TableHead className="w-[80px] font-bold text-center text-[#203259]">Trạng thái</TableHead>
               <TableHead className="font-bold text-[#203259]">Tên công việc</TableHead>
               <TableHead className="w-[150px] font-bold text-[#203259]">Ngày</TableHead>
@@ -165,7 +165,7 @@ export default function WorkerTasksPage() {
                     {task.name}
                   </Link>
                 </TableCell>
-                <TableCell className="text-slate-500">{task.date}</TableCell>
+                <TableCell className="text-zinc-500">{task.date}</TableCell>
                 <TableCell className="font-medium text-[#203259]">{formatVnd(task.earned)}</TableCell>
               </TableRow>
             ))}
@@ -176,29 +176,29 @@ export default function WorkerTasksPage() {
       {/* Pagination */}
       <div className="flex justify-center mb-10">
         <div className="flex items-center gap-1">
-          <Button variant="outline" size="icon" className="w-8 h-8 rounded text-slate-400 border-slate-200" disabled>
+          <Button variant="outline" size="icon" className="size-8 rounded text-zinc-400 border-zinc-200" disabled>
             &lt;
           </Button>
-          <Button variant="outline" size="icon" className="w-8 h-8 rounded border-[#22ab59] bg-[#e7faef] text-[#22ab59] hover:bg-[#e7faef] hover:text-[#22ab59] font-medium">
+          <Button variant="outline" size="icon" className="size-8 rounded border-[#22ab59] bg-[#e7faef] text-[#22ab59] hover:bg-[#e7faef] hover:text-[#22ab59] font-medium">
             1
           </Button>
-          <Button variant="ghost" size="icon" className="w-8 h-8 rounded font-medium hover:bg-slate-100 text-[#203259]">
+          <Button variant="ghost" size="icon" className="size-8 rounded font-medium hover:bg-zinc-100 text-[#203259]">
             2
           </Button>
-          <Button variant="ghost" size="icon" className="w-8 h-8 rounded font-medium hover:bg-slate-100 text-[#203259]">
+          <Button variant="ghost" size="icon" className="size-8 rounded font-medium hover:bg-zinc-100 text-[#203259]">
             3
           </Button>
-          <Button variant="ghost" size="icon" className="w-8 h-8 rounded font-medium hover:bg-slate-100 text-[#203259]">
+          <Button variant="ghost" size="icon" className="size-8 rounded font-medium hover:bg-zinc-100 text-[#203259]">
             4
           </Button>
-          <Button variant="ghost" size="icon" className="w-8 h-8 rounded font-medium hover:bg-slate-100 text-[#203259]">
+          <Button variant="ghost" size="icon" className="size-8 rounded font-medium hover:bg-zinc-100 text-[#203259]">
             5
           </Button>
-          <span className="px-2 text-slate-500">...</span>
-          <Button variant="ghost" size="icon" className="w-8 h-8 rounded font-medium hover:bg-slate-100 text-[#203259]">
+          <span className="px-2 text-zinc-500">...</span>
+          <Button variant="ghost" size="icon" className="size-8 rounded font-medium hover:bg-zinc-100 text-[#203259]">
             27
           </Button>
-          <Button variant="outline" size="icon" className="w-8 h-8 rounded text-[#203259] border-slate-200 hover:bg-slate-50">
+          <Button variant="outline" size="icon" className="size-8 rounded text-[#203259] border-zinc-200 hover:bg-zinc-50">
             &gt;
           </Button>
         </div>

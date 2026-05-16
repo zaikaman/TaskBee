@@ -40,33 +40,33 @@ export function NotificationCenter({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[360px] max-w-[calc(100vw-2rem)]">
-        <div className="border-b border-slate-100 px-3 py-2">
-          <p className="text-sm font-bold text-slate-950">Thông báo</p>
-          <p className="text-xs text-slate-500">
+        <div className="border-b border-zinc-100 px-3 py-2">
+          <p className="text-sm font-bold text-zinc-950">Thông báo</p>
+          <p className="text-xs text-zinc-500">
             {unreadCount > 0 ? `${unreadCount} thông báo chưa đọc` : "Không có thông báo mới"}
           </p>
         </div>
         <div className="max-h-96 overflow-y-auto p-1">
           {notifications.length === 0 ? (
-            <div className="px-3 py-6 text-center text-sm text-slate-500">
+            <div className="px-3 py-6 text-center text-sm text-zinc-500">
               Chưa có thông báo nào.
             </div>
           ) : (
             notifications.map((notification) => (
               <div
                 key={notification.id}
-                className="rounded-md px-3 py-2.5 text-left hover:bg-slate-50"
+                className="rounded-md px-3 py-2.5 text-left hover:bg-zinc-50"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <p className="text-sm font-semibold text-slate-950">
+                  <p className="text-sm font-semibold text-zinc-950">
                     {notification.title}
                   </p>
                   {!notification.readAt ? (
                     <span className="mt-1 size-2 shrink-0 rounded-full bg-emerald-500" />
                   ) : null}
                 </div>
-                <p className="mt-1 text-xs leading-5 text-slate-600">{notification.body}</p>
-                <p className="mt-2 text-[11px] font-medium text-slate-400">
+                <p className="mt-1 text-xs leading-5 text-zinc-600">{notification.body}</p>
+                <p className="mt-2 text-[11px] font-medium text-zinc-400">
                   {formatNotificationTime(notification.createdAt)}
                 </p>
               </div>

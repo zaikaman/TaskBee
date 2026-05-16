@@ -8,7 +8,7 @@ interface JobsDropdownProps {
 }
 
 const menuButtonClassName =
-  "w-full px-4 py-3 text-left text-sm hover:bg-slate-50";
+  "w-full px-4 py-3 text-left text-sm hover:bg-zinc-50";
 
 export function JobsDropdown({ isActive = true }: JobsDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -46,7 +46,7 @@ export function JobsDropdown({ isActive = true }: JobsDropdownProps) {
         className={`inline-flex items-center gap-1 rounded-t px-4 py-2 text-sm transition-colors ${
           isActive
             ? "border-b-2 border-emerald-600 font-semibold text-emerald-700"
-            : "font-medium text-slate-500 hover:text-emerald-700"
+            : "font-medium text-zinc-500 hover:text-emerald-700"
         }`}
       >
         Việc làm nhỏ
@@ -56,7 +56,7 @@ export function JobsDropdown({ isActive = true }: JobsDropdownProps) {
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 top-full z-50 mt-0 w-64 rounded-b border border-slate-200 bg-white shadow-lg">
+        <div className="absolute left-0 top-full z-50 mt-0 w-64 rounded-b border border-zinc-200 bg-white shadow-lg">
           <div className="py-2">
             <button
               type="button"
@@ -65,10 +65,10 @@ export function JobsDropdown({ isActive = true }: JobsDropdownProps) {
                 setIsOpen(false);
               }}
             >
-              <div className="font-medium text-slate-900">Tìm việc làm</div>
+              <div className="font-medium text-zinc-900">Tìm việc làm</div>
             </button>
 
-            <div className="my-1 h-px bg-slate-100" />
+            <div className="my-1 h-px bg-zinc-100" />
 
             <button
               type="button"
@@ -78,8 +78,8 @@ export function JobsDropdown({ isActive = true }: JobsDropdownProps) {
               }}
             >
               <div className="flex items-center justify-between">
-                <span className="font-medium text-slate-900">Nhiệm vụ đã hoàn thành</span>
-                <span className="text-slate-500">0</span>
+                <span className="font-medium text-zinc-900">Nhiệm vụ đã hoàn thành</span>
+                <span className="text-zinc-500">0</span>
               </div>
             </button>
 
@@ -91,8 +91,8 @@ export function JobsDropdown({ isActive = true }: JobsDropdownProps) {
               }}
             >
               <div className="flex items-center justify-between">
-                <span className="font-medium text-slate-900">Đã xác nhận + thanh toán</span>
-                <span className="text-slate-500">0</span>
+                <span className="font-medium text-zinc-900">Đã xác nhận + thanh toán</span>
+                <span className="text-zinc-500">0</span>
               </div>
             </button>
 
@@ -104,8 +104,8 @@ export function JobsDropdown({ isActive = true }: JobsDropdownProps) {
               }}
             >
               <div className="flex items-center justify-between">
-                <span className="font-medium text-slate-900">Đang chờ xét duyệt</span>
-                <span className="text-slate-500">0</span>
+                <span className="font-medium text-zinc-900">Đang chờ xét duyệt</span>
+                <span className="text-zinc-500">0</span>
               </div>
             </button>
           </div>

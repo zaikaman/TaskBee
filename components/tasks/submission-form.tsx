@@ -147,7 +147,7 @@ export function SubmissionForm({ taskId, proofRequirements }: SubmissionFormProp
   return (
     <div id="submit-proof" className="mb-10">
       <div className="flex items-center gap-2 mb-6">
-        <div className="bg-[#e7faef] text-[#22ab59] rounded w-5 h-5 flex items-center justify-center font-bold text-xs">
+        <div className="bg-[#e7faef] text-[#22ab59] rounded size-5 flex items-center justify-center font-bold text-xs">
           ?
         </div>
         <h2 className="font-semibold text-base">Gửi bằng chứng của bạn dưới đây</h2>
@@ -155,8 +155,8 @@ export function SubmissionForm({ taskId, proofRequirements }: SubmissionFormProp
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {proofRequirements ? (
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-700">
-            <p className="font-semibold text-slate-900">Yêu cầu bằng chứng</p>
+          <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-700">
+            <p className="font-semibold text-zinc-900">Yêu cầu bằng chứng</p>
             <p className="mt-2 whitespace-pre-wrap leading-6">{proofRequirements}</p>
           </div>
         ) : null}
@@ -169,7 +169,7 @@ export function SubmissionForm({ taskId, proofRequirements }: SubmissionFormProp
             value={proofText}
             onChange={(e) => setProofText(e.target.value)}
             placeholder="Nhập phần mô tả, nội dung văn bản (tuỳ chọn nếu có ảnh)"
-            className="resize-none bg-slate-50 w-full"
+            className="resize-none bg-zinc-50 w-full"
             rows={4}
             disabled={isPending || isUploading}
           />
@@ -183,11 +183,11 @@ export function SubmissionForm({ taskId, proofRequirements }: SubmissionFormProp
           <div className="flex items-center gap-4">
             <Label
               htmlFor="proof-upload"
-              className={`flex items-center justify-center gap-2 px-4 py-2 border rounded-md cursor-pointer hover:bg-slate-50 transition-colors ${
+              className={`flex items-center justify-center gap-2 px-4 py-2 border rounded-md cursor-pointer hover:bg-zinc-50 transition-colors ${
                 isPending || isUploading ? "opacity-50 pointer-events-none" : ""
               }`}
             >
-              <UploadCloud className="w-5 h-5" />
+              <UploadCloud className="size-5" />
               <span>Chọn ảnh</span>
             </Label>
             <Input
@@ -207,7 +207,7 @@ export function SubmissionForm({ taskId, proofRequirements }: SubmissionFormProp
           {selectedFiles.length > 0 && (
             <div className="flex flex-wrap gap-4 mt-4">
               {selectedFiles.map((file, idx) => (
-                <div key={idx} className="relative group rounded-md overflow-hidden bg-slate-100 p-2 border">
+                <div key={idx} className="relative group rounded-md overflow-hidden bg-zinc-100 p-2 border">
                   <p className="text-xs max-w-[120px] truncate">{file.name}</p>
                   <p className="text-xs text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                   <button
@@ -216,7 +216,7 @@ export function SubmissionForm({ taskId, proofRequirements }: SubmissionFormProp
                     disabled={isPending || isUploading}
                     className="absolute top-0 right-0 p-1 bg-red-500 text-white rounded-bl-md opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
                   >
-                    <X className="w-3 h-3" />
+                    <X className="size-3" />
                   </button>
                 </div>
               ))}
@@ -242,7 +242,7 @@ export function SubmissionForm({ taskId, proofRequirements }: SubmissionFormProp
             className="bg-[#22ab59] hover:bg-[#01a149] text-white px-8 flex items-center gap-2"
             disabled={isPending || isUploading}
           >
-            {(isPending || isUploading) && <Loader2 className="w-4 h-4 animate-spin" />}
+            {(isPending || isUploading) && <Loader2 className="size-4 animate-spin" />}
             {isUploading ? "ĐANG TẢI LÊN..." : isPending ? "ĐANG XỬ LÝ..." : "GỬI BẰNG CHỨNG"}
           </Button>
         </div>

@@ -82,7 +82,7 @@ export function CreateTaskStep1({ data, onNext }: CreateTaskStep1Props) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-[#203259]">Thông tin cơ bản</h2>
+        <h2 className="text-2xl font-semibold text-[#203259]">Thông tin cơ bản</h2>
         <p className="mt-2 text-sm text-[#7f8aa0]">
           Cung cấp thông tin chi tiết về công việc bạn muốn đăng
         </p>
