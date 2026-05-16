@@ -175,6 +175,12 @@ function isUniqueConstraintError(error: unknown) {
 
 type TaskWorkBlockerClient = Prisma.TransactionClient | ReturnType<typeof getPrisma>;
 
+async function lockTaskRow(tx: Prisma.TransactionClient, taskId: string) {
+  await tx.$queryRaw(
+    Prisma.sql`SELECT id FROM "Task" WHERE id = ${taskId}::uuid FOR UPDATE`,
+  );
+}
+
 async function countTaskWorkBlockers(db: TaskWorkBlockerClient, taskId: string) {
   const [heldClaims, pendingSubmissions] = await Promise.all([
     db.taskClaim.count({
@@ -780,6 +786,8 @@ export async function closeTask(taskId: string): Promise<{
 
     return await prisma.$transaction(async (tx) => {
       // Kiểm tra việc tồn tại và thuộc về nhà tuyển việc này
+      await lockTaskRow(tx, taskId);
+
       const task = await tx.task.findUnique({
         where: {
           id: taskId,
@@ -840,15 +848,26 @@ export async function closeTask(taskId: string): Promise<{
       const currentAvailable = currentUser.availableBalance.toString();
 
       // Cập nhật trạng thái việc
-      await tx.task.update({
+      const taskUpdate = await tx.task.updateMany({
         where: {
           id: taskId,
+          employerId: profile.id,
+          status: {
+            in: [TaskStatus.ACTIVE, TaskStatus.PAUSED],
+          },
         },
         data: {
           status: TaskStatus.COMPLETED,
           updatedAt: new Date(),
         },
       });
+
+      if (taskUpdate.count !== 1) {
+        return {
+          ok: false,
+          error: "Trạng thái việc đã thay đổi bởi tiến trình khác. Vui lòng tải lại trang trước khi thao tác tiếp.",
+        };
+      }
 
       // Nếu còn tiền ký quỹ, giải phóng về số dư khả dụng
       if (remainingEscrowMinor > BigInt(0)) {
@@ -944,6 +963,8 @@ export async function cancelTask(taskId: string, reason?: string): Promise<{
     const prisma = getPrisma();
 
     return await prisma.$transaction(async (tx) => {
+      await lockTaskRow(tx, taskId);
+
       // Kiểm tra việc tồn tại và thuộc về nhà tuyển việc này
       const task = await tx.task.findUnique({
         where: {
@@ -1014,15 +1035,26 @@ export async function cancelTask(taskId: string, reason?: string): Promise<{
       const refundEscrow = fromMinorUnits(refundEscrowMinor);
 
       // Cập nhật trạng thái việc
-      await tx.task.update({
+      const taskUpdate = await tx.task.updateMany({
         where: {
           id: taskId,
+          employerId: profile.id,
+          status: {
+            in: [TaskStatus.ACTIVE, TaskStatus.PAUSED],
+          },
         },
         data: {
           status: TaskStatus.CANCELLED,
           updatedAt: new Date(),
         },
       });
+
+      if (taskUpdate.count !== 1) {
+        return {
+          ok: false,
+          error: "Trạng thái việc đã thay đổi bởi tiến trình khác. Vui lòng tải lại trang trước khi thao tác tiếp.",
+        };
+      }
 
       // Hoàn tiền ký quỹ về số dư khả dụng
       if (refundEscrowMinor > BigInt(0)) {

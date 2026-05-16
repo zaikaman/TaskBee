@@ -482,21 +482,35 @@ export async function confirmRegistrationOtp(
       : parsed.data.role;
   const nickname = (profile.nickname as string | undefined) ?? parsed.data.nickname;
 
-  const user = await getPrisma().user.upsert({
-    where: { email: parsed.data.email },
-    update: {
-      username: buildUsername(nickname, data.user.id),
-      role,
-      emailVerified: true,
-      status: "ACTIVE",
+  const prisma = getPrisma();
+  const existingProfile = await prisma.user.findUnique({
+    where: {
+      email: parsed.data.email,
     },
-    create: {
+    select: {
+      status: true,
+    },
+  });
+
+  if (existingProfile) {
+    return {
+      phase: "form",
+      email: parsed.data.email,
+      error:
+        existingProfile.status === UserStatus.ACTIVE
+          ? "Email này đã có tài khoản TaskBee. Vui lòng đăng nhập thay vì đăng ký lại."
+          : "Tài khoản của bạn đang bị hạn chế. Vui lòng liên hệ bộ phận hỗ trợ.",
+    };
+  }
+
+  const user = await prisma.user.create({
+    data: {
       id: data.user.id,
       email: parsed.data.email,
       username: buildUsername(nickname, data.user.id),
       role,
       emailVerified: true,
-      status: "ACTIVE",
+      status: UserStatus.ACTIVE,
     },
   });
   await notifyUser({

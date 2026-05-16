@@ -330,6 +330,7 @@ async function createSubmissionRecord(
       now.getTime() + claim.task.autoApproveDays * ONE_DAY_IN_MS,
     );
 
+    const hadExistingSubmission = Boolean(claim.submission);
     const submission = await tx.submission.upsert({
       where: {
         claimId: claim.id,
@@ -364,14 +365,16 @@ async function createSubmissionRecord(
       },
     });
 
-    await tx.task.update({
-      where: { id: input.taskId },
-      data: {
-        submittedSlots: {
-          increment: 1,
+    if (!hadExistingSubmission) {
+      await tx.task.update({
+        where: { id: input.taskId },
+        data: {
+          submittedSlots: {
+            increment: 1,
+          },
         },
-      },
-    });
+      });
+    }
 
     return {
       submissionId: submission.id,
@@ -379,7 +382,7 @@ async function createSubmissionRecord(
       taskTitle: claim.task.title,
       rewardAmount: claim.task.rewardAmount.toString(),
       autoApproveDays: claim.task.autoApproveDays,
-      hadExistingSubmission: Boolean(claim.submission),
+      hadExistingSubmission,
     };
   });
 }

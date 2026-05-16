@@ -1661,6 +1661,10 @@ export async function cancelWithdrawal(withdrawalId: string): Promise<{
 
     return await prisma.$transaction(async (tx) => {
       // Lấy thông tin withdrawal
+      await tx.$queryRaw(
+        Prisma.sql`SELECT id FROM "Withdrawal" WHERE id = ${withdrawalId}::uuid FOR UPDATE`,
+      );
+
       const withdrawal = await tx.withdrawal.findUnique({
         where: {
           id: withdrawalId,
@@ -1692,9 +1696,11 @@ export async function cancelWithdrawal(withdrawalId: string): Promise<{
       const amount = withdrawal.amount.toString();
 
       // Cập nhật trạng thái withdrawal
-      await tx.withdrawal.update({
+      const withdrawalUpdate = await tx.withdrawal.updateMany({
         where: {
           id: withdrawalId,
+          userId: session.profile!.id,
+          status: WithdrawalStatus.PENDING,
         },
         data: {
           status: WithdrawalStatus.CANCELLED,
@@ -1702,10 +1708,20 @@ export async function cancelWithdrawal(withdrawalId: string): Promise<{
         },
       });
 
+      if (withdrawalUpdate.count !== 1) {
+        return {
+          ok: false,
+          error: "Yêu cầu rút tiền đã được xử lý bởi tiến trình khác. Vui lòng tải lại trang để kiểm tra trạng thái mới nhất.",
+        };
+      }
+
       // Hoàn lại số dư: trừ pending, cộng available
-      const updatedUser = await tx.user.update({
+      const walletUpdate = await tx.user.updateMany({
         where: {
           id: session.profile!.id,
+          pendingBalance: {
+            gte: amount,
+          },
         },
         data: {
           pendingBalance: {
@@ -1714,6 +1730,16 @@ export async function cancelWithdrawal(withdrawalId: string): Promise<{
           availableBalance: {
             increment: amount,
           },
+        },
+      });
+
+      if (walletUpdate.count !== 1) {
+        throw new Error("Số dư đang chờ không đủ để hủy yêu cầu rút tiền này. Vui lòng liên hệ quản trị viên để đối soát.");
+      }
+
+      const updatedUser = await tx.user.findUniqueOrThrow({
+        where: {
+          id: session.profile!.id,
         },
         select: {
           availableBalance: true,
