@@ -95,7 +95,7 @@ Phase 1 (Setup)
 
 - [x] T025 [P] [US4] Implement `wallet.ts` actions to fetch balances and calculate transaction history in `lib/services/wallet.ts`
 - [x] T026 [US4] Implement `requestWithdrawal` Server Action including 10% fee calculation in `lib/services/wallet.ts`
-- [ ] T027 [US4] Create Wallet Dashboard UI (Available/Pending/Escrow) in `app/(dashboard)/wallet/page.tsx`
+- [x] T027 [US4] Create Wallet Dashboard UI (Available/Pending/Escrow) in `app/(dashboard)/wallet/page.tsx`
 - [ ] T028 [US4] Create the Transaction History Table UI component in `components/wallet/transaction-history.tsx`
 - [ ] T066 [US4] Create bank detail Zod validators and reusable bank transfer form components in `lib/validators/wallet.ts` and `components/wallet/`
 - [ ] T067 [US4] Enforce minimum withdrawal threshold and insufficient-balance errors in `requestWithdrawal`
