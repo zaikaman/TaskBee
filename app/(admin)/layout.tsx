@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BadgeCheck, Landmark, UsersRound, WalletCards } from "lucide-react";
 import { requireRole } from "@/lib/auth/session";
 import { UserRole } from "@/lib/generated/prisma/client";
+import { logout } from "@/lib/services/auth";
 
 const adminLinks = [
   { href: "/admin/dashboard", label: "Tổng quan", icon: BadgeCheck },
@@ -19,7 +20,7 @@ export default async function AdminLayout({
 
   return (
     <main className="flex min-h-screen flex-col bg-[#f5f7fa] text-[#001b49] lg:flex-row">
-      <aside className="hidden w-64 shrink-0 border-r border-[#d3dae6] bg-white lg:block">
+      <aside className="hidden w-64 shrink-0 border-r border-[#d3dae6] bg-white lg:flex lg:flex-col">
         <div className="border-b border-[#f0f2f5] px-6 py-5">
           <Link className="flex items-center gap-3" href="/admin/dashboard">
             <span className="flex size-9 items-center justify-center rounded-full border-2 border-[#22ab59] text-[#22ab59]">
@@ -31,7 +32,7 @@ export default async function AdminLayout({
             </span>
           </Link>
         </div>
-        <div className="p-4">
+        <div className="flex-1 p-4">
           <nav className="space-y-1.5">
             {adminLinks.map((link) => {
               const Icon = link.icon;
@@ -48,6 +49,16 @@ export default async function AdminLayout({
               );
             })}
           </nav>
+        </div>
+        <div className="border-t border-[#f0f2f5] p-4">
+          <form action={logout}>
+            <button
+              type="submit"
+              className="flex w-full items-center justify-center rounded border border-[#f4b8bd] bg-white px-3 py-2.5 text-sm font-bold text-[#e63e46] hover:bg-[#fce3e5]"
+            >
+              Đăng xuất
+            </button>
+          </form>
         </div>
       </aside>
       <header className="border-b border-[#d3dae6] bg-white lg:hidden">

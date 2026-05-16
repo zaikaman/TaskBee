@@ -7,7 +7,6 @@ import {
   UserStatus,
   WithdrawalStatus,
 } from "@/lib/generated/prisma/client";
-import { logout } from "@/lib/services/auth";
 import { formatVnd } from "@/lib/utils/money";
 
 export const dynamic = "force-dynamic";
@@ -120,22 +119,12 @@ export default async function AdminDashboardPage() {
             Theo dõi rủi ro vận hành, xử lý tiền đang chờ và kiểm soát tài khoản có dấu hiệu bất thường.
           </p>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <Link
-            className="inline-flex h-10 items-center justify-center rounded bg-emerald-500 px-4 text-sm font-bold text-white hover:bg-emerald-600"
-            href="/admin/withdrawals"
-          >
-            Xử lý rút tiền
-          </Link>
-          <form action={logout}>
-            <button
-              type="submit"
-              className="inline-flex h-10 items-center justify-center rounded border border-[#f4b8bd] bg-white px-4 text-sm font-bold text-[#e63e46] hover:bg-[#fce3e5]"
-            >
-              Đăng xuất
-            </button>
-          </form>
-        </div>
+        <Link
+          className="inline-flex h-10 items-center justify-center rounded bg-emerald-500 px-4 text-sm font-bold text-white hover:bg-emerald-600"
+          href="/admin/withdrawals"
+        >
+          Xử lý rút tiền
+        </Link>
       </header>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
