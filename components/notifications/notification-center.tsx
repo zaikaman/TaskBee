@@ -1,6 +1,9 @@
 "use client";
 
+import { useMemo, useOptimistic, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Bell } from "lucide-react";
+import { markCurrentUserNotificationsAsRead } from "@/app/actions/notifications";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -27,14 +30,48 @@ export function NotificationCenter({
   notifications,
   unreadCount,
 }: NotificationCenterProps) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const notificationState = useMemo(
+    () => ({ notifications, unreadCount }),
+    [notifications, unreadCount],
+  );
+  const [optimisticState, markNotificationsAsReadOptimistically] = useOptimistic(
+    notificationState,
+    (currentState, readAt: Date) => ({
+      unreadCount: 0,
+      notifications: currentState.notifications.map((notification) => ({
+        ...notification,
+        readAt: notification.readAt ?? readAt,
+      })),
+    }),
+  );
+
+  function handleOpenChange(open: boolean) {
+    if (!open || optimisticState.unreadCount === 0 || isPending) {
+      return;
+    }
+
+    startTransition(async () => {
+      markNotificationsAsReadOptimistically(new Date());
+      const result = await markCurrentUserNotificationsAsRead();
+
+      if (!result.ok) {
+        console.error(result.message);
+      }
+
+      router.refresh();
+    });
+  }
+
   return (
-    <DropdownMenu>
+    <DropdownMenu onOpenChange={handleOpenChange}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" aria-label="Thông báo" className="relative">
           <Bell className="size-4" />
-          {unreadCount > 0 ? (
+          {optimisticState.unreadCount > 0 ? (
             <span className="absolute right-1 top-1 min-w-4 rounded-full bg-red-500 px-1 text-[10px] font-bold leading-4 text-white ring-2 ring-white">
-              {unreadCount > 9 ? "9+" : unreadCount}
+              {optimisticState.unreadCount > 9 ? "9+" : optimisticState.unreadCount}
             </span>
           ) : null}
         </Button>
@@ -43,16 +80,16 @@ export function NotificationCenter({
         <div className="border-b border-zinc-100 px-3 py-2">
           <p className="text-sm font-bold text-zinc-950">Thông báo</p>
           <p className="text-xs text-zinc-500">
-            {unreadCount > 0 ? `${unreadCount} thông báo chưa đọc` : "Không có thông báo mới"}
+            {optimisticState.unreadCount > 0 ? `${optimisticState.unreadCount} thông báo chưa đọc` : "Không có thông báo mới"}
           </p>
         </div>
         <div className="max-h-96 overflow-y-auto p-1">
-          {notifications.length === 0 ? (
+          {optimisticState.notifications.length === 0 ? (
             <div className="px-3 py-6 text-center text-sm text-zinc-500">
               Chưa có thông báo nào.
             </div>
           ) : (
-            notifications.map((notification) => (
+            optimisticState.notifications.map((notification) => (
               <div
                 key={notification.id}
                 className="rounded-md px-3 py-2.5 text-left hover:bg-zinc-50"

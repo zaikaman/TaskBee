@@ -17,11 +17,24 @@ const useDropdown = () => {
   return context;
 };
 
-const DropdownMenu = ({ children }: { children: React.ReactNode }) => {
+const DropdownMenu = ({
+  children,
+  onOpenChange,
+}: {
+  children: React.ReactNode;
+  onOpenChange?: (open: boolean) => void;
+}) => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const handleOpenChange = React.useCallback(
+    (open: boolean) => {
+      setIsOpen(open);
+      onOpenChange?.(open);
+    },
+    [onOpenChange],
+  );
 
   return (
-    <DropdownContext.Provider value={{ isOpen, setIsOpen }}>
+    <DropdownContext.Provider value={{ isOpen, setIsOpen: handleOpenChange }}>
       <div className="relative">{children}</div>
     </DropdownContext.Provider>
   );

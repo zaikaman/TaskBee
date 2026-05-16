@@ -150,6 +150,20 @@ export async function getUnreadNotificationCount(userId: string) {
   });
 }
 
+export async function markAllNotificationsAsRead(userId: string) {
+  const prisma = getPrisma();
+
+  return prisma.notification.updateMany({
+    where: {
+      userId,
+      readAt: null,
+    },
+    data: {
+      readAt: new Date(),
+    },
+  });
+}
+
 export async function getRecentNotifications(userId: string, take = 8) {
   const prisma = getPrisma();
 
