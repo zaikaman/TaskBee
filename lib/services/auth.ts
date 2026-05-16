@@ -722,7 +722,7 @@ export async function confirmLoginOtp(
     if (profile.role === UserRole.EMPLOYER) {
       finalRedirect = "/dashboard/employer/tasks";
     } else if (profile.role === UserRole.ADMIN) {
-      finalRedirect = "/dashboard/admin";
+      finalRedirect = "/admin/dashboard";
     }
     // WORKER stays at /marketplace
   }

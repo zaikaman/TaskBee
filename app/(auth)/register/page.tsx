@@ -14,7 +14,7 @@ export default async function RegisterPage() {
     if (userRole === "EMPLOYER") {
       redirect("/dashboard/employer/tasks");
     } else if (userRole === "ADMIN") {
-      redirect("/dashboard/admin");
+      redirect("/admin/dashboard");
     } else {
       redirect("/marketplace");
     }

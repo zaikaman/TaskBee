@@ -23,7 +23,7 @@ function normalizeRedirectTo(redirectTo?: string, userRole?: string) {
   if (userRole === "EMPLOYER") {
     return "/dashboard/employer/tasks";
   } else if (userRole === "ADMIN") {
-    return "/dashboard/admin";
+    return "/admin/dashboard";
   }
   
   // Default for WORKER or no role
