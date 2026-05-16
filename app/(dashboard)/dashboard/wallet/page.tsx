@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   AlertTriangle,
+  ArrowRight,
   Bitcoin,
   CircleDollarSign,
   Landmark,
@@ -16,6 +17,7 @@ import {
   type TransactionHistoryItem,
 } from "@/lib/services/wallet";
 import { formatVnd, toMinorUnits } from "@/lib/utils/money";
+import { EmployerBudgetTransferSection } from "./employer-budget-transfer-section";
 import { SePayDepositSection } from "./sepay-deposit-section";
 
 export const dynamic = "force-dynamic";
@@ -345,40 +347,25 @@ function EmployerDepositPanel({ balance }: { balance: Awaited<ReturnType<typeof 
           title="Nạp crypto USDT"
         >
           <div className="leading-7 text-[#001b49]">
-            <p className="font-medium">Cần hoàn tất thông tin cá nhân và địa chỉ ví nạp.</p>
+            <p className="font-medium">Tạo lệnh nạp USDT với địa chỉ ví theo mạng đã cấu hình.</p>
             <p className="mt-3">
-              Sau khi tích hợp webhook on-chain, khoản nạp USDT sẽ được xác nhận tự động theo số
-              confirmation của mạng.
+              Sau khi provider xác nhận đủ confirmation, khoản nạp USDT sẽ được cộng vào ngân sách employer.
             </p>
+            <Link
+              className="mt-5 inline-flex h-10 items-center justify-center gap-2 bg-[#22ab59] px-4 text-sm font-bold uppercase text-white transition-colors hover:bg-[#005924]"
+              href="/dashboard/wallet/deposit?method=USDT"
+            >
+              Tạo lệnh nạp USDT
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </Link>
           </div>
         </PaymentBox>
 
-        <PaymentBox icon={<CircleDollarSign className="size-5" />} title="Ngân sách khả dụng">
-          <div className="grid gap-4">
-            <div className="bg-[#f5f7fa] p-4">
-              <p className="text-sm font-medium text-[#686d77]">Số tiền khả dụng hiện tại</p>
-              <p className="mt-1 text-xl font-black text-[#00a650]">
-                {formatWalletAmount(balance?.availableBalance)}
-              </p>
-            </div>
-            <div>
-              <label className="mb-2 block text-sm font-bold" htmlFor="budget-transfer">
-                Chuyển sang ngân sách đăng việc
-              </label>
-              <div className="grid gap-3 sm:grid-cols-[1fr_150px] lg:grid-cols-1 xl:grid-cols-[1fr_150px]">
-                <input
-                  className="h-10 bg-[#f5f7fa] px-4 text-sm outline-none"
-                  id="budget-transfer"
-                  inputMode="numeric"
-                  placeholder="0"
-                  readOnly
-                />
-                <button className="bg-[#22ab59] text-sm font-bold uppercase text-white" disabled>
-                  Chuyển
-                </button>
-              </div>
-            </div>
-          </div>
+        <PaymentBox icon={<CircleDollarSign className="size-5" />} title="Ngân sách employer">
+          <EmployerBudgetTransferSection
+            employerAvailableBalance={balance?.employerAvailableBalance ?? "0"}
+            workerAvailableBalance={balance?.workerAvailableBalance ?? "0"}
+          />
         </PaymentBox>
       </div>
     </div>
@@ -444,6 +431,7 @@ function translateTransactionType(type: TransactionType) {
     TASK_ESCROW_LOCK: "Khóa ký quỹ",
     TASK_ESCROW_RELEASE: "Hoàn ký quỹ",
     TASK_REWARD: "Thưởng nhiệm vụ",
+    WORKER_TO_EMPLOYER_TRANSFER: "Chuyển sang ngân sách employer",
     WITHDRAWAL: "Rút tiền",
     WITHDRAWAL_FEE: "Phí rút tiền",
   };

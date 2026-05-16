@@ -39,6 +39,7 @@ import {
 
 type DepositPageClientProps = {
   balance: WalletBalance | null;
+  initialDepositMethod: DepositMethod;
   initialDepositIntent: DepositIntentDetails | null;
   recentDepositIntents: DepositIntentDetails[];
   refreshIntervalSeconds: number;
@@ -449,12 +450,13 @@ function RecentDeposits({ deposits }: { deposits: DepositIntentDetails[] }) {
 
 export function DepositPageClient({
   balance,
+  initialDepositMethod,
   initialDepositIntent,
   recentDepositIntents,
   refreshIntervalSeconds,
 }: DepositPageClientProps) {
   const [activeMethod, setActiveMethod] = useState<DepositMethod>(
-    initialDepositIntent?.provider === DepositProvider.USDT ? "USDT" : "SEPAY",
+    initialDepositIntent?.provider === DepositProvider.USDT ? "USDT" : initialDepositMethod,
   );
   const [amount, setAmount] = useState("500000");
   const [network, setNetwork] = useState<DepositNetwork>(DepositNetwork.TRC20);

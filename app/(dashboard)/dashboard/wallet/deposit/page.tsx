@@ -10,10 +10,21 @@ export const metadata = {
   description: "Tạo lệnh nạp tiền SePay hoặc USDT cho ví nhà tuyển dụng TaskBee.",
 };
 
-export default async function EmployerDepositPage() {
+type EmployerDepositPageProps = {
+  searchParams?: Promise<{
+    method?: string;
+  }>;
+};
+
+function normalizeInitialMethod(method: string | undefined) {
+  return method?.toUpperCase() === "USDT" ? "USDT" : "SEPAY";
+}
+
+export default async function EmployerDepositPage({ searchParams }: EmployerDepositPageProps) {
   await requireRole(UserRole.EMPLOYER);
 
-  const [balance, depositHistory] = await Promise.all([
+  const [params, balance, depositHistory] = await Promise.all([
+    searchParams ?? Promise.resolve<{ method?: string }>({}),
     getWalletBalance(),
     getDepositIntents(1, 8),
   ]);
@@ -25,6 +36,7 @@ export default async function EmployerDepositPage() {
   return (
     <DepositPageClient
       balance={balance}
+      initialDepositMethod={normalizeInitialMethod(params.method)}
       initialDepositIntent={latestActiveIntent}
       recentDepositIntents={depositHistory.depositIntents}
       refreshIntervalSeconds={10}

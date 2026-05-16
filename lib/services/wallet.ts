@@ -44,6 +44,8 @@ import {
  */
 export type WalletBalance = {
   availableBalance: string;
+  employerAvailableBalance: string;
+  workerAvailableBalance: string;
   pendingBalance: string;
   escrowBalance: string;
   totalBalance: string;
@@ -89,6 +91,15 @@ export type RequestWithdrawalResult = {
   withdrawalId?: string;
   fee?: string;
   netAmount?: string;
+};
+
+export type TransferWorkerFundsToEmployerResult = {
+  ok: boolean;
+  message?: string;
+  error?: string;
+  transferredAmount?: string;
+  employerAvailableBalance?: string;
+  workerAvailableBalance?: string;
 };
 
 export type DepositLifecycleStatus = "PENDING" | "EXPIRED" | "CANCELLED" | "CONFIRMED";
@@ -223,6 +234,66 @@ class DepositIntentServiceError extends Error {
     super(message);
     this.name = "DepositIntentServiceError";
   }
+}
+
+type WalletLedgerClient = Prisma.TransactionClient | ReturnType<typeof getPrisma>;
+
+function toNonNegativeMoneyString(amountMinor: bigint) {
+  return fromMinorUnits(amountMinor > BigInt(0) ? amountMinor : BigInt(0));
+}
+
+function getAbsoluteMinorUnits(value: string | null | undefined) {
+  if (!value) {
+    return BigInt(0);
+  }
+
+  const amountMinor = toMinorUnits(value);
+
+  return amountMinor < BigInt(0) ? -amountMinor : amountMinor;
+}
+
+export async function getWorkerAvailableBalanceMinor(db: WalletLedgerClient, userId: string) {
+  const [rewardAggregate, transferAggregate, withdrawalAggregate] = await Promise.all([
+    db.transaction.aggregate({
+      where: {
+        userId,
+        type: TransactionType.TASK_REWARD,
+      },
+      _sum: {
+        amount: true,
+      },
+    }),
+    db.transaction.aggregate({
+      where: {
+        userId,
+        type: TransactionType.WORKER_TO_EMPLOYER_TRANSFER,
+      },
+      _sum: {
+        amount: true,
+      },
+    }),
+    db.withdrawal.aggregate({
+      where: {
+        userId,
+        status: {
+          in: [WithdrawalStatus.PENDING, WithdrawalStatus.APPROVED],
+        },
+      },
+      _sum: {
+        amount: true,
+      },
+    }),
+  ]);
+
+  const rewardMinor = getAbsoluteMinorUnits(rewardAggregate._sum.amount?.toString());
+  const transferredMinor = getAbsoluteMinorUnits(transferAggregate._sum.amount?.toString());
+  const withdrawalMinor = getAbsoluteMinorUnits(withdrawalAggregate._sum.amount?.toString());
+
+  return rewardMinor - transferredMinor - withdrawalMinor;
+}
+
+async function getWorkerAvailableBalance(db: WalletLedgerClient, userId: string) {
+  return toNonNegativeMoneyString(await getWorkerAvailableBalanceMinor(db, userId));
 }
 
 function getDepositExpiresAt(now = new Date()) {
@@ -467,6 +538,23 @@ function normalizeWithdrawalAmount(amount: string | number) {
   };
 }
 
+function normalizeWorkerTransferAmount(amount: string | number) {
+  const normalizedAmount =
+    typeof amount === "string"
+      ? amount.trim().replaceAll(/[₫\s.]/g, "").replaceAll(",", "")
+      : amount;
+  const amountMinor = toMinorUnits(normalizedAmount);
+
+  if (amountMinor <= BigInt(0) || amountMinor % BigInt(100) !== BigInt(0)) {
+    throw new DepositIntentServiceError("Số tiền chuyển phải là số nguyên VND hợp lệ.");
+  }
+
+  return {
+    amount: fromMinorUnits(amountMinor),
+    amountMinor,
+  };
+}
+
 function normalizeWithdrawalInput(
   amount: string | number,
   bankDetails: BankDetails,
@@ -615,6 +703,105 @@ export async function createDepositIntent(
     };
   } catch (error) {
     console.error("Lỗi khi tạo lệnh nạp tiền:", error);
+
+    return {
+      ok: false,
+      error: getRateLimitErrorMessage(error) ?? getWalletValidationError(error),
+    };
+  }
+}
+
+export async function transferWorkerFundsToEmployer(
+  amount: string | number,
+): Promise<TransferWorkerFundsToEmployerResult> {
+  try {
+    const session = await requireVerifiedUser();
+
+    if (!session.profile) {
+      return {
+        ok: false,
+        error: "Vui lòng hoàn tất hồ sơ trước khi chuyển thu nhập sang ngân sách employer.",
+      };
+    }
+
+    const normalizedAmount = normalizeWorkerTransferAmount(amount);
+    const userId = session.profile.id;
+
+    await enforceRateLimit({
+      scope: "wallet:worker-to-employer-transfer",
+      key: userId,
+      limit: 20,
+      windowSeconds: 60 * 60,
+    });
+
+    const prisma = getPrisma();
+    const result = await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw(
+        Prisma.sql`SELECT id FROM "User" WHERE id = ${userId}::uuid FOR UPDATE`,
+      );
+
+      const user = await tx.user.findUniqueOrThrow({
+        where: {
+          id: userId,
+        },
+        select: {
+          availableBalance: true,
+          status: true,
+        },
+      });
+
+      if (user.status !== UserStatus.ACTIVE) {
+        throw new DepositIntentServiceError(
+          "Tài khoản không ở trạng thái hoạt động nên không thể chuyển thu nhập sang ngân sách employer.",
+        );
+      }
+
+      const workerAvailableMinor = await getWorkerAvailableBalanceMinor(tx, userId);
+
+      if (workerAvailableMinor < normalizedAmount.amountMinor) {
+        throw new DepositIntentServiceError(
+          `Thu nhập freelancer có thể chuyển không đủ. Bạn có ${formatVnd(toNonNegativeMoneyString(workerAvailableMinor))} nhưng cần ${formatVnd(normalizedAmount.amount)}.`,
+        );
+      }
+
+      const nextWorkerAvailableMinor = workerAvailableMinor - normalizedAmount.amountMinor;
+      const employerAvailableBalance = toNonNegativeMoneyString(
+        toMinorUnits(user.availableBalance.toString()) - nextWorkerAvailableMinor,
+      );
+
+      await tx.transaction.create({
+        data: {
+          userId,
+          type: TransactionType.WORKER_TO_EMPLOYER_TRANSFER,
+          amount: `-${normalizedAmount.amount}`,
+          balanceAfter: user.availableBalance.toString(),
+          description: `Chuyển ${formatVnd(normalizedAmount.amount)} từ thu nhập freelancer sang ngân sách employer.`,
+          metadata: {
+            amount: normalizedAmount.amount,
+            workerAvailableBefore: toNonNegativeMoneyString(workerAvailableMinor),
+            workerAvailableAfter: toNonNegativeMoneyString(nextWorkerAvailableMinor),
+            employerAvailableAfter: employerAvailableBalance,
+          } as Prisma.InputJsonValue,
+        },
+      });
+
+      return {
+        transferredAmount: normalizedAmount.amount,
+        employerAvailableBalance,
+        workerAvailableBalance: toNonNegativeMoneyString(nextWorkerAvailableMinor),
+      };
+    });
+
+    revalidatePath("/dashboard/wallet");
+    revalidatePath("/dashboard/employer/tasks");
+
+    return {
+      ok: true,
+      message: `Đã chuyển ${formatVnd(result.transferredAmount)} sang ngân sách employer. Khoản này sẽ không thể rút ở ví worker nữa.`,
+      ...result,
+    };
+  } catch (error) {
+    console.error("Lỗi khi chuyển thu nhập worker sang ngân sách employer:", error);
 
     return {
       ok: false,
@@ -883,6 +1070,10 @@ export async function getWalletBalance(): Promise<WalletBalance | null> {
     const availableBalance = user.availableBalance.toString();
     const pendingBalance = user.pendingBalance.toString();
     const escrowBalance = user.escrowBalance.toString();
+    const workerAvailableBalance = await getWorkerAvailableBalance(prisma, session.profile.id);
+    const employerAvailableBalance = toNonNegativeMoneyString(
+      toMinorUnits(availableBalance) - toMinorUnits(workerAvailableBalance),
+    );
 
     // Tính tổng số dư
     const totalBalanceMinor =
@@ -892,6 +1083,8 @@ export async function getWalletBalance(): Promise<WalletBalance | null> {
 
     return {
       availableBalance,
+      employerAvailableBalance,
+      workerAvailableBalance,
       pendingBalance,
       escrowBalance,
       totalBalance: fromMinorUnits(totalBalanceMinor),
@@ -1079,9 +1272,12 @@ export async function requestWithdrawal(
       }
 
       const currentAvailableMinor = toMinorUnits(currentUser.availableBalance.toString());
+      const workerAvailableMinor = await getWorkerAvailableBalanceMinor(tx, userId);
+      const withdrawableMinor =
+        currentAvailableMinor < workerAvailableMinor ? currentAvailableMinor : workerAvailableMinor;
 
-      if (currentAvailableMinor < input.amountMinor) {
-        throw createInsufficientBalanceError(currentUser.availableBalance.toString(), input.amount);
+      if (withdrawableMinor < input.amountMinor) {
+        throw createInsufficientBalanceError(fromMinorUnits(withdrawableMinor), input.amount);
       }
 
       const walletUpdate = await tx.user.updateMany({
@@ -1103,7 +1299,7 @@ export async function requestWithdrawal(
       });
 
       if (walletUpdate.count !== 1) {
-        throw createInsufficientBalanceError(currentUser.availableBalance.toString(), input.amount);
+        throw createInsufficientBalanceError(fromMinorUnits(withdrawableMinor), input.amount);
       }
 
       const updatedUser = await tx.user.findUniqueOrThrow({

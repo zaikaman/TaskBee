@@ -18,6 +18,7 @@ import {
   expireStaleTaskClaims,
   getTaskClaimExpiresAt,
 } from "@/lib/services/task-claim-expiration";
+import { getWorkerAvailableBalanceMinor } from "@/lib/services/wallet";
 import {
   addMoney,
   calculateEmployerTaskCharge,
@@ -245,6 +246,10 @@ async function lockEmployerTaskCharge(
   charge: EmployerTaskCharge,
   taskDetails: Pick<CreateTaskInput, "rewardAmount" | "totalSlots">,
 ) {
+  await tx.$queryRaw(
+    Prisma.sql`SELECT id FROM "User" WHERE id = ${employerId}::uuid FOR UPDATE`,
+  );
+
   const currentUser = await tx.user.findUniqueOrThrow({
     where: {
       id: employerId,
@@ -257,11 +262,16 @@ async function lockEmployerTaskCharge(
   });
 
   const currentBalance = currentUser.availableBalance.toString();
+  const workerAvailableMinor = await getWorkerAvailableBalanceMinor(tx, employerId);
+  const employerSpendableMinor = toMinorUnits(currentBalance) - workerAvailableMinor;
+  const employerSpendable = fromMinorUnits(
+    employerSpendableMinor > BigInt(0) ? employerSpendableMinor : BigInt(0),
+  );
   const isWhitelisted = TEST_WHITELIST_EMAILS.includes(currentUser.email as any);
 
-  if (!isWhitelisted && toMinorUnits(currentBalance) < toMinorUnits(charge.totalCharge)) {
+  if (!isWhitelisted && employerSpendableMinor < toMinorUnits(charge.totalCharge)) {
     throw new Error(
-      `Số dư không đủ. Cần ${formatVnd(charge.totalCharge)} nhưng chỉ có ${formatVnd(currentBalance)}.`,
+      `Ngân sách employer không đủ. Cần ${formatVnd(charge.totalCharge)} nhưng chỉ có ${formatVnd(employerSpendable)}. Nếu muốn dùng thu nhập freelancer, hãy chuyển thu nhập sang ngân sách employer trước.`,
     );
   }
 
