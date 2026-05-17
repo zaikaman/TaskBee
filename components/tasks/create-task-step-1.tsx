@@ -12,9 +12,15 @@ type CreateTaskStep1Props = {
   data: TaskFormData;
   onNext: (data: Partial<TaskFormData>) => void;
   isEdit?: boolean;
+  onTaskTypeChange?: (taskType: TaskType) => void;
 };
 
-export function CreateTaskStep1({ data, onNext, isEdit = false }: CreateTaskStep1Props) {
+export function CreateTaskStep1({
+  data,
+  onNext,
+  isEdit = false,
+  onTaskTypeChange,
+}: CreateTaskStep1Props) {
   const [formData, setFormData] = useState({
     taskType: data.taskType,
     title: data.title,
@@ -36,6 +42,7 @@ export function CreateTaskStep1({ data, onNext, isEdit = false }: CreateTaskStep
   const handleChange = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => {
       if (field === "taskType") {
+        onTaskTypeChange?.(value as TaskType);
         return {
           ...prev,
           taskType: value as TaskType,

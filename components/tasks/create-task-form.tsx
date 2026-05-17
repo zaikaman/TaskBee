@@ -8,6 +8,7 @@ import type { CreateTaskState } from "@/lib/services/task";
 const initialCreateTaskState: CreateTaskState = {
   ok: false,
 };
+import { CreateExpressTaskForm } from "./create-express-task-form";
 import { CreateTaskStep1 } from "./create-task-step-1";
 import { CreateTaskStep2 } from "./create-task-step-2";
 import { CreateTaskStep3 } from "./create-task-step-3";
@@ -90,7 +91,32 @@ export function CreateTaskForm({ onSuccess }: CreateTaskFormProps) {
     setCurrentStep((prev) => prev - 1);
   };
 
+  const handleTaskTypeChange = (taskType: TaskType) => {
+    setFormData((prev) => ({
+      ...prev,
+      taskType,
+      category: "",
+      subcategory: "",
+      targetListId: "",
+    }));
+    setCurrentStep(1);
+  };
+
   const totalSteps = 3;
+
+  if (activeFormData.taskType === TaskType.EXPRESS) {
+    return (
+      <div className="mx-auto w-full max-w-5xl">
+        <CreateExpressTaskForm
+          data={activeFormData}
+          formAction={formAction}
+          isPending={isPending}
+          onChangeTaskType={handleTaskTypeChange}
+          state={state}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto w-full max-w-4xl">
@@ -102,6 +128,7 @@ export function CreateTaskForm({ onSuccess }: CreateTaskFormProps) {
         {currentStep === 1 && (
           <CreateTaskStep1
             data={activeFormData}
+            onTaskTypeChange={handleTaskTypeChange}
             onNext={handleNext}
           />
         )}
