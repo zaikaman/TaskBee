@@ -92,14 +92,14 @@ export default async function ProfilePage() {
   return (
     <div className="mx-auto max-w-[1090px] space-y-6">
       <section className="border-b border-zinc-200 bg-white">
-        <div className="flex flex-wrap gap-8 overflow-x-auto px-1">
+        <div className="flex w-full overflow-x-auto">
           {tabs.map((tab, index) => (
             <span
               key={tab}
               className={
                 index === 0
-                  ? "border-b-2 border-emerald-600 py-4 text-sm font-semibold uppercase text-zinc-950"
-                  : "py-4 text-sm font-semibold uppercase text-zinc-950 hover:text-emerald-700"
+                  ? "flex flex-1 items-center justify-center whitespace-nowrap border-b-2 border-emerald-600 px-4 py-4 text-sm font-semibold uppercase text-zinc-950 text-center"
+                  : "flex flex-1 items-center justify-center whitespace-nowrap px-4 py-4 text-sm font-semibold uppercase text-zinc-950 hover:text-emerald-700 text-center cursor-pointer"
               }
             >
               {tab}
