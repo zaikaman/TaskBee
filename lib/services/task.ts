@@ -142,6 +142,18 @@ function mapCreateTaskFields(raw: Record<string, unknown>) {
   };
 }
 
+function normalizeTaskCategoryData(data: CreateTaskInput): CreateTaskInput {
+  if (data.taskType !== TaskType.CLASSIC) {
+    return {
+      ...data,
+      category: null,
+      subcategory: null,
+    };
+  }
+
+  return data;
+}
+
 function snapshotFields(raw: Record<string, unknown>): CreateTaskState["fields"] {
   return {
     taskType:
@@ -218,7 +230,10 @@ async function countTaskWorkBlockers(db: TaskWorkBlockerClient, taskId: string) 
   };
 }
 
-function getBlockingWorkMessage(action: "pause" | "close" | "cancel", blockers: Awaited<ReturnType<typeof countTaskWorkBlockers>>) {
+function getBlockingWorkMessage(
+  action: "pause" | "close" | "cancel",
+  blockers: Awaited<ReturnType<typeof countTaskWorkBlockers>>,
+) {
   const actionLabel =
     action === "pause" ? "tạm dừng" : action === "close" ? "đóng" : "hủy";
 
@@ -258,24 +273,26 @@ function getTaskSubmissionMode(raw: Record<string, unknown>): TaskSubmissionMode
 }
 
 function buildDraftTaskCreateData(data: CreateTaskInput) {
+  const taskData = normalizeTaskCategoryData(data);
+
   return {
-    taskType: data.taskType ?? TaskType.EXPRESS,
-    title: data.title,
-    description: data.description,
-    instructions: data.instructions,
-    proofRequirements: data.proofRequirements ?? null,
-    category: data.category ?? null,
-    subcategory: data.subcategory ?? null,
-    targetListId: data.targetListId ?? null,
-    rewardAmount: String(data.rewardAmount),
-    totalSlots: data.totalSlots,
-    availableSlots: data.totalSlots,
+    taskType: taskData.taskType ?? TaskType.EXPRESS,
+    title: taskData.title,
+    description: taskData.description,
+    instructions: taskData.instructions,
+    proofRequirements: taskData.proofRequirements ?? null,
+    category: taskData.category ?? null,
+    subcategory: taskData.subcategory ?? null,
+    targetListId: taskData.targetListId ?? null,
+    rewardAmount: String(taskData.rewardAmount),
+    totalSlots: taskData.totalSlots,
+    availableSlots: taskData.totalSlots,
     escrowAmount: "0",
     platformFeeAmount: "0",
     status: TaskStatus.DRAFT,
-    autoApproveDays: data.autoApproveDays,
-    holdTimeMinutes: data.holdTimeMinutes,
-    expiresAt: data.expiresAt ?? null,
+    autoApproveDays: taskData.autoApproveDays,
+    holdTimeMinutes: taskData.holdTimeMinutes,
+    expiresAt: taskData.expiresAt ?? null,
     publishedAt: null,
   };
 }
@@ -1193,6 +1210,8 @@ export async function updateTask(
     };
   }
 
+  const normalizedData = normalizeTaskCategoryData(parsed.data);
+
   try {
     const prisma = getPrisma();
 
@@ -1229,7 +1248,7 @@ export async function updateTask(
       const { task: publishedTask, charge } = await publishDraftTaskRecord(
         profile.id,
         existingTask,
-        parsed.data,
+        normalizedData,
       );
 
       revalidatePath("/dashboard/employer/tasks");
@@ -1258,20 +1277,20 @@ export async function updateTask(
         id: taskId,
       },
       data: {
-        title: parsed.data.title,
-        description: parsed.data.description,
-        instructions: parsed.data.instructions,
-        proofRequirements: parsed.data.proofRequirements ?? null,
-        category: parsed.data.category ?? null,
-        subcategory: parsed.data.subcategory ?? null,
-        targetListId: parsed.data.targetListId ?? null,
-        taskType: parsed.data.taskType ?? TaskType.EXPRESS,
-        rewardAmount: String(parsed.data.rewardAmount),
-        totalSlots: parsed.data.totalSlots,
-        availableSlots: parsed.data.totalSlots,
-        autoApproveDays: parsed.data.autoApproveDays,
-        holdTimeMinutes: parsed.data.holdTimeMinutes,
-        expiresAt: parsed.data.expiresAt ?? null,
+        title: normalizedData.title,
+        description: normalizedData.description,
+        instructions: normalizedData.instructions,
+        proofRequirements: normalizedData.proofRequirements ?? null,
+        category: normalizedData.category ?? null,
+        subcategory: normalizedData.subcategory ?? null,
+        targetListId: normalizedData.targetListId ?? null,
+        taskType: normalizedData.taskType ?? TaskType.EXPRESS,
+        rewardAmount: String(normalizedData.rewardAmount),
+        totalSlots: normalizedData.totalSlots,
+        availableSlots: normalizedData.totalSlots,
+        autoApproveDays: normalizedData.autoApproveDays,
+        holdTimeMinutes: normalizedData.holdTimeMinutes,
+        expiresAt: normalizedData.expiresAt ?? null,
         updatedAt: new Date(),
       },
     });

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { TaskType } from "@/lib/generated/prisma/browser";
 import { calculateEmployerTaskCharge, formatVnd } from "@/lib/utils/money";
 import type { CreateTaskState } from "@/lib/services/task";
 import type { TaskFormData } from "./create-task-form";
@@ -24,6 +25,15 @@ export function CreateTaskStep3({
   taskId,
   isEdit = false,
 }: CreateTaskStep3Props) {
+  const isClassicJob = data.taskType === TaskType.CLASSIC;
+  const summaryData = isClassicJob
+    ? data
+    : {
+        ...data,
+        category: "",
+        subcategory: "",
+      };
+
   // Calculate costs
   const costs = useMemo(() => {
     try {
@@ -66,19 +76,32 @@ export function CreateTaskStep3({
           <div>
             <span className="text-xs font-bold text-[#7f8aa0] uppercase">Loại việc</span>
             <p className="mt-1 text-sm font-medium text-[#203259]">
-              {data.taskType === "CLASSIC" ? "Việc Classic" : data.taskType === "LIST" ? "Việc danh sách" : "Việc Express"}
+              {data.taskType === TaskType.CLASSIC
+                ? "Việc Classic"
+                : data.taskType === TaskType.LIST
+                  ? "Việc danh sách"
+                  : "Việc Express"}
             </p>
           </div>
 
-          <div>
-            <span className="text-xs font-bold text-[#7f8aa0] uppercase">Danh mục</span>
-            <p className="mt-1 text-sm text-[#203259]">{data.category || "Chưa chọn"}</p>
-          </div>
+          {isClassicJob ? (
+            <>
+              <div>
+                <span className="text-xs font-bold text-[#7f8aa0] uppercase">Danh mục</span>
+                <p className="mt-1 text-sm text-[#203259]">{summaryData.category || "Chưa chọn"}</p>
+              </div>
 
-          {data.subcategory && (
-            <div>
-              <span className="text-xs font-bold text-[#7f8aa0] uppercase">Danh mục con</span>
-              <p className="mt-1 text-sm text-[#203259]">{data.subcategory}</p>
+              {summaryData.subcategory && (
+                <div>
+                  <span className="text-xs font-bold text-[#7f8aa0] uppercase">Danh mục con</span>
+                  <p className="mt-1 text-sm text-[#203259]">{summaryData.subcategory}</p>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="border border-dashed border-[#d3dae6] bg-white px-4 py-3 text-sm text-[#5b6576]">
+              Việc Express không cần danh mục hay danh mục con. Hệ thống sẽ tự động chuyển sang
+              luồng đăng nhanh.
             </div>
           )}
 
@@ -172,19 +195,23 @@ export function CreateTaskStep3({
       <form action={formAction} className="space-y-4">
         {/* Hidden fields for all form data */}
         {isEdit && taskId && <input name="taskId" type="hidden" value={taskId} />}
-        <input name="taskType" type="hidden" value={data.taskType} />
-        <input name="title" type="hidden" value={data.title} />
-        <input name="description" type="hidden" value={data.description} />
-        <input name="instructions" type="hidden" value={data.instructions} />
-        <input name="category" type="hidden" value={data.category} />
-        <input name="subcategory" type="hidden" value={data.subcategory} />
-        {data.targetListId && <input name="targetListId" type="hidden" value={data.targetListId} />}
-        <input name="rewardAmount" type="hidden" value={data.rewardAmount} />
-        <input name="totalSlots" type="hidden" value={data.totalSlots} />
-        <input name="autoApproveDays" type="hidden" value={data.autoApproveDays} />
-        <input name="holdTimeMinutes" type="hidden" value={data.holdTimeMinutes} />
-        {data.proofRequirements && (
-          <input name="proofRequirements" type="hidden" value={data.proofRequirements} />
+        <input name="taskType" type="hidden" value={summaryData.taskType} />
+        <input name="title" type="hidden" value={summaryData.title} />
+        <input name="description" type="hidden" value={summaryData.description} />
+        <input name="instructions" type="hidden" value={summaryData.instructions} />
+        {isClassicJob && <input name="category" type="hidden" value={summaryData.category} />}
+        {isClassicJob && (
+          <input name="subcategory" type="hidden" value={summaryData.subcategory} />
+        )}
+        {summaryData.targetListId && (
+          <input name="targetListId" type="hidden" value={summaryData.targetListId} />
+        )}
+        <input name="rewardAmount" type="hidden" value={summaryData.rewardAmount} />
+        <input name="totalSlots" type="hidden" value={summaryData.totalSlots} />
+        <input name="autoApproveDays" type="hidden" value={summaryData.autoApproveDays} />
+        <input name="holdTimeMinutes" type="hidden" value={summaryData.holdTimeMinutes} />
+        {summaryData.proofRequirements && (
+          <input name="proofRequirements" type="hidden" value={summaryData.proofRequirements} />
         )}
 
         {/* Actions */}

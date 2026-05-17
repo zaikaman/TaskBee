@@ -5,7 +5,6 @@ import { TASK_LIMITS } from "@/config/app";
 import { TaskType } from "@/lib/generated/prisma/browser";
 import {
   classicJobCategories,
-  expressJobCategories,
 } from "@/lib/tasks/classic-job-catalog";
 import type { TaskFormData } from "./create-task-form";
 
@@ -21,8 +20,8 @@ export function CreateTaskStep1({ data, onNext, isEdit = false }: CreateTaskStep
     title: data.title,
     description: data.description,
     instructions: data.instructions,
-    category: data.category,
-    subcategory: data.subcategory,
+    category: data.taskType === TaskType.CLASSIC ? data.category : "",
+    subcategory: data.taskType === TaskType.CLASSIC ? data.subcategory : "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -111,7 +110,15 @@ export function CreateTaskStep1({ data, onNext, isEdit = false }: CreateTaskStep
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
-      onNext(formData);
+      onNext(
+        isClassicJob
+          ? formData
+          : {
+              ...formData,
+              category: "",
+              subcategory: "",
+            },
+      );
     }
   };
 
@@ -120,7 +127,7 @@ export function CreateTaskStep1({ data, onNext, isEdit = false }: CreateTaskStep
       <div>
         <h2 className="text-xl font-semibold text-[#203259] sm:text-2xl">Thông tin cơ bản</h2>
         <p className="mt-2 text-sm text-[#7f8aa0]">
-          Chọn loại việc, danh mục và nhập nội dung cần người làm thực hiện
+          Chọn loại việc phù hợp rồi nhập nội dung cần người làm thực hiện
         </p>
       </div>
 
@@ -133,7 +140,7 @@ export function CreateTaskStep1({ data, onNext, isEdit = false }: CreateTaskStep
             {
               value: TaskType.EXPRESS,
               label: "Việc Express",
-              description: "Tạo việc nhanh với danh mục tổng quát",
+              description: "Tạo việc nhanh, không cần chọn danh mục",
             },
             {
               value: TaskType.CLASSIC,
@@ -245,28 +252,10 @@ export function CreateTaskStep1({ data, onNext, isEdit = false }: CreateTaskStep
           )}
         </div>
       ) : (
-        <label className="block">
-          <span className="mb-2 block text-sm font-bold text-[#203259]">
-            Danh mục <span className="text-[#e63e46]">*</span>
-          </span>
-          <select
-            className={`h-[48px] w-full rounded-none border-0 bg-[#edf4ff] px-4 text-sm text-[#203259] outline-none focus:bg-[#f2f4f7] focus:ring-1 ${
-              errors.category ? "focus:ring-[#e63e46]" : "focus:ring-[#22ab59]"
-            }`}
-            onChange={(e) => handleChange("category", e.target.value)}
-            value={formData.category}
-          >
-            <option value="">-- Chọn danh mục --</option>
-            {expressJobCategories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
-          {errors.category && (
-            <span className="mt-1 block text-xs text-[#e63e46]">{errors.category}</span>
-          )}
-        </label>
+        <div className="border border-dashed border-[#d3dae6] bg-[#f8fafc] px-4 py-3 text-sm text-[#5b6576]">
+          Việc Express không cần chọn danh mục hay danh mục con. Hệ thống sẽ đăng việc theo luồng
+          nhanh để bạn đi tiếp sang phần cài đặt.
+        </div>
       )}
 
       <label className="block">
