@@ -68,7 +68,7 @@ export const PAYMENT_CONFIG = {
     bankTransferContentPrefix: "TB",
     webhook: {
       secretEnvVar: "SEPAY_WEBHOOK_SECRET",
-      apiKeyEnvVar: "SEPAY_API_TOKEN",
+      apiKeyEnvVar: "SEPAY_WEBHOOK_API_KEY",
       signatureAlgorithm: "HMAC-SHA256",
       signatureHeader: "x-sepay-signature",
       timestampHeader: "x-sepay-timestamp",

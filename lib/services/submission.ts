@@ -634,8 +634,52 @@ export async function uploadProofFileAction(
       return { ok: false, error: "Thiếu thông tin taskId." };
     }
 
+    if (!isUuid(taskId)) {
+      return { ok: false, error: "ID task không hợp lệ." };
+    }
+
     if (!file || !(file instanceof File)) {
       return { ok: false, error: "Vui lòng chọn ảnh để tải lên." };
+    }
+
+    const prisma = getPrisma();
+    const now = new Date();
+
+    await expireStaleTaskClaims({
+      taskId,
+      workerId: profile.id,
+      now,
+    });
+
+    const activeClaim = await prisma.taskClaim.findFirst({
+      where: {
+        taskId,
+        workerId: profile.id,
+        status: TaskClaimStatus.CLAIMED,
+        OR: [
+          {
+            expiresAt: null,
+          },
+          {
+            expiresAt: {
+              gt: now,
+            },
+          },
+        ],
+        task: {
+          status: TaskStatus.ACTIVE,
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!activeClaim) {
+      return {
+        ok: false,
+        error: "Bạn cần nhận task và còn giữ slot hợp lệ trước khi tải ảnh bằng chứng.",
+      };
     }
 
     const result = await uploadProofImage({

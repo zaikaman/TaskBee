@@ -78,4 +78,32 @@ describe("ledger reconciliation", () => {
     expect(result.summary.isConsistent).toBe(false);
     expect(result.issues.some((issue) => issue.code === "TRANSACTION_BALANCE_FINAL_MISMATCH")).toBe(true);
   });
+
+  it("khong coi worker-to-employer transfer la thay doi availableBalance", async () => {
+    prismaMock.transaction.findMany.mockResolvedValueOnce([
+      {
+        id: "tx-1",
+        userId: "user-1",
+        type: "DEPOSIT",
+        amount: "100000.00",
+        balanceAfter: "100000.00",
+        referenceId: "deposit-1",
+        createdAt: new Date("2026-01-01T00:00:00.000Z"),
+      },
+      {
+        id: "tx-2",
+        userId: "user-1",
+        type: "WORKER_TO_EMPLOYER_TRANSFER",
+        amount: "-20000.00",
+        balanceAfter: "100000.00",
+        referenceId: null,
+        createdAt: new Date("2026-01-02T00:00:00.000Z"),
+      },
+    ]);
+
+    const result = await reconcileLedger({ includeHealthyUsers: true });
+
+    expect(result.summary.isConsistent).toBe(true);
+    expect(result.summary.errorCount).toBe(0);
+  });
 });

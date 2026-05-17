@@ -267,6 +267,10 @@ function getTransactionEffects(
   transaction: Pick<SelectedTransaction, "type">,
   amountMinor: bigint,
 ): WalletEffect[] {
+  if (transaction.type === TransactionType.WORKER_TO_EMPLOYER_TRANSFER) {
+    return [];
+  }
+
   if (transaction.type === TransactionType.TASK_ESCROW_LOCK) {
     return [
       {
