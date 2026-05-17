@@ -177,13 +177,27 @@ function FilterButton({
   );
 }
 
-function OptionRow({ option, type = "checkbox" }: { option: FilterOption; type?: "checkbox" | "radio" }) {
+function OptionRow({
+  option,
+  type = "checkbox",
+  name,
+}: {
+  option: FilterOption;
+  type?: "checkbox" | "radio";
+  name?: string;
+}) {
+  const isRadio = type === "radio";
+
   return (
     <label className="flex cursor-pointer items-center gap-3 text-sm font-semibold text-[#687282]">
       <input
         type={type}
+        name={name}
+        value={option.label}
         disabled={option.locked}
-        className="size-3.5 appearance-none border border-[#202733] bg-white checked:border-[#22ab59] checked:bg-[#22ab59] disabled:opacity-60"
+        className={`size-3.5 appearance-none border bg-white checked:border-[#22ab59] checked:bg-[#22ab59] disabled:opacity-60 ${
+          isRadio ? "rounded-full border-[#c7d3e2]" : "rounded-sm border-[#202733]"
+        }`}
       />
       <span className="flex items-center gap-1.5">
         {option.label}
@@ -298,7 +312,11 @@ function MarketplaceFilterPanel({
           </>
         }
       >
-        <div className="space-y-4">{subcategories.map((label) => <OptionRow key={label} option={{ label }} type="radio" />)}</div>
+        <div className="space-y-4">
+          {subcategories.map((label) => (
+            <OptionRow key={label} name="marketplace-subcategory" option={{ label }} type="radio" />
+          ))}
+        </div>
       </PanelShell>
     );
   }
@@ -365,7 +383,11 @@ function MarketplaceFilterPanel({
         </>
       }
     >
-      <div className="space-y-4">{employerStats.map((label) => <OptionRow key={label} option={{ label }} type="radio" />)}</div>
+      <div className="space-y-4">
+        {employerStats.map((label) => (
+          <OptionRow key={label} name="marketplace-stats" option={{ label }} type="radio" />
+        ))}
+      </div>
     </PanelShell>
   );
 }
