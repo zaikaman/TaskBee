@@ -2,16 +2,21 @@
 
 type CreateTaskStepperProps = {
   currentStep: number;
+  labels?: string[];
   totalSteps: number;
 };
 
-const stepLabels = [
+const defaultStepLabels = [
   "Thông tin cơ bản",
   "Cài đặt công việc",
-  "Xác nhận & Thanh toán",
+  "Xác nhận & thanh toán",
 ];
 
-export function CreateTaskStepper({ currentStep, totalSteps }: CreateTaskStepperProps) {
+export function CreateTaskStepper({
+  currentStep,
+  labels = defaultStepLabels,
+  totalSteps,
+}: CreateTaskStepperProps) {
   return (
     <div className="w-full">
       <div className="flex items-start justify-between overflow-x-auto pb-2">
@@ -22,15 +27,14 @@ export function CreateTaskStepper({ currentStep, totalSteps }: CreateTaskStepper
 
           return (
             <div key={stepNumber} className="flex min-w-[110px] flex-1 items-start">
-              {/* Step Circle */}
               <div className="flex min-w-0 flex-col items-center text-center">
                 <div
-                  className={`flex size-10 items-center justify-center rounded-full border-2 font-bold transition-colors ${
+                  className={`flex size-8 items-center justify-center rounded-full border font-bold transition-colors ${
                     isCompleted
                       ? "border-[#22ab59] bg-[#22ab59] text-white"
                       : isActive
                         ? "border-[#22ab59] bg-white text-[#22ab59]"
-                        : "border-[#d1d5db] bg-white text-[#9ca3af]"
+                        : "border-[#d3dae6] bg-white text-[#d3dae6]"
                   }`}
                 >
                   {isCompleted ? (
@@ -53,18 +57,17 @@ export function CreateTaskStepper({ currentStep, totalSteps }: CreateTaskStepper
                 </div>
                 <span
                   className={`mt-2 max-w-24 text-xs font-medium leading-snug ${
-                    isActive || isCompleted ? "text-[#22ab59]" : "text-[#9ca3af]"
+                    isActive || isCompleted ? "text-[#01a149]" : "text-[#d3dae6]"
                   }`}
                 >
-                  {stepLabels[index]}
+                  {labels[index] ?? `Bước ${stepNumber}`}
                 </span>
               </div>
 
-              {/* Connector Line */}
               {stepNumber < totalSteps && (
                 <div
-                  className={`mx-2 mt-5 h-0.5 flex-1 transition-colors ${
-                    isCompleted ? "bg-[#22ab59]" : "bg-[#d1d5db]"
+                  className={`mx-2 mt-4 h-px flex-1 transition-colors ${
+                    isCompleted ? "bg-[#22ab59]" : "bg-[#d3dae6]"
                   }`}
                 />
               )}

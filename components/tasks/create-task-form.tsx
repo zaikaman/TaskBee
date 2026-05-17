@@ -9,7 +9,8 @@ const initialCreateTaskState: CreateTaskState = {
   ok: false,
 };
 import { CreateExpressTaskForm } from "./create-express-task-form";
-import { CreateTaskStep1 } from "./create-task-step-1";
+import { CreateClassicCategoryStep } from "./create-classic-category-step";
+import { CreateClassicDetailsStep } from "./create-classic-details-step";
 import { CreateTaskStep2 } from "./create-task-step-2";
 import { CreateTaskStep3 } from "./create-task-step-3";
 import { CreateTaskStepper } from "./create-task-stepper";
@@ -87,6 +88,10 @@ export function CreateTaskForm({ onSuccess }: CreateTaskFormProps) {
     setCurrentStep((prev) => prev + 1);
   };
 
+  const handleUpdate = (stepData: Partial<TaskFormData>) => {
+    setFormData((prev) => ({ ...prev, ...stepData }));
+  };
+
   const handleBack = () => {
     setCurrentStep((prev) => prev - 1);
   };
@@ -102,7 +107,8 @@ export function CreateTaskForm({ onSuccess }: CreateTaskFormProps) {
     setCurrentStep(1);
   };
 
-  const totalSteps = 3;
+  const classicStepLabels = ["Danh mục", "Nội dung", "Cài đặt", "Xác nhận"];
+  const totalSteps = classicStepLabels.length;
 
   if (activeFormData.taskType === TaskType.EXPRESS) {
     return (
@@ -119,21 +125,26 @@ export function CreateTaskForm({ onSuccess }: CreateTaskFormProps) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl">
-      {/* Stepper */}
-      <CreateTaskStepper currentStep={currentStep} totalSteps={totalSteps} />
-
-      {/* Step Content */}
-      <div className="mt-6 sm:mt-8">
+    <div className="mx-auto w-full max-w-6xl">
+      <div>
         {currentStep === 1 && (
-          <CreateTaskStep1
+          <CreateClassicCategoryStep
             data={activeFormData}
             onTaskTypeChange={handleTaskTypeChange}
+            onUpdate={handleUpdate}
             onNext={handleNext}
           />
         )}
 
         {currentStep === 2 && (
+          <CreateClassicDetailsStep
+            data={activeFormData}
+            onBack={handleBack}
+            onNext={handleNext}
+          />
+        )}
+
+        {currentStep === 3 && (
           <CreateTaskStep2
             data={activeFormData}
             onNext={handleNext}
@@ -141,7 +152,7 @@ export function CreateTaskForm({ onSuccess }: CreateTaskFormProps) {
           />
         )}
 
-        {currentStep === 3 && (
+        {currentStep === 4 && (
           <CreateTaskStep3
             data={activeFormData}
             formAction={formAction}
@@ -150,6 +161,14 @@ export function CreateTaskForm({ onSuccess }: CreateTaskFormProps) {
             onBack={handleBack}
           />
         )}
+      </div>
+
+      <div className="mt-8 bg-[#f5f7fa] px-6 py-5">
+        <CreateTaskStepper
+          currentStep={currentStep}
+          labels={classicStepLabels}
+          totalSteps={totalSteps}
+        />
       </div>
     </div>
   );
