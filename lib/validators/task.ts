@@ -10,7 +10,7 @@ import {
  * Nhà tuyển việc sử dụng để tạo việc với đầy đủ thông tin
  */
 export const createTaskSchema = z.object({
-  // Loại việc - MVP chỉ hỗ trợ EXPRESS, sau này mở rộng CLASSIC và LIST
+  // Loại việc được lưu trực tiếp vào Task để tách Express, Classic và List.
   taskType: z
     .enum([TaskType.EXPRESS, TaskType.CLASSIC, TaskType.LIST])
     .default(TaskType.EXPRESS),
@@ -44,16 +44,16 @@ export const createTaskSchema = z.object({
   category: z
     .string()
     .min(2, "Danh mục phải có ít nhất 2 ký tự")
-    .max(50, "Danh mục không được vượt quá 50 ký tự")
+    .max(120, "Danh mục không được vượt quá 120 ký tự")
     .trim()
     .optional()
     .nullable(),
 
-  // Danh mục con - dùng cho loại việc CLASSIC (trong tương lai)
+  // Danh mục con dùng cho Classic Job.
   subcategory: z
     .string()
     .min(2, "Danh mục con phải có ít nhất 2 ký tự")
-    .max(50, "Danh mục con không được vượt quá 50 ký tự")
+    .max(160, "Danh mục con không được vượt quá 160 ký tự")
     .trim()
     .optional()
     .nullable(),

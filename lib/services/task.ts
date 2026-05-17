@@ -39,11 +39,14 @@ export type CreateTaskState = {
   error?: string;
   taskId?: string;
   fields?: Partial<{
+    taskType: TaskType;
     title: string;
     description: string;
     instructions: string;
     proofRequirements: string;
     category: string;
+    subcategory: string;
+    targetListId: string;
     rewardAmount: string;
     totalSlots: string;
     autoApproveDays: string;
@@ -117,11 +120,14 @@ function normalizeOptionalDate(value: unknown) {
 
 function mapCreateTaskFields(raw: Record<string, unknown>) {
   return {
+    taskType: normalizeRequiredText(raw.taskType),
     title: normalizeRequiredText(raw.title),
     description: normalizeRequiredText(raw.description),
     instructions: normalizeRequiredText(raw.instructions),
     proofRequirements: normalizeOptionalText(raw.proofRequirements),
     category: normalizeOptionalText(raw.category),
+    subcategory: normalizeOptionalText(raw.subcategory),
+    targetListId: normalizeOptionalText(raw.targetListId),
     rewardAmount: normalizeNumber(raw.rewardAmount),
     totalSlots: normalizeNumber(raw.totalSlots),
     autoApproveDays:
@@ -138,12 +144,20 @@ function mapCreateTaskFields(raw: Record<string, unknown>) {
 
 function snapshotFields(raw: Record<string, unknown>): CreateTaskState["fields"] {
   return {
+    taskType:
+      raw.taskType === TaskType.EXPRESS ||
+      raw.taskType === TaskType.CLASSIC ||
+      raw.taskType === TaskType.LIST
+        ? raw.taskType
+        : undefined,
     title: typeof raw.title === "string" ? raw.title : undefined,
     description: typeof raw.description === "string" ? raw.description : undefined,
     instructions: typeof raw.instructions === "string" ? raw.instructions : undefined,
     proofRequirements:
       typeof raw.proofRequirements === "string" ? raw.proofRequirements : undefined,
     category: typeof raw.category === "string" ? raw.category : undefined,
+    subcategory: typeof raw.subcategory === "string" ? raw.subcategory : undefined,
+    targetListId: typeof raw.targetListId === "string" ? raw.targetListId : undefined,
     rewardAmount: typeof raw.rewardAmount === "string" ? raw.rewardAmount : undefined,
     totalSlots: typeof raw.totalSlots === "string" ? raw.totalSlots : undefined,
     autoApproveDays:
@@ -1249,6 +1263,9 @@ export async function updateTask(
         instructions: parsed.data.instructions,
         proofRequirements: parsed.data.proofRequirements ?? null,
         category: parsed.data.category ?? null,
+        subcategory: parsed.data.subcategory ?? null,
+        targetListId: parsed.data.targetListId ?? null,
+        taskType: parsed.data.taskType ?? TaskType.EXPRESS,
         rewardAmount: String(parsed.data.rewardAmount),
         totalSlots: parsed.data.totalSlots,
         availableSlots: parsed.data.totalSlots,

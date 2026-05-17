@@ -49,6 +49,9 @@ export function EditTaskForm({ task, onSuccess, onCancel }: EditTaskFormProps) {
     description: state.fields?.description ?? formData.description,
     instructions: state.fields?.instructions ?? formData.instructions,
     category: state.fields?.category ?? formData.category,
+    taskType: state.fields?.taskType ?? formData.taskType,
+    subcategory: state.fields?.subcategory ?? formData.subcategory,
+    targetListId: state.fields?.targetListId ?? formData.targetListId,
     rewardAmount: state.fields?.rewardAmount ?? formData.rewardAmount,
     totalSlots: state.fields?.totalSlots ?? formData.totalSlots,
     autoApproveDays: state.fields?.autoApproveDays ?? formData.autoApproveDays,
@@ -85,6 +88,7 @@ export function EditTaskForm({ task, onSuccess, onCancel }: EditTaskFormProps) {
           <CreateTaskStep1
             data={activeFormData}
             onNext={handleNext}
+            isEdit={true}
           />
         )}
 

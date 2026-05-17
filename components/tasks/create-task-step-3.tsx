@@ -64,9 +64,23 @@ export function CreateTaskStep3({
           </div>
 
           <div>
+            <span className="text-xs font-bold text-[#7f8aa0] uppercase">Loại việc</span>
+            <p className="mt-1 text-sm font-medium text-[#203259]">
+              {data.taskType === "CLASSIC" ? "Việc Classic" : data.taskType === "LIST" ? "Việc danh sách" : "Việc Express"}
+            </p>
+          </div>
+
+          <div>
             <span className="text-xs font-bold text-[#7f8aa0] uppercase">Danh mục</span>
             <p className="mt-1 text-sm text-[#203259]">{data.category || "Chưa chọn"}</p>
           </div>
+
+          {data.subcategory && (
+            <div>
+              <span className="text-xs font-bold text-[#7f8aa0] uppercase">Danh mục con</span>
+              <p className="mt-1 text-sm text-[#203259]">{data.subcategory}</p>
+            </div>
+          )}
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -163,6 +177,8 @@ export function CreateTaskStep3({
         <input name="description" type="hidden" value={data.description} />
         <input name="instructions" type="hidden" value={data.instructions} />
         <input name="category" type="hidden" value={data.category} />
+        <input name="subcategory" type="hidden" value={data.subcategory} />
+        {data.targetListId && <input name="targetListId" type="hidden" value={data.targetListId} />}
         <input name="rewardAmount" type="hidden" value={data.rewardAmount} />
         <input name="totalSlots" type="hidden" value={data.totalSlots} />
         <input name="autoApproveDays" type="hidden" value={data.autoApproveDays} />
