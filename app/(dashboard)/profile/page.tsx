@@ -20,7 +20,7 @@ import {
   UserStatus,
   type User,
 } from "@/lib/generated/prisma/client";
-import { toMinorUnits } from "@/lib/utils/money";
+import { formatVnd, toMinorUnits, type MoneyInput } from "@/lib/utils/money";
 import { ProfileUpdateForm } from "./profile-update-form";
 
 const FREELANCER_STATS_TAB = "freelancer-stats";
@@ -47,6 +47,10 @@ const statusLabels: Record<UserStatus, string> = {
   BANNED: "Bị cấm",
 };
 
+const EARNING_POINT_THRESHOLD_VND = 26_000;
+const EARNING_POINT_THRESHOLD_MINOR_UNITS = BigInt(EARNING_POINT_THRESHOLD_VND * 100);
+const EARNING_POINTS_PER_THRESHOLD = 40;
+
 const freelancerPointRules = [
   { rule: "Người làm starter hoàn thành việc starter", points: "30" },
   { rule: "Người làm advanced hoàn thành việc starter", points: "20" },
@@ -55,7 +59,7 @@ const freelancerPointRules = [
   { rule: "Người làm expert hoàn thành việc advanced", points: "20" },
   { rule: "Người làm expert hoàn thành việc expert", points: "30" },
   { rule: "Task được đánh giá xuất sắc", points: "+ 50% điểm" },
-  { rule: "Mỗi 1 USD kiếm được", points: "40" },
+  { rule: `Mỗi ${formatVnd(EARNING_POINT_THRESHOLD_VND)} kiếm được`, points: "40" },
   { rule: "Task bị đánh giá không hài lòng", points: "-50 * cấp người làm" },
   { rule: "Task bị đánh dấu spam/trùng lặp", points: "-200 * cấp người làm" },
   { rule: "1 tuần không hoạt động", points: "-100 * cấp người làm" },
@@ -262,9 +266,9 @@ function FreelancerPerformanceCard({ stats }: { stats: FreelancerStats }) {
       <h2 className="text-base font-semibold text-[#001f52]">Hiệu suất người làm</h2>
       <div className="mt-6 grid gap-x-12 gap-y-4 text-sm sm:grid-cols-2">
         <StatRow label="Task đã làm" value={stats.tasksDone.toLocaleString("vi-VN")} />
-        <StatRow label="Đã kiếm" value={formatUsd(stats.earned)} />
+        <StatRow label="Đã kiếm" value={formatVnd(stats.earned)} />
         <StatRow label="Hài lòng" value={stats.satisfied.toLocaleString("vi-VN")} />
-        <StatRow label="Đã kiếm/Task" value={formatUsd(stats.earnedPerTask)} />
+        <StatRow label="Đã kiếm/Task" value={formatVnd(stats.earnedPerTask)} />
         <StatRow label="Không hài lòng" value={stats.notSatisfied.toLocaleString("vi-VN")} />
         <StatRow label="Khoảng cách gửi task" value={`${stats.submitTaskIntervalSeconds}s`} />
         <StatRow label="Task gửi gần nhất" value={stats.lastTaskSubmittedLabel} />
@@ -511,6 +515,7 @@ async function getFreelancerStats(user: User): Promise<FreelancerStats> {
   ]);
 
   const earned = Number(earnedAggregate._sum.amount?.toString() ?? "0");
+  const earningPoints = calculateEarningPoints(earned);
   const allTimeReviewed = satisfied + notSatisfied;
   const recentReviewed = recentSatisfied + recentNotSatisfied;
   const allTimeSuccessRate = allTimeReviewed > 0 ? Math.round((satisfied / allTimeReviewed) * 100) : 0;
@@ -519,7 +524,6 @@ async function getFreelancerStats(user: User): Promise<FreelancerStats> {
   const taskPoints = approvedSubmissions.reduce((total, submission) => {
     return total + getTaskCompletionPoints(submission.task.taskType);
   }, 0);
-  const earningPoints = Math.floor(Number(toMinorUnits(earned.toFixed(2))) / 100) * 40;
   const points = Math.max(0, taskPoints + earningPoints - notSatisfied * 50);
   const level = getFreelancerLevel(points);
 
@@ -549,7 +553,7 @@ async function getFreelancerStats(user: User): Promise<FreelancerStats> {
     transactions: rewardTransactions.map((transaction) => ({
       id: transaction.id,
       description: transaction.description,
-      points: Math.floor(Number(toMinorUnits(transaction.amount.toString())) / 100) * 40,
+      points: calculateEarningPoints(transaction.amount.toString()),
       createdAt: new Intl.DateTimeFormat("vi-VN", {
         day: "2-digit",
         month: "2-digit",
@@ -578,13 +582,9 @@ function getFreelancerLevelName(level: number): "starter" | "advanced" | "expert
   return "starter";
 }
 
-function formatUsd(value: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 3,
-    maximumFractionDigits: 3,
-  }).format(value);
+function calculateEarningPoints(amount: MoneyInput) {
+  const amountMinorUnits = toMinorUnits(amount);
+  return Number(amountMinorUnits / EARNING_POINT_THRESHOLD_MINOR_UNITS) * EARNING_POINTS_PER_THRESHOLD;
 }
 
 function getRoleMetrics(role: UserRole, stats: ProfileStats) {
