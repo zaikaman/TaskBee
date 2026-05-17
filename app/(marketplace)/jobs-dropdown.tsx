@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 
 interface JobsDropdownProps {
@@ -8,7 +9,7 @@ interface JobsDropdownProps {
 }
 
 const menuButtonClassName =
-  "w-full px-4 py-3 text-left text-sm hover:bg-zinc-50";
+  "block w-full px-4 py-3 text-left text-sm hover:bg-[#f5f7fa]";
 
 export function JobsDropdown({ isActive = true }: JobsDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -30,87 +31,55 @@ export function JobsDropdown({ isActive = true }: JobsDropdownProps) {
     };
   }, [isOpen]);
 
-  const handleToggle = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsOpen((prev) => !prev);
-  };
-
   return (
     <div className="relative" ref={dropdownRef}>
       <button
         type="button"
-        onClick={handleToggle}
+        onClick={() => setIsOpen((current) => !current)}
         aria-haspopup="menu"
         aria-expanded={isOpen}
-        className={`inline-flex items-center gap-1 rounded-t px-4 py-2 text-sm transition-colors ${
+        className={`inline-flex h-10 items-center gap-2 rounded-t px-4 text-base transition-colors ${
           isActive
-            ? "border-b-2 border-emerald-600 font-semibold text-emerald-700"
-            : "font-medium text-zinc-500 hover:text-emerald-700"
+            ? "bg-[#22ab59] font-semibold text-white"
+            : "font-semibold text-[#687282] hover:bg-[#f5f7fa] hover:text-[#22ab59]"
         }`}
       >
-        Việc làm nhỏ
-        <ChevronDown
-          className={`size-3 transition-transform ${isOpen ? "rotate-180" : ""}`}
-        />
+        Việc nhỏ
+        <ChevronDown className={`size-3 transition-transform ${isOpen ? "rotate-180" : ""}`} />
       </button>
 
-      {isOpen && (
-        <div className="absolute left-0 top-full z-50 mt-0 w-64 rounded-b border border-zinc-200 bg-white shadow-lg">
+      {isOpen ? (
+        <div className="absolute left-0 top-full z-50 w-72 border border-[#edf0f4] bg-white shadow-[0_12px_28px_rgba(20,28,38,0.13)]">
           <div className="py-2">
-            <button
-              type="button"
-              className={menuButtonClassName}
-              onClick={() => {
-                setIsOpen(false);
-              }}
-            >
-              <div className="font-medium text-zinc-900">Tìm việc làm</div>
-            </button>
+            <Link href="/marketplace" className={menuButtonClassName} onClick={() => setIsOpen(false)}>
+              <span className="font-semibold text-[#203259]">Tìm việc nhỏ</span>
+            </Link>
 
-            <div className="my-1 h-px bg-zinc-100" />
+            <div className="my-1 h-px bg-[#edf0f4]" />
 
-            <button
-              type="button"
-              className={menuButtonClassName}
-              onClick={() => {
-                setIsOpen(false);
-              }}
-            >
-              <div className="flex items-center justify-between">
-                <span className="font-medium text-zinc-900">Nhiệm vụ đã hoàn thành</span>
-                <span className="text-zinc-500">0</span>
-              </div>
-            </button>
+            <Link href="/marketplace/finished" className={menuButtonClassName} onClick={() => setIsOpen(false)}>
+              <span className="flex items-center justify-between">
+                <span className="font-semibold text-[#203259]">Việc đã hoàn thành</span>
+                <span className="text-[#687282]">0</span>
+              </span>
+            </Link>
 
-            <button
-              type="button"
-              className={menuButtonClassName}
-              onClick={() => {
-                setIsOpen(false);
-              }}
-            >
-              <div className="flex items-center justify-between">
-                <span className="font-medium text-zinc-900">Đã xác nhận + thanh toán</span>
-                <span className="text-zinc-500">0</span>
-              </div>
-            </button>
+            <Link href="/marketplace/paid" className={menuButtonClassName} onClick={() => setIsOpen(false)}>
+              <span className="flex items-center justify-between">
+                <span className="font-semibold text-[#203259]">Đã duyệt và thanh toán</span>
+                <span className="text-[#687282]">0</span>
+              </span>
+            </Link>
 
-            <button
-              type="button"
-              className={menuButtonClassName}
-              onClick={() => {
-                setIsOpen(false);
-              }}
-            >
-              <div className="flex items-center justify-between">
-                <span className="font-medium text-zinc-900">Đang chờ xét duyệt</span>
-                <span className="text-zinc-500">0</span>
-              </div>
-            </button>
+            <Link href="/marketplace/pending" className={menuButtonClassName} onClick={() => setIsOpen(false)}>
+              <span className="flex items-center justify-between">
+                <span className="font-semibold text-[#203259]">Đang chờ duyệt</span>
+                <span className="text-[#687282]">0</span>
+              </span>
+            </Link>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

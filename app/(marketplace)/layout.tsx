@@ -19,7 +19,7 @@ export default function MarketplaceLayout({
             </p>
           </div>
 
-          <section className="overflow-hidden rounded border border-zinc-200 bg-white">
+          <section>
             {children}
           </section>
         </div>
