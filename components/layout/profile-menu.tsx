@@ -12,9 +12,9 @@ type ProfileMenuProps = {
 };
 
 const menuItems = [
-  { href: "/account", label: "Cài đặt tài khoản" },
+  { href: "/account", label: "Cài đặt tài khoản", activeWhenOnCurrentRoute: true },
   { href: "/referrals", label: "Chia sẻ & nhận thưởng" },
-  { href: "/account", label: "Hồ sơ của tôi" },
+  { href: "/account", label: "Hồ sơ của tôi", activeWhenOnCurrentRoute: false },
   { href: "/dashboard/worker/tasks", label: "Xếp hạng MicroJobs" },
   { href: "/dashboard/employer/tasks", label: "Xếp hạng Gigs" },
   { href: "/support", label: "Hỗ trợ" },
@@ -72,21 +72,27 @@ export function ProfileMenu({ displayName }: ProfileMenuProps) {
             Xin chào, {displayName}
           </div>
           <div className="py-2">
-            {menuItems.map((item) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                role="menuitem"
-                className={
-                  pathname === item.href || pathname.startsWith(`${item.href}/`)
-                    ? "block px-5 py-2.5 font-semibold text-emerald-600 hover:bg-zinc-50"
-                    : "block px-5 py-2.5 text-zinc-600 hover:bg-zinc-50 hover:text-zinc-950"
-                }
-                onClick={() => setOpen(false)}
-              >
-                {item.label}
-              </Link>
-            ))}
+            {menuItems.map((item) => {
+              const isActive =
+                item.activeWhenOnCurrentRoute !== false &&
+                (pathname === item.href || pathname.startsWith(`${item.href}/`));
+
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  role="menuitem"
+                  className={
+                    isActive
+                      ? "block px-5 py-2.5 font-semibold text-emerald-600 hover:bg-zinc-50"
+                      : "block px-5 py-2.5 text-zinc-600 hover:bg-zinc-50 hover:text-zinc-950"
+                  }
+                  onClick={() => setOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
             <form action={logout}>
               <button
                 type="submit"
