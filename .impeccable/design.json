@@ -1,0 +1,222 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-18T00:00:00+07:00",
+  "title": "Design System: TaskBee",
+  "extensions": {
+    "colorMeta": {
+      "trust-green": {
+        "role": "primary",
+        "displayName": "Xanh Tin Cậy",
+        "canonical": "#22ab59",
+        "tonalRamp": ["oklch(18% 0.06 150)", "oklch(28% 0.09 150)", "oklch(38% 0.12 150)", "oklch(49% 0.15 150)", "oklch(60% 0.17 150)", "oklch(72% 0.13 150)", "oklch(84% 0.08 150)", "oklch(94% 0.04 150)"]
+      },
+      "admin-ink": {
+        "role": "secondary",
+        "displayName": "Xanh Mực Quản Trị",
+        "canonical": "#203259",
+        "tonalRamp": ["oklch(15% 0.04 265)", "oklch(25% 0.06 265)", "oklch(35% 0.07 265)", "oklch(45% 0.06 265)", "oklch(58% 0.05 265)", "oklch(72% 0.04 265)", "oklch(85% 0.025 265)", "oklch(95% 0.012 265)"]
+      },
+      "main-charcoal": {
+        "role": "neutral",
+        "displayName": "Than Chữ Chính",
+        "canonical": "#30394d",
+        "tonalRamp": ["oklch(15% 0.02 260)", "oklch(25% 0.03 260)", "oklch(35% 0.035 260)", "oklch(48% 0.03 260)", "oklch(62% 0.025 260)", "oklch(76% 0.018 260)", "oklch(88% 0.012 260)", "oklch(96% 0.006 260)"]
+      },
+      "cool-paper": {
+        "role": "neutral",
+        "displayName": "Nền Giấy Lạnh",
+        "canonical": "#f5f7fa",
+        "tonalRamp": ["oklch(18% 0.01 260)", "oklch(30% 0.012 260)", "oklch(44% 0.012 260)", "oklch(58% 0.01 260)", "oklch(72% 0.008 260)", "oklch(84% 0.006 260)", "oklch(92% 0.005 260)", "oklch(97% 0.004 260)"]
+      },
+      "warning-soft": {
+        "role": "tertiary",
+        "displayName": "Vàng Cảnh Báo Mềm",
+        "canonical": "#fff3cf",
+        "tonalRamp": ["oklch(20% 0.04 80)", "oklch(32% 0.07 80)", "oklch(45% 0.1 80)", "oklch(58% 0.12 80)", "oklch(72% 0.1 80)", "oklch(84% 0.07 80)", "oklch(91% 0.045 80)", "oklch(96% 0.025 80)"]
+      },
+      "danger": {
+        "role": "tertiary",
+        "displayName": "Đỏ Kiểm Soát",
+        "canonical": "#e63e46",
+        "tonalRamp": ["oklch(18% 0.07 25)", "oklch(29% 0.11 25)", "oklch(40% 0.15 25)", "oklch(52% 0.19 25)", "oklch(63% 0.2 25)", "oklch(74% 0.14 25)", "oklch(86% 0.08 25)", "oklch(95% 0.035 25)"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Hero hoặc tiêu đề trang có nhiệm vụ định hướng lớn."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Tiêu đề dashboard, wallet, admin và màn hình tạo việc."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card title, field group, table section và menu item chính."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Mô tả nhiệm vụ, hướng dẫn, lỗi và nội dung phụ."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Badge, nhãn trạng thái, metadata và nhãn form ngắn."
+      }
+    },
+    "shadows": [
+      {
+        "name": "Popover Lift",
+        "value": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+        "purpose": "Dropdown, select content và menu nổi."
+      },
+      {
+        "name": "Admin Tile Lift",
+        "value": "0 2px 12px rgba(32, 50, 89, 0.06)",
+        "purpose": "Metric tile hoặc card dashboard cần tách nhẹ khỏi nền."
+      },
+      {
+        "name": "Landing Mockup Lift",
+        "value": "0 22px 70px rgba(32, 50, 89, 0.12)",
+        "purpose": "Mockup marketing, không dùng trong app shell hằng ngày."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state-transition",
+        "value": "150ms ease-out",
+        "purpose": "Hover, focus, active và reveal nhỏ."
+      },
+      {
+        "name": "select-popover",
+        "value": "100ms ease-out",
+        "purpose": "Select, dropdown và popover nhỏ."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Hành động chính trong app như tạo việc, tìm việc hoặc xác nhận luồng ví.",
+      "html": "<button class=\"ds-btn-primary\">Tạo công việc</button>",
+      "css": ".ds-btn-primary { height: 32px; padding: 0 10px; border: 1px solid transparent; border-radius: 8px; background: #22ab59; color: #ffffff; font-family: Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 14px; font-weight: 500; display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; transition: background-color 150ms ease-out, transform 150ms ease-out, box-shadow 150ms ease-out; } .ds-btn-primary:hover { background: #005924; } .ds-btn-primary:active { transform: translateY(1px); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(34, 171, 89, 0.3); }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Hành động phụ, filter hoặc lối rẽ không phải CTA chính.",
+      "html": "<button class=\"ds-btn-outline\">Xem chi tiết</button>",
+      "css": ".ds-btn-outline { height: 32px; padding: 0 10px; border: 1px solid #d3dae6; border-radius: 8px; background: transparent; color: #30394d; font-family: Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 14px; font-weight: 500; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; transition: background-color 150ms ease-out, border-color 150ms ease-out, color 150ms ease-out; } .ds-btn-outline:hover { background: #f2f4f7; color: #203259; } .ds-btn-outline:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(104, 109, 119, 0.22); }"
+    },
+    {
+      "name": "Input",
+      "kind": "input",
+      "refersTo": "input-default",
+      "description": "Trường nhập liệu gọn cho form tạo việc, đăng nhập, ví và admin.",
+      "html": "<label class=\"ds-field\"><span>Tên công việc</span><input class=\"ds-input\" placeholder=\"Nhập tên công việc\" /></label>",
+      "css": ".ds-field { display: grid; gap: 6px; color: #30394d; font-family: Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 13px; font-weight: 700; } .ds-input { height: 32px; width: 100%; border: 1px solid #d3dae6; border-radius: 8px; background: transparent; color: #1b1b1b; padding: 4px 10px; font-size: 14px; font-weight: 400; transition: border-color 150ms ease-out, box-shadow 150ms ease-out; } .ds-input::placeholder { color: #686d77; } .ds-input:focus-visible { outline: none; border-color: #a8b0bf; box-shadow: 0 0 0 3px rgba(104, 109, 119, 0.22); }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "badge-success",
+      "description": "Nhãn trạng thái có chữ rõ, dùng cho nhiệm vụ, submission, ví và admin.",
+      "html": "<span class=\"ds-badge-success\">Đã thanh toán</span>",
+      "css": ".ds-badge-success { height: 20px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; border: 1px solid transparent; background: #e7faef; color: #22ab59; padding: 2px 8px; font-family: Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 12px; font-weight: 700; white-space: nowrap; } .ds-badge-success:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(34, 171, 89, 0.3); }"
+    },
+    {
+      "name": "App Card",
+      "kind": "card",
+      "refersTo": "card-default",
+      "description": "Bề mặt product cho nhóm thông tin, dùng border/ring trước shadow.",
+      "html": "<article class=\"ds-card\"><h3>Ví tiền</h3><p>Số dư khả dụng và số tiền đang chờ duyệt được tách rõ.</p></article>",
+      "css": ".ds-card { display: flex; flex-direction: column; gap: 12px; border-radius: 12px; border: 1px solid rgba(48, 57, 77, 0.1); background: #ffffff; color: #30394d; padding: 16px; font-family: Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; } .ds-card h3 { margin: 0; font-size: 16px; line-height: 1.375; font-weight: 500; } .ds-card p { margin: 0; color: #686d77; font-size: 14px; line-height: 1.5; }"
+    },
+    {
+      "name": "Top Navigation",
+      "kind": "nav",
+      "refersTo": "navigation-top",
+      "description": "Thanh điều hướng product, sticky, sáng, có active state rõ.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-logo\" href=\"#\">TaskBee</a><a class=\"ds-nav-link ds-active\" href=\"#\">Việc làm nhỏ</a><a class=\"ds-nav-link\" href=\"#\">Ví tiền</a></nav>",
+      "css": ".ds-nav { min-height: 64px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #d3dae6; background: #ffffff; padding: 0 16px; font-family: Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; } .ds-nav-logo { margin-right: 16px; color: #22ab59; font-size: 20px; font-weight: 700; text-decoration: none; } .ds-nav-link { height: 64px; display: inline-flex; align-items: center; padding: 0 12px; border-bottom: 2px solid transparent; color: #686d77; font-size: 14px; font-weight: 500; text-decoration: none; transition: color 150ms ease-out, border-color 150ms ease-out; } .ds-nav-link:hover { color: #22ab59; } .ds-nav-link.ds-active { border-bottom-color: #22ab59; color: #22ab59; font-weight: 700; }"
+    },
+    {
+      "name": "Data Table",
+      "kind": "custom",
+      "refersTo": "table-default",
+      "description": "Bảng product cho admin, ví, giao dịch và danh sách nhiệm vụ.",
+      "html": "<table class=\"ds-table\"><thead><tr><th>Công việc</th><th>Trạng thái</th><th class=\"ds-money\">Số tiền</th></tr></thead><tbody><tr><td>Kiểm thử luồng đăng ký</td><td>Đang chờ</td><td class=\"ds-money\">12.000đ</td></tr></tbody></table>",
+      "css": ".ds-table { width: 100%; border-collapse: collapse; caption-side: bottom; font-family: Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 14px; color: #30394d; } .ds-table th { height: 40px; padding: 0 12px; text-align: left; vertical-align: middle; color: #686d77; font-weight: 500; border-bottom: 1px solid #f0f2f5; } .ds-table td { padding: 12px; vertical-align: middle; border-bottom: 1px solid #f0f2f5; } .ds-table tbody tr { transition: background-color 150ms ease-out; } .ds-table tbody tr:hover { background: rgba(242, 244, 247, 0.5); } .ds-table .ds-money { text-align: right; font-weight: 700; color: #203259; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Sổ Cái Gọn Gàng",
+    "overview": "TaskBee dùng một hệ giao diện giống sổ vận hành tài chính nhỏ: rõ dòng tiền, rõ trạng thái, ít trang trí, thao tác nhanh. Sản phẩm phục vụ các luồng có tiền thật, ký quỹ, bằng chứng và kiểm duyệt, nên giao diện phải tạo niềm tin bằng cấu trúc trước khi dùng màu sắc hay hiệu ứng.\n\nRegister chính là product. Thiết kế cần quen thuộc như một công cụ vận hành tốt: top nav rõ, form gọn, bảng dễ quét, trạng thái có nhãn và bằng chứng hiển thị có trật tự. TaskBee không cần tạo cảm giác xa hoa; nó cần tạo cảm giác mọi khoản tiền và mọi quyết định đều có dấu vết.\n\nHệ này từ chối app kiếm tiền rẻ tiền, dashboard crypto tối màu, landing page SaaS chung chung, quá nhiều gradient và phong cách quá trẻ con. Mỗi màn hình phải đọc được nhanh trên mobile, có tương phản đạt WCAG AA và không dùng màu sắc làm tín hiệu duy nhất.",
+    "keyCharacteristics": [
+      "Sạch, sáng, có kiểm soát; nền trung tính lạnh, accent xanh dùng tiết chế.",
+      "Dày vừa phải cho thao tác thật: form, bảng, ví tiền, danh sách việc và trạng thái duyệt.",
+      "Gần với shadcn/radix-nova: component quen thuộc, radius nhỏ đến vừa, focus ring rõ.",
+      "Tiếng Việt rõ nghĩa, có dấu, ưu tiên nhãn trực tiếp hơn copy quảng bá."
+    ],
+    "rules": [
+      {
+        "name": "The Money First Rule",
+        "body": "Màu xanh chỉ được dùng mạnh cho hành động hoặc trạng thái có ích cho luồng công việc; không dùng xanh như trang trí nền tràn lan.",
+        "section": "colors"
+      },
+      {
+        "name": "The No Crypto Dark Rule",
+        "body": "Không chuyển các dashboard tiền, ví hoặc admin sang nền tối kiểu crypto, neon hoặc đầu cơ.",
+        "section": "colors"
+      },
+      {
+        "name": "The Plain Vietnamese Rule",
+        "body": "Không dùng copy mơ hồ hoặc tiếng Việt không dấu trong UI; nhãn phải nói rõ người dùng cần làm gì hoặc trạng thái đang là gì.",
+        "section": "typography"
+      },
+      {
+        "name": "The No Display Labels Rule",
+        "body": "Không dùng chữ hero-scale trong form, badge, button, table hoặc nav.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat By Default Rule",
+        "body": "Card và panel đứng yên phải dùng border/ring trước; shadow nặng là dấu hiệu sai giọng.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do dùng Xanh Tin Cậy cho primary action, active nav và trạng thái tích cực có liên quan trực tiếp đến workflow.",
+      "Do hiển thị số tiền, phí, escrow, pending balance và deadline bằng cấu trúc rõ trước khi thêm mô tả.",
+      "Do dùng border, nền neutral và spacing để phân lớp; shadow chỉ dùng khi bề mặt thật sự nổi.",
+      "Do viết toàn bộ nội dung UI bằng tiếng Việt có dấu, cụ thể và có thể hành động.",
+      "Do kết hợp icon, text và label cho trạng thái để không phụ thuộc duy nhất vào màu sắc.",
+      "Do giữ mobile là bề mặt hạng nhất: button đủ cao, nav cuộn ngang rõ, form không vỡ dòng khó đọc."
+    ],
+    "donts": [
+      "Don't làm TaskBee giống app kiếm tiền rẻ tiền, hứa hẹn quá mức hoặc tạo cảm giác lôi kéo.",
+      "Don't làm dashboard crypto tối màu, neon, đầu cơ hoặc nặng hiệu ứng.",
+      "Don't dùng landing page SaaS chung chung với hero, card và gradient quen thuộc.",
+      "Don't dùng quá nhiều gradient, màu sắc trang trí hoặc hiệu ứng không phục vụ thao tác.",
+      "Don't làm giao diện quá trẻ con, thiếu nghiêm túc khi hiển thị tiền, bằng chứng, trạng thái duyệt và quyết định của admin.",
+      "Don't dùng border-left hoặc border-right lớn hơn 1px như vạch màu trang trí trên card, list item, alert hoặc callout.",
+      "Don't dùng gradient text; nhấn mạnh bằng trọng lượng, kích thước hoặc cấu trúc."
+    ]
+  }
+}
