@@ -37,6 +37,7 @@ export function EditTaskForm({ task, onSuccess, onCancel }: EditTaskFormProps) {
     taskType: task.taskType,
     subcategory: task.subcategory || "",
     targetListId: task.targetListId || "",
+    classicLevel: "starter",
   };
 
   const [formData, setFormData] = useState<TaskFormData>(initialFormData);
@@ -57,6 +58,7 @@ export function EditTaskForm({ task, onSuccess, onCancel }: EditTaskFormProps) {
     autoApproveDays: state.fields?.autoApproveDays ?? formData.autoApproveDays,
     holdTimeMinutes: state.fields?.holdTimeMinutes ?? formData.holdTimeMinutes,
     proofRequirements: state.fields?.proofRequirements ?? formData.proofRequirements,
+    classicLevel: formData.classicLevel,
   };
 
   // Handle success

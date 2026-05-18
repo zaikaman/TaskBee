@@ -9,7 +9,7 @@ type CreateTaskStepperProps = {
 const defaultStepLabels = [
   "Thông tin cơ bản",
   "Cài đặt công việc",
-  "Xác nhận & thanh toán",
+  "Xác nhận và thanh toán",
 ];
 
 export function CreateTaskStepper({

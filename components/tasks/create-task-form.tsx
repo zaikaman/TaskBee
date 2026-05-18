@@ -4,35 +4,31 @@ import { useActionState, useEffect, useState } from "react";
 import { TaskType } from "@/lib/generated/prisma/browser";
 import { createTask } from "@/lib/services/task";
 import type { CreateTaskState } from "@/lib/services/task";
+import { CreateClassicCategoryStep } from "./create-classic-category-step";
+import { CreateClassicLevelStep } from "./create-classic-level-step";
+import { CreateClassicProofsStep } from "./create-classic-proofs-step";
+import { CreateClassicSettingsStep } from "./create-classic-settings-step";
+import { CreateExpressTaskForm } from "./create-express-task-form";
+import { CreateTaskStepper } from "./create-task-stepper";
 
 const initialCreateTaskState: CreateTaskState = {
   ok: false,
 };
-import { CreateExpressTaskForm } from "./create-express-task-form";
-import { CreateClassicCategoryStep } from "./create-classic-category-step";
-import { CreateClassicDetailsStep } from "./create-classic-details-step";
-import { CreateTaskStep2 } from "./create-task-step-2";
-import { CreateTaskStep3 } from "./create-task-step-3";
-import { CreateTaskStepper } from "./create-task-stepper";
 
 export type TaskFormData = {
-  // Step 1: Thông tin cơ bản
   title: string;
   description: string;
   instructions: string;
   category: string;
-  
-  // Step 2: Cài đặt công việc
   rewardAmount: string;
   totalSlots: string;
   autoApproveDays: string;
   holdTimeMinutes: string;
   proofRequirements: string;
-  
-  // Hidden fields (MVP: hardcoded)
   taskType: TaskType;
   subcategory: string;
   targetListId: string;
+  classicLevel: string;
 };
 
 const initialFormData: TaskFormData = {
@@ -41,25 +37,59 @@ const initialFormData: TaskFormData = {
   instructions: "",
   category: "",
   rewardAmount: "",
-  totalSlots: "",
-  autoApproveDays: "3",
-  holdTimeMinutes: "90",
+  totalSlots: "25",
+  autoApproveDays: "7",
+  holdTimeMinutes: "15",
   proofRequirements: "",
   taskType: TaskType.EXPRESS,
   subcategory: "",
   targetListId: "",
+  classicLevel: "starter",
 };
 
 type CreateTaskFormProps = {
   onSuccess?: (taskId: string) => void;
 };
 
+const classicStepLabels = ["Danh mục", "Cấp độ", "Bằng chứng", "Cài đặt"];
+
+function ClassicJobTabs({
+  onTaskTypeChange,
+}: {
+  onTaskTypeChange: (taskType: TaskType) => void;
+}) {
+  return (
+    <div className="border-b border-[#d3dae6]">
+      <div className="flex gap-8">
+        <button
+          className="px-0 pb-4 text-sm font-black uppercase text-[#203259] hover:text-[#22ab59]"
+          onClick={() => onTaskTypeChange(TaskType.EXPRESS)}
+          type="button"
+        >
+          Việc Express
+        </button>
+        <button
+          className="border-b-2 border-[#22ab59] px-0 pb-4 text-sm font-black uppercase text-[#203259]"
+          type="button"
+        >
+          Việc Classic
+        </button>
+        <button
+          className="px-0 pb-4 text-sm font-black uppercase text-[#203259] opacity-60"
+          type="button"
+        >
+          Việc danh sách
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function CreateTaskForm({ onSuccess }: CreateTaskFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<TaskFormData>(initialFormData);
   const [state, formAction, isPending] = useActionState(createTask, initialCreateTaskState);
 
-  // Restore form data from server state if validation failed
   const activeFormData: TaskFormData = {
     ...formData,
     title: state.fields?.title ?? formData.title,
@@ -74,9 +104,9 @@ export function CreateTaskForm({ onSuccess }: CreateTaskFormProps) {
     autoApproveDays: state.fields?.autoApproveDays ?? formData.autoApproveDays,
     holdTimeMinutes: state.fields?.holdTimeMinutes ?? formData.holdTimeMinutes,
     proofRequirements: state.fields?.proofRequirements ?? formData.proofRequirements,
+    classicLevel: formData.classicLevel,
   };
 
-  // Handle success - use useEffect to avoid calling during render
   useEffect(() => {
     if (state.ok && state.taskId && onSuccess) {
       onSuccess(state.taskId);
@@ -84,31 +114,32 @@ export function CreateTaskForm({ onSuccess }: CreateTaskFormProps) {
   }, [state.ok, state.taskId, onSuccess]);
 
   const handleNext = (stepData: Partial<TaskFormData>) => {
-    setFormData((prev) => ({ ...prev, ...stepData }));
-    setCurrentStep((prev) => prev + 1);
+    setFormData((previous) => ({ ...previous, ...stepData }));
+    setCurrentStep((previous) => Math.min(previous + 1, classicStepLabels.length));
   };
 
   const handleUpdate = (stepData: Partial<TaskFormData>) => {
-    setFormData((prev) => ({ ...prev, ...stepData }));
+    setFormData((previous) => ({ ...previous, ...stepData }));
   };
 
   const handleBack = () => {
-    setCurrentStep((prev) => prev - 1);
+    setCurrentStep((previous) => Math.max(previous - 1, 1));
   };
 
   const handleTaskTypeChange = (taskType: TaskType) => {
-    setFormData((prev) => ({
-      ...prev,
+    setFormData((previous) => ({
+      ...previous,
       taskType,
       category: "",
       subcategory: "",
       targetListId: "",
+      totalSlots: taskType === TaskType.CLASSIC ? previous.totalSlots || "25" : previous.totalSlots,
+      autoApproveDays: taskType === TaskType.CLASSIC ? "7" : "3",
+      holdTimeMinutes: taskType === TaskType.CLASSIC ? "15" : "15",
+      classicLevel: "starter",
     }));
     setCurrentStep(1);
   };
-
-  const classicStepLabels = ["Danh mục", "Nội dung", "Cài đặt", "Xác nhận"];
-  const totalSteps = classicStepLabels.length;
 
   if (activeFormData.taskType === TaskType.EXPRESS) {
     return (
@@ -125,49 +156,51 @@ export function CreateTaskForm({ onSuccess }: CreateTaskFormProps) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl">
-      <div>
-        {currentStep === 1 && (
-          <CreateClassicCategoryStep
-            data={activeFormData}
-            onTaskTypeChange={handleTaskTypeChange}
-            onUpdate={handleUpdate}
-            onNext={handleNext}
-          />
-        )}
+    <div className="mx-auto w-full max-w-6xl space-y-7">
+      <ClassicJobTabs onTaskTypeChange={handleTaskTypeChange} />
 
-        {currentStep === 2 && (
-          <CreateClassicDetailsStep
-            data={activeFormData}
-            onBack={handleBack}
-            onNext={handleNext}
-          />
-        )}
+      {currentStep === 1 && (
+        <CreateClassicCategoryStep
+          data={activeFormData}
+          onUpdate={handleUpdate}
+          onNext={handleNext}
+        />
+      )}
 
-        {currentStep === 3 && (
-          <CreateTaskStep2
-            data={activeFormData}
-            onNext={handleNext}
-            onBack={handleBack}
-          />
-        )}
+      {currentStep === 2 && (
+        <CreateClassicLevelStep
+          data={activeFormData}
+          onBack={handleBack}
+          onUpdate={handleUpdate}
+          onNext={handleNext}
+        />
+      )}
 
-        {currentStep === 4 && (
-          <CreateTaskStep3
-            data={activeFormData}
-            formAction={formAction}
-            isPending={isPending}
-            state={state}
-            onBack={handleBack}
-          />
-        )}
-      </div>
+      {currentStep === 3 && (
+        <CreateClassicProofsStep
+          data={activeFormData}
+          onBack={handleBack}
+          onUpdate={handleUpdate}
+          onNext={handleNext}
+        />
+      )}
+
+      {currentStep === 4 && (
+        <CreateClassicSettingsStep
+          data={activeFormData}
+          formAction={formAction}
+          isPending={isPending}
+          onBack={handleBack}
+          onUpdate={handleUpdate}
+          state={state}
+        />
+      )}
 
       <div className="mt-8 bg-[#f5f7fa] px-6 py-5">
         <CreateTaskStepper
           currentStep={currentStep}
           labels={classicStepLabels}
-          totalSteps={totalSteps}
+          totalSteps={classicStepLabels.length}
         />
       </div>
     </div>
