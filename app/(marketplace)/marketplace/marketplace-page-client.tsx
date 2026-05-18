@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import posthog from "posthog-js";
 import {
   ChevronDown,
@@ -15,8 +16,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { JobsDropdown } from "../jobs-dropdown";
+import { TaskType } from "@/lib/generated/prisma/browser";
 import { formatVnd } from "@/lib/utils/money";
 import type { MarketplaceTaskListItem } from "@/lib/services/marketplace";
+import {
+  classicJobCategories,
+  expressMarketplaceCategoryName,
+  type ClassicJobCategory,
+} from "@/lib/tasks/classic-job-catalog";
 import type { TaskFilterInput } from "@/lib/validators/task";
 
 type MarketplacePageClientProps = {
@@ -42,21 +49,13 @@ const taskLevels: FilterOption[] = [
   { label: "Chuyên gia", locked: true },
 ];
 
-const fallbackCategories = [
-  "Việc nhanh",
-  "Đăng ký tài khoản",
-  "SEO, nội dung và tương tác",
-  "Nhập liệu và thu thập dữ liệu",
-  "Telegram",
-  "Discord",
-];
-
-const subcategories = [
-  "Tải ứng dụng",
-  "Theo dõi kênh",
-  "Đăng bài",
-  "Đánh giá sản phẩm",
-  "Tham gia cộng đồng",
+const marketplaceCategoryCatalog: ClassicJobCategory[] = [
+  {
+    id: "express",
+    name: expressMarketplaceCategoryName,
+    subcategories: [],
+  },
+  ...classicJobCategories.filter((category) => category.id !== "xac-minh-nang-luc"),
 ];
 
 const employerStats = [
@@ -87,6 +86,10 @@ function buildPageHref(filters: TaskFilterInput, page: number) {
 
   if (filters.category) {
     query.set("category", filters.category);
+  }
+
+  if (filters.subcategory) {
+    query.set("subcategory", filters.subcategory);
   }
 
   if (filters.status) {
@@ -125,6 +128,50 @@ function buildVisiblePages(page: number, totalPages: number) {
   return Array.from(pageSet).sort((left, right) => left - right);
 }
 
+function buildPaymentFilterLabel(filters: TaskFilterInput) {
+  const minReward = filters.minReward;
+  const maxReward = filters.maxReward;
+
+  if (minReward !== undefined && maxReward !== undefined) {
+    return `${formatVnd(minReward)} - ${formatVnd(maxReward)}`;
+  }
+
+  if (minReward !== undefined) {
+    return `Từ ${formatVnd(minReward)}`;
+  }
+
+  if (maxReward !== undefined) {
+    return `Đến ${formatVnd(maxReward)}`;
+  }
+
+  return "Thanh toán";
+}
+
+function buildFormHref(form: HTMLFormElement) {
+  const query = new URLSearchParams();
+  const formData = new FormData(form);
+
+  for (const [key, value] of formData.entries()) {
+    if (typeof value !== "string") {
+      continue;
+    }
+
+    const normalizedValue = value.trim();
+
+    if (normalizedValue.length > 0) {
+      query.set(key, normalizedValue);
+    }
+  }
+
+  const queryString = query.toString();
+
+  return queryString.length > 0 ? `${firstPageHref()}?${queryString}` : firstPageHref();
+}
+
+function getButtonForm(button: HTMLButtonElement) {
+  return button.form;
+}
+
 function HiddenFilterFields({
   filters,
   pageSize,
@@ -132,24 +179,27 @@ function HiddenFilterFields({
 }: {
   filters: TaskFilterInput;
   pageSize: number;
-  omit?: Array<"search" | "category" | "minReward" | "maxReward">;
+  omit?: Array<"search" | "category" | "subcategory" | "minReward" | "maxReward">;
 }) {
   return (
     <>
-      <input type="hidden" name="page" value="1" />
-      <input type="hidden" name="pageSize" value={String(pageSize)} />
-      {filters.status ? <input type="hidden" name="status" value={filters.status} /> : null}
+      <input readOnly type="hidden" name="page" value="1" />
+      <input readOnly type="hidden" name="pageSize" value={String(pageSize)} />
+      {filters.status ? <input readOnly type="hidden" name="status" value={filters.status} /> : null}
       {filters.search && !omit.includes("search") ? (
-        <input type="hidden" name="search" value={filters.search} />
+        <input readOnly type="hidden" name="search" value={filters.search} />
       ) : null}
       {filters.category && !omit.includes("category") ? (
-        <input type="hidden" name="category" value={filters.category} />
+        <input readOnly type="hidden" name="category" value={filters.category} />
+      ) : null}
+      {filters.subcategory && !omit.includes("subcategory") ? (
+        <input readOnly type="hidden" name="subcategory" value={filters.subcategory} />
       ) : null}
       {filters.minReward !== undefined && !omit.includes("minReward") ? (
-        <input type="hidden" name="minReward" value={String(filters.minReward)} />
+        <input readOnly type="hidden" name="minReward" value={String(filters.minReward)} />
       ) : null}
       {filters.maxReward !== undefined && !omit.includes("maxReward") ? (
-        <input type="hidden" name="maxReward" value={String(filters.maxReward)} />
+        <input readOnly type="hidden" name="maxReward" value={String(filters.maxReward)} />
       ) : null}
     </>
   );
@@ -157,10 +207,12 @@ function HiddenFilterFields({
 
 function FilterButton({
   active,
+  disabled = false,
   label,
   onClick,
 }: {
   active: boolean;
+  disabled?: boolean;
   label: string;
   onClick: () => void;
 }) {
@@ -168,8 +220,9 @@ function FilterButton({
     <button
       type="button"
       aria-expanded={active}
+      disabled={disabled}
       onClick={onClick}
-      className="flex w-full h-12 min-w-36 flex-1 items-center justify-between border-r border-[#dfe6ef] bg-[#f5f7fa] px-5 text-sm font-semibold text-[#566174] transition-colors hover:bg-white sm:min-w-40"
+      className="flex w-full h-12 min-w-36 flex-1 items-center justify-between border-r border-[#dfe6ef] bg-[#f5f7fa] px-5 text-sm font-semibold text-[#566174] transition-colors hover:bg-white disabled:cursor-not-allowed disabled:bg-[#eef2f6] disabled:text-[#9aa3b1] disabled:hover:bg-[#eef2f6] sm:min-w-40"
     >
       <span className="truncate">{label}</span>
       <ChevronDown className={`size-4 text-[#6d7480] transition-transform ${active ? "rotate-180" : ""}`} />
@@ -178,10 +231,12 @@ function FilterButton({
 }
 
 function OptionRow({
+  checked = false,
   option,
   type = "checkbox",
   name,
 }: {
+  checked?: boolean;
   option: FilterOption;
   type?: "checkbox" | "radio";
   name?: string;
@@ -193,7 +248,8 @@ function OptionRow({
       <input
         type={type}
         name={name}
-        value={option.label}
+        defaultValue={option.label}
+        defaultChecked={checked}
         disabled={option.locked}
         className={`size-3.5 appearance-none border bg-white checked:border-[#22ab59] checked:bg-[#22ab59] disabled:opacity-60 ${
           isRadio ? "rounded-full border-[#c7d3e2]" : "rounded-sm border-[#202733]"
@@ -222,7 +278,7 @@ function PanelShell({
         wide ? "w-[340px] sm:w-[470px]" : "w-[320px]"
       }`}
     >
-      <div className="p-6">{children}</div>
+      <div className="max-h-[420px] overflow-y-auto p-6">{children}</div>
       <div className="grid grid-cols-2 bg-[#f5f7fa] text-sm font-bold uppercase">
         {footer}
       </div>
@@ -232,13 +288,15 @@ function PanelShell({
 
 function MarketplaceFilterPanel({
   activePanel,
-  categories,
+  categoryCatalog,
   filters,
+  onNavigate,
   pageSize,
 }: {
   activePanel: FilterPanelKey;
-  categories: string[];
+  categoryCatalog: ClassicJobCategory[];
   filters: TaskFilterInput;
+  onNavigate: (href: string) => void;
   pageSize: number;
 }) {
   if (activePanel === "level") {
@@ -267,29 +325,39 @@ function MarketplaceFilterPanel({
           footer={
             <>
               <Link
-                href={buildPageHref({ ...filters, category: undefined }, 1)}
+                href={buildPageHref({ ...filters, category: undefined, subcategory: undefined }, 1)}
                 className="flex h-10 items-center justify-center text-[#22ab59]"
               >
                 Xóa lọc
               </Link>
-              <button type="submit" className="h-10 bg-[#22ab59] text-white">
+              <button
+                type="button"
+                className="h-10 bg-[#22ab59] text-white"
+                onClick={(event) => {
+                  const form = getButtonForm(event.currentTarget);
+
+                  if (form) {
+                    onNavigate(buildFormHref(form));
+                  }
+                }}
+              >
                 Áp dụng
               </button>
             </>
           }
         >
-          <HiddenFilterFields filters={filters} pageSize={pageSize} omit={["category"]} />
+          <HiddenFilterFields filters={filters} pageSize={pageSize} omit={["category", "subcategory"]} />
           <div className="space-y-4">
-            {categories.map((category) => (
-              <label key={category} className="flex cursor-pointer items-center gap-3 text-sm text-[#687282]">
+            {categoryCatalog.map((category) => (
+              <label key={category.id} className="flex cursor-pointer items-center gap-3 text-sm text-[#687282]">
                 <input
                   type="radio"
                   name="category"
-                  value={category}
-                  defaultChecked={filters.category === category}
+                  defaultValue={category.name}
+                  defaultChecked={filters.category === category.name}
                   className="size-3.5 appearance-none rounded-full border border-[#c7d3e2] bg-white checked:border-[#22ab59] checked:bg-[#22ab59]"
                 />
-                <span>{category}</span>
+                <span>{category.name}</span>
               </label>
             ))}
           </div>
@@ -298,26 +366,52 @@ function MarketplaceFilterPanel({
     );
   }
 
+  const selectedCategory = categoryCatalog.find(
+    (category) => category.name === filters.category,
+  );
+
   if (activePanel === "subcategory") {
     return (
-      <PanelShell
-        footer={
-          <>
-            <button type="button" className="h-10 text-[#22ab59]">
-              Xóa lọc
-            </button>
-            <button type="button" className="h-10 bg-[#22ab59] text-white">
-              Áp dụng
-            </button>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          {subcategories.map((label) => (
-            <OptionRow key={label} name="marketplace-subcategory" option={{ label }} type="radio" />
-          ))}
-        </div>
-      </PanelShell>
+      <form action="/marketplace" method="get">
+        <PanelShell
+          footer={
+            <>
+              <Link
+                href={buildPageHref({ ...filters, subcategory: undefined }, 1)}
+                className="flex h-10 items-center justify-center text-[#22ab59]"
+              >
+                Xóa lọc
+              </Link>
+              <button
+                type="button"
+                className="h-10 bg-[#22ab59] text-white"
+                onClick={(event) => {
+                  const form = getButtonForm(event.currentTarget);
+
+                  if (form) {
+                    onNavigate(buildFormHref(form));
+                  }
+                }}
+              >
+                Áp dụng
+              </button>
+            </>
+          }
+        >
+          <HiddenFilterFields filters={filters} pageSize={pageSize} omit={["subcategory"]} />
+          <div className="space-y-4">
+            {(selectedCategory?.subcategories ?? []).map((label) => (
+              <OptionRow
+                checked={filters.subcategory === label}
+                key={label}
+                name="subcategory"
+                option={{ label }}
+                type="radio"
+              />
+            ))}
+          </div>
+        </PanelShell>
+      </form>
     );
   }
 
@@ -333,7 +427,17 @@ function MarketplaceFilterPanel({
               >
                 Xóa lọc
               </Link>
-              <button type="submit" className="h-10 bg-[#22ab59] text-white">
+              <button
+                type="button"
+                className="h-10 bg-[#22ab59] text-white"
+                onClick={(event) => {
+                  const form = getButtonForm(event.currentTarget);
+
+                  if (form) {
+                    onNavigate(buildFormHref(form));
+                  }
+                }}
+              >
                 Áp dụng
               </button>
             </>
@@ -428,13 +532,13 @@ function SortMenu() {
 
 export function MarketplacePageClient({
   tasks,
-  categories: rawCategories,
   filters,
   page,
   pageSize,
   totalCount,
   totalPages,
 }: MarketplacePageClientProps) {
+  const router = useRouter();
   const [activePanel, setActivePanel] = useState<FilterPanelKey | null>(null);
 
   useEffect(() => {
@@ -447,18 +551,28 @@ export function MarketplacePageClient({
     });
   }, [filters.status, page, pageSize, tasks.length, totalCount]);
 
-  const categories = useMemo(() => {
-    const normalizedCategories = (rawCategories ?? []).filter((category) => category.trim().length > 0);
-
-    return normalizedCategories.length > 0 ? normalizedCategories : fallbackCategories;
-  }, [rawCategories]);
-
   const visiblePages = totalPages > 1 ? buildVisiblePages(page, totalPages) : [];
   const firstItem = totalCount === 0 ? 0 : (page - 1) * pageSize + 1;
   const lastItem = Math.min(page * pageSize, totalCount);
+  const selectedCategory = marketplaceCategoryCatalog.find(
+    (category) => category.name === filters.category,
+  );
+  const canOpenSubcategory = Boolean(selectedCategory && selectedCategory.subcategories.length > 0);
+  const categoryFilterLabel = filters.category ?? "Danh mục";
+  const subcategoryFilterLabel = filters.subcategory ?? "Danh mục con";
+  const paymentFilterLabel = buildPaymentFilterLabel(filters);
 
   const togglePanel = (panel: FilterPanelKey) => {
+    if (panel === "subcategory" && !canOpenSubcategory) {
+      return;
+    }
+
     setActivePanel((current) => (current === panel ? null : panel));
+  };
+
+  const navigateWithFilters = (href: string) => {
+    setActivePanel(null);
+    router.push(href, { scroll: false });
   };
 
   return (
@@ -478,31 +592,31 @@ export function MarketplacePageClient({
           <div className="relative flex-1 min-w-[20%]">
             <FilterButton active={activePanel === "level"} label="Cấp độ việc" onClick={() => togglePanel("level")} />
             {activePanel === "level" ? (
-              <MarketplaceFilterPanel activePanel="level" categories={categories} filters={filters} pageSize={pageSize} />
+              <MarketplaceFilterPanel activePanel="level" categoryCatalog={marketplaceCategoryCatalog} filters={filters} onNavigate={navigateWithFilters} pageSize={pageSize} />
             ) : null}
           </div>
           <div className="relative flex-1 min-w-[20%]">
-            <FilterButton active={activePanel === "category"} label="Danh mục" onClick={() => togglePanel("category")} />
+            <FilterButton active={activePanel === "category"} label={categoryFilterLabel} onClick={() => togglePanel("category")} />
             {activePanel === "category" ? (
-              <MarketplaceFilterPanel activePanel="category" categories={categories} filters={filters} pageSize={pageSize} />
+              <MarketplaceFilterPanel activePanel="category" categoryCatalog={marketplaceCategoryCatalog} filters={filters} onNavigate={navigateWithFilters} pageSize={pageSize} />
             ) : null}
           </div>
           <div className="relative flex-1 min-w-[20%]">
-            <FilterButton active={activePanel === "subcategory"} label="Danh mục con" onClick={() => togglePanel("subcategory")} />
+            <FilterButton active={activePanel === "subcategory"} disabled={!canOpenSubcategory} label={subcategoryFilterLabel} onClick={() => togglePanel("subcategory")} />
             {activePanel === "subcategory" ? (
-              <MarketplaceFilterPanel activePanel="subcategory" categories={categories} filters={filters} pageSize={pageSize} />
+              <MarketplaceFilterPanel activePanel="subcategory" categoryCatalog={marketplaceCategoryCatalog} filters={filters} onNavigate={navigateWithFilters} pageSize={pageSize} />
             ) : null}
           </div>
           <div className="relative flex-1 min-w-[20%]">
-            <FilterButton active={activePanel === "payment"} label="Thanh toán" onClick={() => togglePanel("payment")} />
+            <FilterButton active={activePanel === "payment"} label={paymentFilterLabel} onClick={() => togglePanel("payment")} />
             {activePanel === "payment" ? (
-              <MarketplaceFilterPanel activePanel="payment" categories={categories} filters={filters} pageSize={pageSize} />
+              <MarketplaceFilterPanel activePanel="payment" categoryCatalog={marketplaceCategoryCatalog} filters={filters} onNavigate={navigateWithFilters} pageSize={pageSize} />
             ) : null}
           </div>
           <div className="relative flex-1 min-w-[20%]">
             <FilterButton active={activePanel === "stats"} label="Thống kê thuê" onClick={() => togglePanel("stats")} />
             {activePanel === "stats" ? (
-              <MarketplaceFilterPanel activePanel="stats" categories={categories} filters={filters} pageSize={pageSize} />
+              <MarketplaceFilterPanel activePanel="stats" categoryCatalog={marketplaceCategoryCatalog} filters={filters} onNavigate={navigateWithFilters} pageSize={pageSize} />
             ) : null}
           </div>
         </div>
@@ -515,18 +629,31 @@ export function MarketplacePageClient({
           <form
             action="/marketplace"
             method="get"
-            onSubmit={(event) => {
-              const formData = new FormData(event.currentTarget);
-
-              posthog.capture("marketplace_filters_applied", {
-                search: String(formData.get("search") ?? ""),
-              });
-            }}
           >
             <HiddenFilterFields filters={filters} pageSize={pageSize} omit={["search"]} />
             <Input
               defaultValue={filters.search ?? ""}
               name="search"
+              onKeyDown={(event) => {
+                if (event.key !== "Enter") {
+                  return;
+                }
+
+                event.preventDefault();
+
+                const form = event.currentTarget.form;
+
+                if (!form) {
+                  return;
+                }
+
+                const formData = new FormData(form);
+
+                posthog.capture("marketplace_filters_applied", {
+                  search: String(formData.get("search") ?? ""),
+                });
+                navigateWithFilters(buildFormHref(form));
+              }}
               placeholder="Tìm việc và nhấn Enter..."
               className="h-10 w-full rounded-none border-0 bg-[#f5f7fa] px-3 text-sm text-[#203259] shadow-none placeholder:text-[#203259] focus-visible:ring-1 focus-visible:ring-[#22ab59] sm:w-64"
             />
@@ -541,20 +668,23 @@ export function MarketplacePageClient({
             const remainingSlots = Math.max(task.totalSlots - task.claimedSlots, 0);
             const progress = task.totalSlots > 0 ? Math.round((task.claimedSlots / task.totalSlots) * 100) : 0;
             const progressWidth = `${Math.min(progress, 100)}%`;
+            const isExpressTask = task.taskType === TaskType.EXPRESS;
 
             return (
               <article
                 key={task.id}
-                className="group grid gap-4 border-b border-[#edf0f4] border-l-2 border-l-[#6f3cff] bg-[#fbf9ff] px-4 py-5 transition-colors hover:bg-white sm:px-8 lg:grid-cols-[minmax(0,1fr)_180px_130px]"
+                className="group grid gap-4 border-b border-[#edf0f4] bg-white px-4 py-5 transition-colors hover:bg-[#fbfcfe] sm:px-8 lg:grid-cols-[minmax(0,1fr)_180px_130px]"
               >
                 <div className="min-w-0">
                   <h3 className="mb-5 line-clamp-2 text-base font-semibold text-[#203259] group-hover:text-[#22ab59]">
                     <Link href={`/marketplace/${task.id}`} className="hover:underline">
                       {task.title}
                     </Link>
-                    <span className="ml-2 inline-flex rounded-sm bg-[#7f35ff] px-1.5 py-0.5 align-middle text-[10px] font-bold uppercase text-white">
-                      nổi bật
-                    </span>
+                    {isExpressTask ? (
+                      <span className="ml-2 inline-flex rounded-sm bg-[#ff7a59] px-1.5 py-0.5 align-middle text-[10px] font-bold uppercase text-white">
+                        EXPRESS
+                      </span>
+                    ) : null}
                   </h3>
                   <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-[#687282]">
                     <span className="inline-flex items-center gap-1">
@@ -563,7 +693,7 @@ export function MarketplacePageClient({
                     </span>
                     <span className="inline-flex items-center gap-1">
                       <span className="rounded-sm bg-[#dff5e7] px-1 text-[10px] font-bold text-[#22ab59]">i</span>
-                      {task.category ?? "Việc nhỏ"}
+                      {isExpressTask ? expressMarketplaceCategoryName : task.category ?? "Việc nhỏ"}
                     </span>
                     <span>Người mới</span>
                   </div>

@@ -185,7 +185,13 @@ export const taskFilterSchema = z.object({
 
   category: z
     .string()
-    .max(50, "Danh mục không hợp lệ")
+    .max(120, "Danh mục không hợp lệ")
+    .trim()
+    .optional(),
+
+  subcategory: z
+    .string()
+    .max(160, "Danh mục con không hợp lệ")
     .trim()
     .optional(),
 

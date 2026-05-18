@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth/session";
 import { TaskStatus, UserRole } from "@/lib/generated/prisma/client";
 import { loadMarketplaceTasks } from "@/lib/services/marketplace";
+import { classicJobCategories, expressMarketplaceCategoryName } from "@/lib/tasks/classic-job-catalog";
 import { validateTaskFilter, type TaskFilterInput } from "@/lib/validators/task";
 import { MarketplacePageClient } from "./marketplace-page-client";
 
@@ -60,10 +61,21 @@ function parseMarketplaceFilters(searchParams: Record<string, string | string[] 
     minReward !== undefined && maxReward !== undefined && minReward > maxReward
       ? [maxReward, minReward]
       : [minReward, maxReward];
+  const category = firstValue(searchParams.category)?.trim() || undefined;
+  const isExpressCategory = category === expressMarketplaceCategoryName;
+  const selectedCategory = isExpressCategory
+    ? undefined
+    : classicJobCategories.find((item) => item.name === category);
+  const requestedSubcategory = firstValue(searchParams.subcategory)?.trim() || undefined;
+  const subcategory =
+    requestedSubcategory && selectedCategory?.subcategories.includes(requestedSubcategory)
+      ? requestedSubcategory
+      : undefined;
 
   return validateTaskFilter({
     search: firstValue(searchParams.search)?.trim() || undefined,
-    category: firstValue(searchParams.category)?.trim() || undefined,
+    category,
+    subcategory,
     status,
     minReward: normalizedMinReward,
     maxReward: normalizedMaxReward,

@@ -1,8 +1,9 @@
 import "server-only";
 
-import { Prisma, SubmissionStatus, TaskClaimStatus, TaskStatus } from "@/lib/generated/prisma/client";
+import { Prisma, SubmissionStatus, TaskClaimStatus, TaskStatus, TaskType } from "@/lib/generated/prisma/client";
 import { getPrisma } from "@/lib/db/prisma";
 import { expireStaleTaskClaims } from "@/lib/services/task-claim-expiration";
+import { expressMarketplaceCategoryName } from "@/lib/tasks/classic-job-catalog";
 import { serializeTaskForClient, type SerializableTask } from "@/lib/utils/task-serialization";
 import type { TaskFilterInput } from "@/lib/validators/task";
 
@@ -59,9 +60,21 @@ function buildMarketplaceTaskWhere(filters: TaskFilterInput): Prisma.TaskWhereIn
     });
   }
 
-  if (filters.category) {
+  const isExpressCategory = filters.category === expressMarketplaceCategoryName;
+
+  if (isExpressCategory) {
+    conditions.push({
+      taskType: TaskType.EXPRESS,
+    });
+  } else if (filters.category) {
     conditions.push({
       category: filters.category,
+    });
+  }
+
+  if (!isExpressCategory && filters.subcategory) {
+    conditions.push({
+      subcategory: filters.subcategory,
     });
   }
 

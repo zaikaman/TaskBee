@@ -4,6 +4,8 @@ export type ClassicJobCategory = {
   subcategories: string[];
 };
 
+export const expressMarketplaceCategoryName = "Việc Express";
+
 export const classicJobCategories: ClassicJobCategory[] = [
   {
     id: "dang-ky",
