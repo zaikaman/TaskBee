@@ -9,21 +9,21 @@ import { logout } from "@/lib/services/auth";
 
 type ProfileMenuProps = {
   displayName: string;
+  profileHref: string;
 };
 
-const menuItems = [
-  { href: "/account", label: "Cài đặt tài khoản", activeWhenOnCurrentRoute: true },
-  { href: "/referrals", label: "Chia sẻ & nhận thưởng" },
-  { href: "/account", label: "Hồ sơ của tôi", activeWhenOnCurrentRoute: false },
-  { href: "/dashboard/worker/tasks", label: "Xếp hạng MicroJobs" },
-  { href: "/dashboard/employer/tasks", label: "Xếp hạng Gigs" },
-  { href: "/support", label: "Hỗ trợ" },
-];
-
-export function ProfileMenu({ displayName }: ProfileMenuProps) {
+export function ProfileMenu({ displayName, profileHref }: ProfileMenuProps) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
+  const menuItems = [
+    { href: "/account", label: "Cài đặt tài khoản", activeWhenOnCurrentRoute: true },
+    { href: "/referrals", label: "Chia sẻ & nhận thưởng" },
+    { href: profileHref, label: "Hồ sơ của tôi", activeWhenOnCurrentRoute: false },
+    { href: "/dashboard/worker/tasks", label: "Xếp hạng MicroJobs" },
+    { href: "/dashboard/employer/tasks", label: "Xếp hạng Gigs" },
+    { href: "/support", label: "Hỗ trợ" },
+  ];
 
   useEffect(() => {
     function handlePointerDown(event: PointerEvent) {

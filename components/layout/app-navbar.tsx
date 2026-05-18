@@ -29,8 +29,10 @@ export async function AppNavbar() {
     session?.profile?.username ??
     session?.email?.split("@")[0] ??
     "người dùng";
+  const profileHref = session?.profile?.username
+    ? `/u/${encodeURIComponent(session.profile.username)}`
+    : "/account";
   const isEmployer = session?.profile?.role === UserRole.EMPLOYER;
-  const isWorker = session?.profile?.role === UserRole.WORKER;
   const submitTaskIntervalSeconds = session?.profile?.submitTaskIntervalSeconds ?? 180;
   const [notifications, unreadCount] = session?.profile
     ? await Promise.all([
@@ -67,7 +69,7 @@ export async function AppNavbar() {
               <Button variant="ghost" size="icon" aria-label="Lịch sử">
                 <Clock3 className="size-4" />
               </Button>
-              <ProfileMenu displayName={displayName} />
+              <ProfileMenu displayName={displayName} profileHref={profileHref} />
               <Button variant="ghost" size="icon" aria-label="Giao diện tối">
                 <Moon className="size-4" />
               </Button>
