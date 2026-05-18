@@ -18,8 +18,8 @@ export default function DashboardError({
     <RouteState
       title="Không thể tải dashboard"
       description="Dữ liệu tài khoản hoặc ví chưa tải được. Vui lòng thử lại để tiếp tục làm việc."
-      primaryHref="/dashboard/profile"
-      primaryLabel="Về hồ sơ"
+      primaryHref="/account"
+      primaryLabel="Về tài khoản"
       onRetry={unstable_retry}
     />
   );

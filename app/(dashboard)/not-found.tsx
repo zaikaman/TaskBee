@@ -5,8 +5,8 @@ export default function DashboardNotFound() {
     <RouteState
       title="Không tìm thấy mục trong dashboard"
       description="Trang dashboard này không tồn tại hoặc bạn không có quyền truy cập."
-      primaryHref="/dashboard/profile"
-      primaryLabel="Về hồ sơ"
+      primaryHref="/account"
+      primaryLabel="Về tài khoản"
     />
   );
 }

@@ -12,7 +12,7 @@ const primaryLinks = [
 
 function isActivePath(pathname: string, href: string) {
   if (href === "/dashboard") {
-    return pathname === "/dashboard" || pathname === "/profile" || pathname.startsWith("/dashboard/");
+    return pathname === "/dashboard" || pathname === "/account" || pathname.startsWith("/dashboard/");
   }
 
   return pathname === href || pathname.startsWith(`${href}/`);

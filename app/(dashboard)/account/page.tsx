@@ -21,18 +21,18 @@ import {
   type User,
 } from "@/lib/generated/prisma/client";
 import { formatVnd, toMinorUnits, type MoneyInput } from "@/lib/utils/money";
-import { ProfileUpdateForm } from "./profile-update-form";
+import { ProfileUpdateForm } from "../profile/profile-update-form";
 
 const FREELANCER_STATS_TAB = "freelancer-stats";
 
 const tabs = [
-  { label: "Tổng quan", href: "/profile", key: "overview" },
-  { label: "Bảo mật", href: "/profile#security", key: "security" },
-  { label: "Danh tính/KYC", href: "/profile#identity-kyc", key: "identity-kyc" },
-  { label: "Thống kê người làm", href: `/profile?tab=${FREELANCER_STATS_TAB}`, key: FREELANCER_STATS_TAB },
-  { label: "Danh sách", href: "/profile#lists", key: "lists" },
-  { label: "Người thuê đã chặn", href: "/profile#blocked-buyers", key: "blocked-buyers" },
-  { label: "Chương trình & ưu đãi", href: "/profile#programs", key: "programs" },
+  { label: "Tổng quan", href: "/account", key: "overview" },
+  { label: "Bảo mật", href: "/account#security", key: "security" },
+  { label: "Danh tính/KYC", href: "/account#identity-kyc", key: "identity-kyc" },
+  { label: "Thống kê người làm", href: `/account?tab=${FREELANCER_STATS_TAB}`, key: FREELANCER_STATS_TAB },
+  { label: "Danh sách", href: "/account#lists", key: "lists" },
+  { label: "Người thuê đã chặn", href: "/account#blocked-buyers", key: "blocked-buyers" },
+  { label: "Chương trình & ưu đãi", href: "/account#programs", key: "programs" },
 ];
 
 const roleLabels: Record<UserRole, string> = {
@@ -101,13 +101,13 @@ type FreelancerStats = {
   }>;
 };
 
-type ProfilePageProps = {
+type AccountPageProps = {
   searchParams?: Promise<{
     tab?: string;
   }>;
 };
 
-export default async function ProfilePage({ searchParams }: ProfilePageProps) {
+export default async function AccountPage({ searchParams }: AccountPageProps) {
   const session = await requireVerifiedUser();
   const profile = session.profile;
   const resolvedSearchParams = await searchParams;

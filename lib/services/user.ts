@@ -163,8 +163,7 @@ export async function updateProfile(
     },
   });
 
-  revalidatePath("/profile");
-  revalidatePath("/dashboard/profile");
+  revalidatePath("/account");
 
   return {
     ok: true,

@@ -12,9 +12,9 @@ type ProfileMenuProps = {
 };
 
 const menuItems = [
-  { href: "/profile", label: "Cài đặt tài khoản" },
+  { href: "/account", label: "Cài đặt tài khoản" },
   { href: "/referrals", label: "Chia sẻ & nhận thưởng" },
-  { href: "/profile", label: "Hồ sơ của tôi" },
+  { href: "/account", label: "Hồ sơ của tôi" },
   { href: "/dashboard/worker/tasks", label: "Xếp hạng MicroJobs" },
   { href: "/dashboard/employer/tasks", label: "Xếp hạng Gigs" },
   { href: "/support", label: "Hỗ trợ" },

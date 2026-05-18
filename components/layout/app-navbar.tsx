@@ -122,8 +122,8 @@ export async function AppNavbar() {
             </Link>
           )}
           {isAuthenticated ? (
-            <Link className="shrink-0 rounded border border-zinc-200 px-3 py-2 hover:border-emerald-300 hover:text-emerald-700" href="/profile">
-              Hồ sơ
+            <Link className="shrink-0 rounded border border-zinc-200 px-3 py-2 hover:border-emerald-300 hover:text-emerald-700" href="/account">
+              Tài khoản
             </Link>
           ) : (
             <Link className="shrink-0 rounded border border-zinc-200 px-3 py-2 hover:border-emerald-300 hover:text-emerald-700" href="/login">
